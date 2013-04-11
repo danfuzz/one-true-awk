@@ -45,21 +45,13 @@ if ! git --version >& /dev/null; then
     exit 1
 fi
 
-set -e
-
 cd "${progDir}"
-
-if [[ -e latest ]]; then
-    rm -rf latest
-fi
-
+rm -rf latest
 git commit -a -m "Clear out the latest/ directory. (via ${progName})"
 
 for dir in versions/*; do
-    if [[ -e latest ]]; then
-        rm -rf latest
-    fi
-    mkdir latest
-    cp "${dir}/*" latest
-    git commit -a -m "Copy of ${dir}. (via ${progName})"
+    rm -rf latest
+    mkdir latest || exit 1
+    cp "${dir}/*" latest || exit 1
+    git commit -a -m "Copy of ${dir}. (via ${progName})" || exit 1
 done
