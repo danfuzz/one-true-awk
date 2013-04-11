@@ -1,11 +1,15 @@
-#define	xfree(a)	{ if(a!=NULL) yfree(a); a=NULL;}
+#ifdef pdp11
+#define hack	int
+#endif
+#define	AWKFLOAT	float
+#define	xfree(a)	{ if(a!=NULL) { yfree(a); a=NULL;} }
 #define yfree free
 #ifdef	DEBUG
 #	define	dprintf	if(dbg)printf
 #else
 #	define	dprintf(x1, x2, x3, x4)
 #endif
-typedef	double	awkfloat;
+typedef	AWKFLOAT	awkfloat;
 
 extern char	**FS;
 extern char	**RS;
@@ -122,6 +126,6 @@ extern int	pairstack[], paircnt;
 obj	nullproc();
 obj	relop();
 
-#define MAXSYM	16
+#define MAXSYM	50
 #define	HAT	0177	/* matches ^ in regular expr */
 			/* watch out for mach dep */
