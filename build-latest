@@ -1,0 +1,65 @@
+#!/bin/bash
+
+#
+# Builds a history for the directory `latest/` by starting with
+# an empty directory, committing that, and then copying-and-committing
+# each dated version from `versions/` in turn.
+#
+
+#
+# Directory and program name detection
+#
+
+# Preserve the original working dir as origDir.
+origDir="${PWD}"
+
+# Set progName to the program name, progDir to its directory, and baseDir
+# to progDir's directory. Follows symlinks.
+prog="$0"
+while [[ -h ${prog} ]]; do
+    [[ "$(/bin/ls -ld "${prog}")" =~ .*' -> '(.*)$ ]]
+    newProg="${BASH_REMATCH[1]}"
+    if [[ ${newProg} =~ ^/ ]]; then
+        prog="${newProg}"
+    else
+        prog="$(dirname "${prog}")/${newProg}"
+    fi
+done
+progName="$(basename "${prog}")"
+progDir="$(dirname "${prog}")"
+cd "${progDir}"
+progDir="${PWD}"
+cd ..
+baseDir="${PWD}"
+cd "${origDir}"
+unset prog
+unset newProg
+
+
+#
+# Main script
+#
+
+if ! git --version >& /dev/null; then
+    echo "${progName}: Need git!" 1>&2
+    exit 1
+fi
+
+set -e
+
+cd "${progDir}"
+
+if [[ -e latest ]]; then
+    rm -rf latest
+fi
+
+git commit -a -m "Clear out the latest/ directory. (via ${progName})"
+
+for dir in versions/*; do
+    if [[ -e latest ]]; then
+        rm -rf latest
+    fi
+    mkdir latest
+    cp "${dir}/*" latest
+    git commit -a -m "Copy of ${dir}. (via ${progName})"
+done
