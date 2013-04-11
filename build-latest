@@ -53,5 +53,6 @@ for dir in versions/*; do
     rm -rf latest
     mkdir latest || exit 1
     cp ${dir}/* latest || exit 1
-    git commit -m "Copy of ${dir}. (via ${progName})" latest || exit 1
+    git add latest || exit 1
+    git commit -a -m "Copy of ${dir}. (via ${progName})" || exit 1
 done
