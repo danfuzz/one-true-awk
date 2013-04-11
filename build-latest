@@ -52,6 +52,6 @@ git commit -a -m "Clear out the latest/ directory. (via ${progName})"
 for dir in versions/*; do
     rm -rf latest
     mkdir latest || exit 1
-    cp "${dir}/*" latest || exit 1
+    cp ${dir}/* latest || exit 1
     git commit -a -m "Copy of ${dir}. (via ${progName})" || exit 1
 done
