@@ -1,55 +1,86 @@
-CFLAGS=-O
-YFLAGS=-d
-FILES=awk.lx.o b.o main.o token.o tran.o lib.o run.o parse.o proctab.o freeze.o
-SOURCE=awk.def awk.g.y awk.lx.l b.c lib.c main.c parse.c \
-	proc.c freeze.c\
-	run.c token.c tran.c
+# /****************************************************************
+# Copyright (C) Lucent Technologies 1997
+# All Rights Reserved
+# 
+# Permission to use, copy, modify, and distribute this software and
+# its documentation for any purpose and without fee is hereby
+# granted, provided that the above copyright notice appear in all
+# copies and that both that the copyright notice and this
+# permission notice and warranty disclaimer appear in supporting
+# documentation, and that the name Lucent Technologies or any of
+# its entities not be used in advertising or publicity pertaining
+# to distribution of the software without specific, written prior
+# permission.
+# 
+# LUCENT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+# INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
+# IN NO EVENT SHALL LUCENT OR ANY OF ITS ENTITIES BE LIABLE FOR ANY
+# SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+# IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+# ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+# THIS SOFTWARE.
+# ****************************************************************/
 
-a.out:	$(FILES) awk.g.o
-	cc -i $(CFLAGS) awk.g.o  $(FILES)  -lm
+CFLAGS = -g
+CFLAGS = -O2
+CFLAGS =
 
-y.tab.h:	awk.g.o
+CC = gcc -Wall -g -Wwrite-strings
+CC = gcc -Wall -g
+CC = /opt/SUNWspro/bin/cc
+CC = /opt/pure/purify/purify cc
+CC = cc
 
-awk.h:	y.tab.h
-	-cmp -s y.tab.h awk.h || cp y.tab.h awk.h
+YACC = bison -y
+YACC = yacc
+YFLAGS = -d
 
-$(FILES):	awk.h awk.def
+OFILES = b.o main.o parse.o proctab.o tran.o lib.o run.o lex.o
 
-token.c:	awk.h
-	e - <tokenscript
+SOURCE = awk.h ytab.c ytab.h proto.h awkgram.y lex.c b.c main.c \
+	maketab.c parse.c lib.c run.c tran.c proctab.c missing95.c
 
-src:	$(SOURCE) test.a tokenscript makefile README
-	cp $? /usr/src/cmd/awk
-	touch src
+LISTING = awk.h proto.h awkgram.y lex.c b.c main.c maketab.c parse.c \
+	lib.c run.c tran.c missing95.c
 
-get:
-	for i in $(SOURCE) makefile tokenscript README; do cp /usr/src/cmd/awk/$$i .; done
+SHIP = README FIXES $(SOURCE) ytab[ch].bak makefile makefile.win \
+	vcvars32.bat buildwin.bat mac.code awk.1
 
-bin:
-	cp a.out /usr/bin/awk
-	strip /usr/bin/awk
+a.out:	ytab.o $(OFILES)
+	$(CC) $(CFLAGS) ytab.o $(OFILES) $(ALLOC)  -lm
 
-profile:	awk.g.o $(FILES) mon.o
-	cc -p -i awk.g.o $(FILES) mon.o -lm
+$(OFILES):	awk.h ytab.h proto.h
 
-find:
-	egrep -n "$(PAT)" *.[ylhc] awk.def
+ytab.o:	awk.h proto.h awkgram.y
+	$(YACC) $(YFLAGS) awkgram.y
+	mv y.tab.c ytab.c
+	mv y.tab.h ytab.h
+	$(CC) $(CFLAGS) -c ytab.c
 
-list:
-	-pr $(SOURCE) makefile tokenscript README EXPLAIN
+proctab.c:	maketab
+	./maketab >proctab.c
 
-lint:
-	lint -spu b.c main.c token.c tran.c run.c lib.c parse.c -lm |\
-		egrep -v '^(error|free|malloc)'
+maketab:	ytab.h maketab.c
+	$(CC) $(CFLAGS) maketab.c -o maketab
 
-proctab.c:	proc
-	proc >proctab.c
+bundle:
+	@cp ytab.h ytabh.bak
+	@cp ytab.c ytabc.bak
+	@bundle $(SHIP)
 
-proc:	awk.h proc.o token.o
-	cc -o proc proc.o token.o
+tar:
+	@cp ytab.h ytabh.bak
+	@cp ytab.c ytabc.bak
+	@bundle $(SHIP) >awk.shar
+	@tar cf awk.tar $(SHIP)
+	gzip awk.tar
+	ls -l awk.tar.gz
+	@zip awk.zip $(SHIP)
+	ls -l awk.zip
+
+names:
+	@echo $(LISTING)
 
 clean:
-	rm a.out *.o t.* *temp* *.out *junk* y.tab.* awk.h proc proctab.c
-
-diffs:
-	-for i in $(SOURCE); do echo $$i:; diff $$i /usr/src/cmd/awk | ind; done
+	rm -f a.out *.o *.obj maketab maketab.exe # proctab.c

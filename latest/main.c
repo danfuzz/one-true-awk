@@ -1,119 +1,189 @@
-#include "stdio.h"
-#include "ctype.h"
-#include "awk.def"
+/****************************************************************
+Copyright (C) Lucent Technologies 1997
+All Rights Reserved
+
+Permission to use, copy, modify, and distribute this software and
+its documentation for any purpose and without fee is hereby
+granted, provided that the above copyright notice appear in all
+copies and that both that the copyright notice and this
+permission notice and warranty disclaimer appear in supporting
+documentation, and that the name Lucent Technologies or any of
+its entities not be used in advertising or publicity pertaining
+to distribution of the software without specific, written prior
+permission.
+
+LUCENT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
+IN NO EVENT SHALL LUCENT OR ANY OF ITS ENTITIES BE LIABLE FOR ANY
+SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+THIS SOFTWARE.
+****************************************************************/
+
+const char	*version = "version 20040207";
+
+#define DEBUG
+#include <stdio.h>
+#include <ctype.h>
+#include <locale.h>
+#include <stdlib.h>
+#include <string.h>
+#include <signal.h>
 #include "awk.h"
-#define TOLOWER(c)	(isupper(c) ? tolower(c) : c) /* ugh!!! */
+#include "ytab.h"
+
+extern	char	**environ;
+extern	int	nfields;
 
 int	dbg	= 0;
-int	svflg	= 0;
-int	rstflg	= 0;
-int	svargc;
-char	**svargv, **xargv;
-extern FILE	*yyin;	/* lex input file */
+char	*cmdname;	/* gets argv[0] for error messages */
+extern	FILE	*yyin;	/* lex input file */
 char	*lexprog;	/* points to program argument if it exists */
-extern	errorflag;	/* non-zero if any syntax errors; set by yyerror */
+extern	int errorflag;	/* non-zero if any syntax errors; set by yyerror */
+int	compile_time = 2;	/* for error printing: */
+				/* 2 = cmdline, 1 = compile, 0 = running */
 
-int filefd, symnum, ansfd;
-char *filelist;
-extern int maxsym, errno;
-main(argc, argv) int argc; char *argv[]; {
-	if (argc == 1)
-		error(FATAL, "Usage: awk [-f source | 'cmds'] [files]");
-	if (strcmp(argv[0], "a.out"))
-		logit(argc, argv);
-	syminit();
-	while (argc > 1) {
-		argc--;
-		argv++;
-		/* this nonsense is because gcos argument handling */
-		/* folds -F into -f.  accordingly, one checks the next
-		/* character after f to see if it's -f file or -Fx.
-		*/
-		if (argv[0][0] == '-' && TOLOWER(argv[0][1]) == 'f' && argv[0][2] == '\0') {
-			yyin = fopen(argv[1], "r");
-			if (yyin == NULL)
-				error(FATAL, "can't open %s", argv[1]);
+char	*pfile[20];	/* program filenames from -f's */
+int	npfile = 0;	/* number of filenames */
+int	curpfile = 0;	/* current filename */
+
+int	safe	= 0;	/* 1 => "safe" mode */
+
+int main(int argc, char *argv[])
+{
+	const char *fs = NULL;
+
+	setlocale(LC_CTYPE, "");
+	setlocale(LC_NUMERIC, "C"); /* for parsing cmdline & prog */
+	cmdname = argv[0];
+	if (argc == 1) {
+		fprintf(stderr, "Usage: %s [-f programfile | 'program'] [-Ffieldsep] [-v var=value] [files]\n", cmdname);
+		exit(1);
+	}
+	signal(SIGFPE, fpecatch);
+	yyin = NULL;
+	symtab = makesymtab(NSYMTAB);
+	while (argc > 1 && argv[1][0] == '-' && argv[1][1] != '\0') {
+		if (strcmp(argv[1], "--") == 0) {	/* explicit end of args */
 			argc--;
 			argv++;
 			break;
-		} else if (argv[0][0] == '-' && TOLOWER(argv[0][1]) == 'f') {	/* set field sep */
-			if (argv[0][2] == 't')	/* special case for tab */
-				**FS = '\t';
-			else
-				**FS = argv[0][2];
-			continue;
-		} else if (argv[0][0] != '-') {
-			dprintf("cmds=|%s|\n", argv[0], NULL, NULL);
-			yyin = NULL;
-			lexprog = argv[0];
-			argv[0] = argv[-1];	/* need this space */
+		}
+		switch (argv[1][1]) {
+		case 's':
+			if (strcmp(argv[1], "-safe") == 0)
+				safe = 1;
 			break;
-		} else if (strcmp("-d", argv[0])==0) {
-			dbg = 1;
-		}
-		else if(strcmp("-S", argv[0]) == 0) {
-			svflg = 1;
-		}
-		else if(strncmp("-R", argv[0], 2) == 0) {
-			if(thaw(argv[0] + 2) == 0)
-				rstflg = 1;
-			else {
-				fprintf(stderr, "not restored\n");
-				exit(1);
+		case 'f':	/* next argument is program filename */
+			argc--;
+			argv++;
+			if (argc <= 1)
+				FATAL("no program filename");
+			pfile[npfile++] = argv[1];
+			break;
+		case 'F':	/* set field separator */
+			if (argv[1][2] != 0) {	/* arg is -Fsomething */
+				if (argv[1][2] == 't' && argv[1][3] == 0)	/* wart: t=>\t */
+					fs = "\t";
+				else if (argv[1][2] != 0)
+					fs = &argv[1][2];
+			} else {		/* arg is -F something */
+				argc--; argv++;
+				if (argc > 1 && argv[1][0] == 't' && argv[1][1] == 0)	/* wart: t=>\t */
+					fs = "\t";
+				else if (argc > 1 && argv[1][0] != 0)
+					fs = &argv[1][0];
 			}
+			if (fs == NULL || *fs == '\0')
+				WARNING("field separator FS is empty");
+			break;
+		case 'v':	/* -v a=1 to be done NOW.  one -v for each */
+			if (argv[1][2] == '\0' && --argc > 1 && isclvar((++argv)[1]))
+				setclvar(argv[1]);
+			break;
+		case 'm':	/* more memory: -mr=record, -mf=fields */
+				/* no longer supported */
+			WARNING("obsolete option %s ignored", argv[1]);
+			break;
+		case 'd':
+			dbg = atoi(&argv[1][2]);
+			if (dbg == 0)
+				dbg = 1;
+			printf("awk %s\n", version);
+			break;
+		case 'V':	/* added for exptools "standard" */
+			printf("awk %s\n", version);
+			exit(0);
+			break;
+		default:
+			WARNING("unknown option %s ignored", argv[1]);
+			break;
 		}
+		argc--;
+		argv++;
 	}
-	if (argc <= 1) {
-		argv[0][0] = '-';
-		argv[0][1] = '\0';
-		argc++;
-		argv--;
+	/* argv[1] is now the first argument */
+	if (npfile == 0) {	/* no -f; first argument is program */
+		if (argc <= 1) {
+			if (dbg)
+				exit(0);
+			FATAL("no program given");
+		}
+		   dprintf( ("program = |%s|\n", argv[1]) );
+		lexprog = argv[1];
+		argc--;
+		argv++;
 	}
-	svargc = --argc;
-	svargv = ++argv;
-	dprintf("svargc=%d svargv[0]=%s\n", svargc, svargv[0], NULL);
-	*FILENAME = *svargv;	/* initial file name */
-	if(rstflg == 0)
-		yyparse();
-	dprintf("errorflag=%d\n", errorflag, NULL, NULL);
-	if (errorflag)
-		exit(errorflag);
-	if(svflg) {
-		svflg = 0;
-		if(freeze("awk.out") != 0)
-			fprintf(stderr, "not saved\n");
-		exit(0);
-	}
-	run();
-	exit(errorflag);
+	recinit(recsize);
+	syminit();
+	compile_time = 1;
+	argv[0] = cmdname;	/* put prog name at front of arglist */
+	   dprintf( ("argc=%d, argv[0]=%s\n", argc, argv[0]) );
+	arginit(argc, argv);
+	if (!safe)
+		envinit(environ);
+	yyparse();
+	setlocale(LC_NUMERIC, ""); /* back to whatever it is locally */
+	if (fs)
+		*FS = qstring(fs, '\0');
+	   dprintf( ("errorflag=%d\n", errorflag) );
+	if (errorflag == 0) {
+		compile_time = 0;
+		run(winner);
+	} else
+		bracecheck();
+	return(errorflag);
 }
 
-logit(n, s) char *s[];
-{	int i, tvec[2];
-	FILE *f, *g;
-	char buf[512];
-	if ((f=fopen("/crp/pjw/awkhist/awkhist", "a"))==NULL)
-		return;
-	time(tvec);
-	fprintf(f, "%-8s %s", getlogin(), ctime(tvec));
-	for (i=0; i<n; i++)
-		fprintf(f, "'%s'", s[i]);
-	putc('\n', f);
-	if (strcmp(s[1], "-f")) {
-		fclose(f);
-		return;
-	}
-	if ((g=fopen(s[2], "r"))==NULL) {
-		fclose(f);
-		return;
-	}
-	while ((i=fread(buf, 1, 512, g))>0)
-		fwrite(buf, 1, i, f);
-	fclose(f);
-	fclose(g);
-}
-
-yywrap()
+int pgetc(void)		/* get 1 character from awk program */
 {
-	return(1);
+	int c;
+
+	for (;;) {
+		if (yyin == NULL) {
+			if (curpfile >= npfile)
+				return EOF;
+			if (strcmp(pfile[curpfile], "-") == 0)
+				yyin = stdin;
+			else if ((yyin = fopen(pfile[curpfile], "r")) == NULL)
+				FATAL("can't open file %s", pfile[curpfile]);
+			lineno = 1;
+		}
+		if ((c = getc(yyin)) != EOF)
+			return c;
+		if (yyin != stdin)
+			fclose(yyin);
+		yyin = NULL;
+		curpfile++;
+	}
+}
+
+char *cursource(void)	/* current source file name */
+{
+	if (npfile > 0)
+		return pfile[curpfile];
+	else
+		return NULL;
 }
