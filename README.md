@@ -32,3 +32,13 @@ References:
 
 * Related question on StackOverflow:
   <http://stackoverflow.com/questions/15687108/>
+
+- - - - -
+
+With thanks to:
+
+* Olivier Dulac, <http://stackoverflow.com/users/1841533/olivier-dulac>
+
+* Jlliagre, <http://stackoverflow.com/users/211665/jlliagre>
+
+* Eric Fischer, <https://github.com/ericfischer>
