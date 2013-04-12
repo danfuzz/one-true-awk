@@ -23,8 +23,29 @@ Origins / Sources Of The Code Contained Herein
 * 2000-05-25 &mdash; from
   [Debian Snapshot](http://snapshot.debian.org/package/original-awk/).
 
+* 2000-11-15 &mdash; from
+  [FreeBSD Subversion](http://svn.freebsd.org/base/vendor/one-true-awk/).
+
+* 2002-01-01 &mdash; from
+  [FreeBSD Subversion](http://svn.freebsd.org/base/vendor/one-true-awk/).
+
 * 2002-02-10 &mdash; from
   [Debian Snapshot](http://snapshot.debian.org/package/original-awk/).
+
+* 2002-11-29 &mdash; from
+  [FreeBSD Subversion](http://svn.freebsd.org/base/vendor/one-true-awk/).
+
+* 2002-12-13 &mdash; from
+  [FreeBSD Subversion](http://svn.freebsd.org/base/vendor/one-true-awk/).
+
+* 2003-03-14 &mdash; from
+  [FreeBSD Subversion](http://svn.freebsd.org/base/vendor/one-true-awk/).
+
+* 2003-07-29 &mdash; from
+  [FreeBSD Subversion](http://svn.freebsd.org/base/vendor/one-true-awk/).
+
+* 2003-07-31 &mdash; from
+  [FreeBSD Subversion](http://svn.freebsd.org/base/vendor/one-true-awk/).
 
 * 2004-02-07 &mdash; on the open web, found via web search for
   (something like) "awk source code".
@@ -57,10 +78,16 @@ Origins / Sources Of The Code Contained Herein
   Princeton](http://www.cs.princeton.edu/~bwk/btl.mirror/),
   via the Internet Archive's [Wayback Machine](http://web.archive.org).
 
+* 2011-05-01 &mdash; from
+  [FreeBSD Subversion](http://svn.freebsd.org/base/vendor/one-true-awk/).
+
 * 2011-05-06 &mdash; archive of
   [Kernighan's page at
   Princeton](http://www.cs.princeton.edu/~bwk/btl.mirror/),
   via the Internet Archive's [Wayback Machine](http://web.archive.org).
+
+* 2011-08-07 &mdash; from
+  [FreeBSD Subversion](http://svn.freebsd.org/base/vendor/one-true-awk/).
 
 * 2011-08-10 &mdash; retrieved directly from
   [Kernighan's page at
