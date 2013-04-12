@@ -17,8 +17,20 @@ Origins / Sources Of The Code Contained Herein
 * 1980-04-11 &mdash; System III,
   via [The Unix Archive](http://minnie.tuhs.org/TUHS/archive_sites.html).
 
+* 1998-02-11 &mdash; from
+  [Debian Snapshot](http://snapshot.debian.org/package/original-awk/).
+
+* 2000-05-25 &mdash; from
+  [Debian Snapshot](http://snapshot.debian.org/package/original-awk/).
+
+* 2002-02-10 &mdash; from
+  [Debian Snapshot](http://snapshot.debian.org/package/original-awk/).
+
 * 2004-02-07 &mdash; on the open web, found via web search for
   (something like) "awk source code".
+
+* 2004-12-22 &mdash; from
+  [Debian Snapshot](http://snapshot.debian.org/package/original-awk/).
 
 * 2005-04-24 &mdash; retrieved directly from
   the [AWK Annoyances page](http://www.samiam.org/awk/annoyances.html),
