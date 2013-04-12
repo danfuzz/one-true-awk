@@ -20,30 +20,36 @@ Origins / Sources Of The Code Contained Herein
 * 2004-02-07 &mdash; on the open web, found via web search for
   (something like) "awk source code".
 
-* 2005-04-24 &mdash; on the open web, found via web search for
-  (something like) "awk source code".
+* 2005-04-24 &mdash; retrieved directly from
+  the [AWK Annoyances page](http://www.samiam.org/awk/annoyances.html),
+  which probably came from one of Kernighan's pages.
 
 * 2007-05-01 &mdash; retrieved directly from
-  [Kernighan's site at Bell
+  [Kernighan's page at Bell
   Labs](http://cm.bell-labs.com/cm/cs/awkbook/index.html).
 
 * 2009-11-26 &mdash; on the open web, found via web search for
   (something like) "awk source code".
 
 * 2010-02-08 &mdash; archive of
-  [Kernighan's site](http://www.cs.princeton.edu/~bwk/btl.mirror/),
+  [Kernighan's page at
+  Princeton](http://www.cs.princeton.edu/~bwk/btl.mirror/),
   via the Internet Archive's [Wayback Machine](http://web.archive.org).
 
 * 2010-05-23 &mdash; archive of
-  [Kernighan's site](http://www.cs.princeton.edu/~bwk/btl.mirror/),
+  [Kernighan's page at
+  Princeton](http://www.cs.princeton.edu/~bwk/btl.mirror/),
   via the Internet Archive's [Wayback Machine](http://web.archive.org).
 
 * 2011-05-06 &mdash; archive of
-  [Kernighan's site](http://www.cs.princeton.edu/~bwk/btl.mirror/),
+  [Kernighan's page at
+  Princeton](http://www.cs.princeton.edu/~bwk/btl.mirror/),
   via the Internet Archive's [Wayback Machine](http://web.archive.org).
 
 * 2011-08-10 &mdash; retrieved directly from
-  [Kernighan's site](http://www.cs.princeton.edu/~bwk/btl.mirror/).
+  [Kernighan's page at
+  Princeton](http://www.cs.princeton.edu/~bwk/btl.mirror/).
 
 * 2012-12-20 &mdash; retrieved directly from
-  [Kernighan's site](http://www.cs.princeton.edu/~bwk/btl.mirror/).
+  [Kernighan's page at
+  Princeton](http://www.cs.princeton.edu/~bwk/btl.mirror/).
