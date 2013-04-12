@@ -17,4 +17,5 @@ or just submit a pull request!
 
 Cheers,
 
--dan <http://milk.com/>
+-dan<br>
+<http://milk.com/>
