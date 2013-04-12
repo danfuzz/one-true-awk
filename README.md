@@ -17,6 +17,9 @@ latest version. `git blame` provides useful output on files in
 
 If you have access to a version of the code not represented in this
 repo, then please send mail to me, or just submit a pull request.
+In particular, the history contained herein is missing any versions
+published in the years 1981&ndash;1997, and in addition
+none of 2001, 2006, nor 2008 are represented.
 
 Cheers!
 
