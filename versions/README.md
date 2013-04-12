@@ -23,8 +23,9 @@ Origins / Sources Of The Code Contained Herein
 * 2005-04-24 &mdash; on the open web, found via web search for
   (something like) "awk source code".
 
-* 2007-05-01 &mdash; on the open web, found via web search for
-  (something like) "awk source code".
+* 2007-05-01 &mdash; retrieved directly from
+  [Kernighan's site at Bell
+  Labs](http://cm.bell-labs.com/cm/cs/awkbook/index.html).
 
 * 2009-11-26 &mdash; on the open web, found via web search for
   (something like) "awk source code".
