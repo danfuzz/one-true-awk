@@ -28,6 +28,10 @@ Origins / Sources Of The Code Contained Herein
   [Kernighan's page at Bell
   Labs](http://cm.bell-labs.com/cm/cs/awkbook/index.html).
 
+* 2007-10-23 &mdash; reverse-application to version 2009-11-26
+  of patch file retrieved from
+  <http://launchpadlibrarian.net/38348065/original-awk_2007-10-23-4_2009-11-26-1.diff.gz>.
+
 * 2009-11-26 &mdash; on the open web, found via web search for
   (something like) "awk source code".
 
