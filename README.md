@@ -9,13 +9,13 @@ through to the present day (as of this writing).
 The `versions/` directory has each version in a separate subdirectory.
 The `latest/` directory has a full (as can be made) git history of all
 the versions, with tip-of-tree being the latest version. `git blame`
-will provide useful output on files in `latest`.
+will provide useful output on files in `latest/`.
 
-If you have access to a version of the code not represented
-in this repo, then please send mail to me at <danfuzz@milk.com>,
-or just submit a pull request!
+If you have access to a version of the code not represented in this
+repo, then please send mail to me, or just submit a pull request.
 
-Cheers,
+Cheers!
 
 -dan<br>
+<danfuzz@milk.com><br>
 <http://milk.com/>
