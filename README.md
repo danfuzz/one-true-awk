@@ -19,3 +19,16 @@ Cheers!
 -dan<br>
 <danfuzz@milk.com><br>
 <http://milk.com/>
+
+- - - - -
+
+References:
+
+* Earliest versions:
+  <http://minnie.tuhs.org/cgi-bin/utree.pl>
+
+* Most recent version:
+  <http://www.cs.princeton.edu/~bwk/btl.mirror/>
+
+* Related question on StackOverflow:
+  <http://stackoverflow.com/questions/15687108/>
