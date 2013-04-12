@@ -49,7 +49,7 @@ cd "${progDir}"
 rm -rf latest
 git commit -a -m "Clear out the latest/ directory. (via ${progName})"
 
-for dir in versions/*; do
+for dir in versions/*-*; do
     rm -rf latest
     mkdir latest || exit 1
     cp ${dir}/* latest || exit 1
