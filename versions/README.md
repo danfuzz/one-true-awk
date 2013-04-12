@@ -17,6 +17,13 @@ Origins / Sources Of The Code Contained Herein
 * 1980-04-11 &mdash; System III,
   via [The Unix Archive](http://minnie.tuhs.org/TUHS/archive_sites.html).
 
+* 1983-12-09 &mdash; from
+  [RetroBSD](https://code.google.com/p/retrobsd/source/browse/trunk/src/cmd/awk/?r=702).
+
+  Note: The date here is based on a comment at the top of the file
+  `awk.def.h`, which *may* also indicate that the "real" name of this
+  file was merely `awk.def`.
+
 * 1998-02-11 &mdash; from
   [Debian Snapshot](http://snapshot.debian.org/package/original-awk/).
 
