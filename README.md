@@ -6,10 +6,14 @@ by the original Awk authors and most recently primarily maintained
 by Brian Kernighan. This includes the earliest published version
 through to the present day (as of this writing).
 
-The `versions/` directory has each version in a separate subdirectory.
-The `latest/` directory has a full (as can be made) git history of all
-the versions, with tip-of-tree being the latest version. `git blame`
-will provide useful output on files in `latest/`.
+The [versions/](versions) directory has each version in a separate
+subdirectory. See that directory's [README](README.md) file for
+details about the origin of each version.
+
+The [latest/](latest) directory has a full (as can be
+made) git history of all the versions, with tip-of-tree being the
+latest version. `git blame` provides useful output on files in
+`latest/`.
 
 If you have access to a version of the code not represented in this
 repo, then please send mail to me, or just submit a pull request.
