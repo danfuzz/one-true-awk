@@ -1,12 +1,17 @@
 One True Awk
 ============
 
-This repo serves as an archive of versions of Awk developed
-by the original Awk authors and most recently primarily maintained
-by Brian Kernighan. This includes the earliest published version
-through to the present day (as of this writing).
+This repo serves as an archive of versions of Awk developed by the
+original Awk authors &mdash; (in acronym order) Alfred V. Aho, Peter
+Weinberger, and Brian Kernighan &mdash; and most recently primarily
+maintained by Kernighan. These versions of Awk are sometimes referred
+to as "Bwk" as a tip o' the hat to the fact that Kernighan (whose
+middle initial is "W") has been the most active of the authors in
+developing this code.
 
-The [versions/](versions) directory has each version in a separate
+This archive includes the earliest widely published version through
+versions released quite recently (as of this writing). The
+[versions/](versions) directory has each version in a separate
 subdirectory. See that directory's [README](versions/README.md) file
 for details about the origin of each version.
 
