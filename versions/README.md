@@ -17,7 +17,7 @@ Origins / Sources Of The Code Contained Herein
 * 1979-12-30 &mdash; 3BSD
   via [The Unix Archive](http://minnie.tuhs.org/TUHS/archive_sites.html).
 
-  This is 1979-02-16 with a patch to use a larger input buffer.
+  Note: This is 1979-02-16 with a patch to use a larger input buffer.
 
 * 1980-04-11 &mdash; System III,
   via [The Unix Archive](http://minnie.tuhs.org/TUHS/archive_sites.html).
@@ -35,7 +35,7 @@ Origins / Sources Of The Code Contained Herein
 * 1983-12-10 &mdash; 2.9BSD
   via [The Unix Archive](http://minnie.tuhs.org/TUHS/archive_sites.html).
 
-  This is a very minor (null check) patch to 1979-05-16.
+  Note: This is a very minor (null check) patch to 1979-05-16.
 
 * 1986-06-05 &mdash; 4.3BSD
   via [The Unix Archive](http://minnie.tuhs.org/TUHS/archive_sites.html).
@@ -126,3 +126,10 @@ Origins / Sources Of The Code Contained Herein
 * 2012-12-20 &mdash; retrieved directly from
   [Kernighan's page at
   Princeton](http://www.cs.princeton.edu/~bwk/btl.mirror/).
+
+- - - - - - -
+
+*Note:* The file <order.txt> in this directory is the ordering
+of versions used when generating the history in <../latest/>,
+which is *not* the same as the version dates because the history
+isn't really linear.
