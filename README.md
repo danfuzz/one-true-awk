@@ -16,11 +16,13 @@ latest version. `git blame` provides useful output on files in
 `latest/`.
 
 If you have access to a version of the code not represented in this
-repo, then please send mail to me, or just submit a pull request.
-In particular, the history contained herein is missing any versions
-published in most of the years 1981&ndash;1997, and in addition
-none of 1999, 2001, 2006, nor 2008 are represented.
+repo, then please send mail to me, or just submit a pull request.  In
+particular, the earliest version contained herein is from 1979, and
+the historical record is missing any versions published in the
+following years: 1981 1982 1984 1985 1987 1988 1989 1990 1991 1993
+1994 1995 1997 1999 2001 2006 2008
 
+I hope you find this archive educational, entertaining, and enlightening.
 Cheers!
 
 -dan<br>
