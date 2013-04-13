@@ -14,6 +14,11 @@ Origins / Sources Of The Code Contained Herein
   `EXPLAIN` file which appeared in this version bears the
   date 1979-11-30.
 
+* 1979-12-30 &mdash; 3BSD
+  via [The Unix Archive](http://minnie.tuhs.org/TUHS/archive_sites.html).
+
+  This is 1979-02-16 with a patch to use a larger input buffer.
+
 * 1980-04-11 &mdash; System III,
   via [The Unix Archive](http://minnie.tuhs.org/TUHS/archive_sites.html).
 
@@ -23,6 +28,24 @@ Origins / Sources Of The Code Contained Herein
   Note: The date here is based on a comment at the top of the file
   `awk.def.h`, which *may* also indicate that the "real" name of this
   file was merely `awk.def`.
+
+* 1983-09-26 &mdash; 4.2BSD
+  via [The Unix Archive](http://minnie.tuhs.org/TUHS/archive_sites.html).
+
+* 1983-12-10 &mdash; 2.9BSD
+  via [The Unix Archive](http://minnie.tuhs.org/TUHS/archive_sites.html).
+
+  This is a very minor (null check) patch to 1979-05-16.
+
+* 1983-06-05 &mdash; 4.3BSD
+  via [The Unix Archive](http://minnie.tuhs.org/TUHS/archive_sites.html).
+
+* 1992-08-01 &mdash; 4.4BSD Alpha
+  via [The Unix Archive](http://minnie.tuhs.org/TUHS/archive_sites.html).
+
+* 1996-06-29 &mdash; retrieved November 5, 1996 from
+  [Kernighan's page at Bell
+  Labs](http://cm.bell-labs.com/cm/cs/awkbook/index.html).
 
 * 1998-02-11 &mdash; from
   [Debian Snapshot](http://snapshot.debian.org/package/original-awk/).
