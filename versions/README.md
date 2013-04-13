@@ -37,7 +37,7 @@ Origins / Sources Of The Code Contained Herein
 
   This is a very minor (null check) patch to 1979-05-16.
 
-* 1983-06-05 &mdash; 4.3BSD
+* 1986-06-05 &mdash; 4.3BSD
   via [The Unix Archive](http://minnie.tuhs.org/TUHS/archive_sites.html).
 
 * 1992-08-01 &mdash; 4.4BSD Alpha
