@@ -36,23 +36,16 @@ Cheers!
 
 - - - - -
 
-References:
+Acknowledgments
+---------------
 
-* Earliest versions:
-  <http://minnie.tuhs.org/cgi-bin/utree.pl>
+* Eric Fischer, <https://github.com/ericfischer>, who has gone above
+  and beyond in finding versions to include here.
 
-* Most recent version:
-  <http://www.cs.princeton.edu/~bwk/btl.mirror/>
+* Olivier Dulac, <http://stackoverflow.com/users/1841533/olivier-dulac>,
+  who provided some good suggestions via 
+  [StackOverflow](http://stackoverflow.com/questions/15687108/).
 
-* Related question on StackOverflow:
-  <http://stackoverflow.com/questions/15687108/>
-
-- - - - -
-
-With thanks to:
-
-* Olivier Dulac, <http://stackoverflow.com/users/1841533/olivier-dulac>
-
-* Jlliagre, <http://stackoverflow.com/users/211665/jlliagre>
-
-* Eric Fischer, <https://github.com/ericfischer>
+* Jlliagre, <http://stackoverflow.com/users/211665/jlliagre>,
+  who provided some good suggestions via 
+  [StackOverflow](http://stackoverflow.com/questions/15687108/).
