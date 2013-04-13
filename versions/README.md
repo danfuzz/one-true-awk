@@ -129,7 +129,7 @@ Origins / Sources Of The Code Contained Herein
 
 - - - - - - -
 
-*Note:* The file <order.txt> in this directory is the ordering
-of versions used when generating the history in <../latest/>,
+*Note:* The file [order.txt](order.txt) in this directory is the ordering
+of versions used when generating the history in [latest/](../latest/),
 which is *not* the same as the version dates because the history
 isn't really linear.
