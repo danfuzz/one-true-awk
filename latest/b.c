@@ -313,10 +313,9 @@ struct fa *cgotofn()
 	for (i=0; i<=line; i++) index[i] = iposns[i] = setvec[i] = 0;
 	for (i=0; i<NCHARS; i++)  isyms[i] = symbol[i] = 0;
 	setcnt = 0;
-	state[0] = add(0);
 	/* compute initial positions and symbols of state 0 */
 	ssmax = 0;
-	ptr = foll[0];
+	ptr = state[0] = foll[0];
 	spinit = *ptr;
 	for (i=0; i<spinit; i++) {
 		curpos = *(++ptr);

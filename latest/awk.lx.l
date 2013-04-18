@@ -7,14 +7,15 @@
 extern int	yylval;
 extern int	mustfld;
 
-int	lineno	= 1;
+int	lineno	1;
 #ifdef	DEBUG
 #	define	RETURN(x)	{if (dbg) ptoken(x); return(x); }
 #else
 #	define	RETURN(x)	return(x)
 #endif
-#define	CADD	cbuf[clen++]=yytext[0];
-char	cbuf[80];
+#define	CADD	cbuf[clen++]=yytext[0]; if(clen>=CBUFLEN-1) {yyerror("string too long", cbuf); BEGIN A;}
+#define	CBUFLEN	150
+char	cbuf[CBUFLEN];
 int	clen, cflag;
 %}
 
@@ -127,20 +128,20 @@ WS	[ \t]
 <reg>\n		{ yyerror("newline in regular expression"); lineno++; BEGIN A; }
 <reg>.		{ yylval = yytext[0]; RETURN(CHAR); }
 
-<str>\"		{ BEGIN A; cbuf[clen]=0; yylval = setsymtab("", tostring(cbuf), 0.0, CON|STR, symtab); RETURN(STRING); }
+<str>\"		{ BEGIN A; cbuf[clen]=0; yylval = setsymtab(cbuf, tostring(cbuf), 0.0, CON|STR, symtab); RETURN(STRING); }
 <str>\n		{ yyerror("newline in string"); lineno++; BEGIN A; }
 <str>"\\\""	{ cbuf[clen++]='"'; }
 <str,chc>"\\"n	{ cbuf[clen++]='\n'; }
 <str,chc>"\\"t	{ cbuf[clen++]='\t'; }
 <str,chc>"\\\\"	{ cbuf[clen++]='\\'; }
-<str>.		CADD;
+<str>.		{ CADD; }
 
 <chc>"\\""]"	{ cbuf[clen++]=']'; }
 <chc>"]"	{ BEGIN reg; cbuf[clen]=0; yylval = tostring(cbuf);
 		if (cflag==0) { RETURN(CCL); }
 		else { RETURN(NCCL); } }
 <chc>\n		{ yyerror("newline in character class"); lineno++; BEGIN A; }
-<chc>.		CADD;
+<chc>.		{ CADD; }
 
 %%
 
