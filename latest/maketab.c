@@ -135,8 +135,8 @@ int main(int argc, char *argv[])
 		if (c != '#' || (n != 4 && strcmp(def,"define") != 0))	/* not a valid #define */
 			continue;
 		if (tok < FIRSTTOKEN || tok > LASTTOKEN) {
-			fprintf(stderr, "maketab funny token %d %s\n", tok, buf);
-			exit(1);
+			fprintf(stderr, "maketab funny token %d %s ignored\n", tok, buf);
+			continue;
 		}
 		names[tok-FIRSTTOKEN] = (char *) malloc(strlen(name)+1);
 		strcpy(names[tok-FIRSTTOKEN], name);

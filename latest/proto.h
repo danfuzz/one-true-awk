@@ -65,6 +65,7 @@ extern	int	cgoto(fa *, int, int);
 extern	void	freefa(fa *);
 
 extern	int	pgetc(void);
+extern	char	*cursource(void);
 
 extern	Node	*nodealloc(int);
 extern	Node	*exptostat(Node *);
@@ -88,7 +89,9 @@ extern	Node	*linkum(Node *, Node *);
 extern	void	defn(Cell *, Node *, Node *);
 extern	int	isarg(char *);
 extern	char	*tokname(int);
-extern	Cell *(*proctab[])(Node **, int);
+extern	Cell	*(*proctab[])(Node **, int);
+extern	int	ptoi(void *);
+extern	Node	*itonp(int);
 
 extern	void	syminit(void);
 extern	void	arginit(int, char **);
@@ -127,12 +130,15 @@ extern	void	yyerror(char *);
 extern	void	fpecatch(int);
 extern	void	bracecheck(void);
 extern	void	bcheck2(int, int, int);
-extern	void	error(int, char *);
+extern	void	SYNTAX(char *, ...);
+extern	void	FATAL(char *, ...);
+extern	void	WARNING(char *, ...);
+extern	void	error(void);
 extern	void	eprint(void);
 extern	void	bclass(int);
 extern	double	errcheck(double, char *);
 extern	int	isclvar(char *);
-extern	int	isnumber(char *);
+extern	int	is_number(char *);
 
 extern	int	adjbuf(char **pb, int *sz, int min, int q, char **pbp, char *what);
 extern	void	run(Node *);

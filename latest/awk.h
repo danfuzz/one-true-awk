@@ -39,10 +39,6 @@ typedef	unsigned char uschar;
 #endif
 
 extern	char	errbuf[];
-#define	ERROR	sprintf(errbuf,
-#define	FATAL	), error(1, errbuf)
-#define	WARNING	), error(0, errbuf)
-#define	SYNTAX	), yyerror(errbuf)
 
 extern int	compile_time;	/* 1 if compiling, 0 if running */
 extern int	safe;		/* 0 => unsafe, 1 => safe */
@@ -83,7 +79,7 @@ typedef struct Cell {
 	char	*nval;		/* name, for variables only */
 	char	*sval;		/* string value */
 	Awkfloat fval;		/* value as number */
-	unsigned tval;		/* type info: STR|NUM|ARR|FCN|FLD|CON|DONTFREE */
+	int	 tval;		/* type info: STR|NUM|ARR|FCN|FLD|CON|DONTFREE */
 	struct Cell *cnext;	/* ptr to next if chained */
 } Cell;
 
@@ -136,7 +132,7 @@ typedef struct Node {
 	struct	Node *nnext;
 	int	lineno;
 	int	nobj;
-	struct Node *narg[1];	/* variable: actual size set by calling malloc */
+	struct	Node *narg[1];	/* variable: actual size set by calling malloc */
 } Node;
 
 #define	NIL	((Node *) 0)
@@ -209,27 +205,27 @@ extern	int	pairstack[], paircnt;
 #define NSTATES	32
 
 typedef struct rrow {
-	int	ltype;
+	long	ltype;	/* long avoids pointer warnings on 64-bit */
 	union {
 		int i;
 		Node *np;
-		char *up;
+		uschar *up;
 	} lval;		/* because Al stores a pointer in it! */
 	int	*lfollow;
 } rrow;
 
 typedef struct fa {
-	char	*restr;
+	uschar	gototab[NSTATES][NCHARS];
+	uschar	out[NSTATES];
+	uschar	*restr;
+	int	*posns[NSTATES];
 	int	anchor;
 	int	use;
-	uschar	gototab[NSTATES][NCHARS];
-	int	*posns[NSTATES];
-	uschar	out[NSTATES];
 	int	initstat;
 	int	curstat;
 	int	accept;
 	int	reset;
-	struct	rrow re[1];
+	struct	rrow re[1];	/* variable: actual size set by calling malloc */
 } fa;
 
 

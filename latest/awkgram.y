@@ -97,7 +97,7 @@ Node	*arglist = 0;	/* list of args for current function */
 program:
 	  pas	{ if (errorflag==0)
 			winner = (Node *)stat3(PROGRAM, beginloc, $1, endloc); }
-	| error	{ yyclearin; bracecheck(); ERROR "bailing out" SYNTAX; }
+	| error	{ yyclearin; bracecheck(); SYNTAX("bailing out"); }
 	;
 
 and:
@@ -239,11 +239,11 @@ pattern:
 	| pattern IN varname		{ $$ = op2(INTEST, $1, makearr($3)); }
 	| '(' plist ')' IN varname	{ $$ = op2(INTEST, $2, makearr($5)); }
 	| pattern '|' GETLINE var	{ 
-			if (safe) ERROR "cmd | getline is unsafe" SYNTAX;
-			else $$ = op3(GETLINE, $4, (Node*)$2, $1); }
+			if (safe) SYNTAX("cmd | getline is unsafe");
+			else $$ = op3(GETLINE, $4, itonp($2), $1); }
 	| pattern '|' GETLINE		{ 
-			if (safe) ERROR "cmd | getline is unsafe" SYNTAX;
-			else $$ = op3(GETLINE, (Node*)0, (Node*)$2, $1); }
+			if (safe) SYNTAX("cmd | getline is unsafe");
+			else $$ = op3(GETLINE, (Node*)0, itonp($2), $1); }
 	| pattern term %prec CAT	{ $$ = op2(CAT, $1, $2); }
 	| re
 	| term
@@ -293,19 +293,19 @@ rparen:
 
 simple_stmt:
 	  print prarg '|' term		{ 
-			if (safe) ERROR "print | is unsafe" SYNTAX;
-			else $$ = stat3($1, $2, (Node *) $3, $4); }
+			if (safe) SYNTAX("print | is unsafe");
+			else $$ = stat3($1, $2, itonp($3), $4); }
 	| print prarg APPEND term	{
-			if (safe) ERROR "print >> is unsafe" SYNTAX;
-			else $$ = stat3($1, $2, (Node *) $3, $4); }
+			if (safe) SYNTAX("print >> is unsafe");
+			else $$ = stat3($1, $2, itonp($3), $4); }
 	| print prarg GT term		{
-			if (safe) ERROR "print > is unsafe" SYNTAX;
-			else $$ = stat3($1, $2, (Node *) $3, $4); }
+			if (safe) SYNTAX("print > is unsafe");
+			else $$ = stat3($1, $2, itonp($3), $4); }
 	| print prarg			{ $$ = stat3($1, $2, NIL, NIL); }
 	| DELETE varname '[' patlist ']' { $$ = stat2(DELETE, makearr($2), $4); }
 	| DELETE varname		 { $$ = stat2(DELETE, makearr($2), 0); }
 	| pattern			{ $$ = exptostat($1); }
-	| error				{ yyclearin; ERROR "illegal statement" SYNTAX; }
+	| error				{ yyclearin; SYNTAX("illegal statement"); }
 	;
 
 st:
@@ -314,10 +314,10 @@ st:
 	;
 
 stmt:
-	  BREAK st		{ if (!inloop) ERROR "break illegal outside of loops" SYNTAX;
+	  BREAK st		{ if (!inloop) SYNTAX("break illegal outside of loops");
 				  $$ = stat1(BREAK, NIL); }
 	| CLOSE pattern st	{ $$ = stat1(CLOSE, $2); }
-	| CONTINUE st		{  if (!inloop) ERROR "continue illegal outside of loops" SYNTAX;
+	| CONTINUE st		{  if (!inloop) SYNTAX("continue illegal outside of loops");
 				  $$ = stat1(CONTINUE, NIL); }
 	| do {inloop++;} stmt {--inloop;} WHILE '(' pattern ')' st
 		{ $$ = stat2(DO, $3, notnull($7)); }
@@ -328,10 +328,10 @@ stmt:
 	| if stmt		{ $$ = stat3(IF, $1, $2, NIL); }
 	| lbrace stmtlist rbrace { $$ = $2; }
 	| NEXT st	{ if (infunc)
-				ERROR "next is illegal inside a function" SYNTAX;
+				SYNTAX("next is illegal inside a function");
 			  $$ = stat1(NEXT, NIL); }
 	| NEXTFILE st	{ if (infunc)
-				ERROR "nextfile is illegal inside a function" SYNTAX;
+				SYNTAX("nextfile is illegal inside a function");
 			  $$ = stat1(NEXTFILE, NIL); }
 	| RETURN pattern st	{ $$ = stat1(RETURN, $2); }
 	| RETURN st		{ $$ = stat1(RETURN, NIL); }
@@ -350,7 +350,8 @@ subop:
 	;
 
 term:
-	  term '+' term			{ $$ = op2(ADD, $1, $3); }
+ 	  term '/' ASGNOP term		{ $$ = op2(DIVEQ, $1, $4); }
+ 	| term '+' term			{ $$ = op2(ADD, $1, $3); }
 	| term '-' term			{ $$ = op2(MINUS, $1, $3); }
 	| term '*' term			{ $$ = op2(MULT, $1, $3); }
 	| term '/' term			{ $$ = op2(DIVIDE, $1, $3); }
@@ -359,23 +360,23 @@ term:
 	| '-' term %prec UMINUS		{ $$ = op1(UMINUS, $2); }
 	| '+' term %prec UMINUS		{ $$ = $2; }
 	| NOT term %prec UMINUS		{ $$ = op1(NOT, notnull($2)); }
-	| BLTIN '(' ')'			{ $$ = op2(BLTIN, (Node *) $1, rectonode()); }
-	| BLTIN '(' patlist ')'		{ $$ = op2(BLTIN, (Node *) $1, $3); }
-	| BLTIN				{ $$ = op2(BLTIN, (Node *) $1, rectonode()); }
+	| BLTIN '(' ')'			{ $$ = op2(BLTIN, itonp($1), rectonode()); }
+	| BLTIN '(' patlist ')'		{ $$ = op2(BLTIN, itonp($1), $3); }
+	| BLTIN				{ $$ = op2(BLTIN, itonp($1), rectonode()); }
 	| CALL '(' ')'			{ $$ = op2(CALL, celltonode($1,CVAR), NIL); }
 	| CALL '(' patlist ')'		{ $$ = op2(CALL, celltonode($1,CVAR), $3); }
 	| DECR var			{ $$ = op1(PREDECR, $2); }
 	| INCR var			{ $$ = op1(PREINCR, $2); }
 	| var DECR			{ $$ = op1(POSTDECR, $1); }
 	| var INCR			{ $$ = op1(POSTINCR, $1); }
-	| GETLINE var LT term		{ $$ = op3(GETLINE, $2, (Node *)$3, $4); }
-	| GETLINE LT term		{ $$ = op3(GETLINE, NIL, (Node *)$2, $3); }
+	| GETLINE var LT term		{ $$ = op3(GETLINE, $2, itonp($3), $4); }
+	| GETLINE LT term		{ $$ = op3(GETLINE, NIL, itonp($2), $3); }
 	| GETLINE var			{ $$ = op3(GETLINE, $2, NIL, NIL); }
 	| GETLINE			{ $$ = op3(GETLINE, NIL, NIL, NIL); }
 	| INDEX '(' pattern comma pattern ')'
 		{ $$ = op2(INDEX, $3, $5); }
 	| INDEX '(' pattern comma reg_expr ')'
-		{ ERROR "index() doesn't permit regular expressions" SYNTAX;
+		{ SYNTAX("index() doesn't permit regular expressions");
 		  $$ = op2(INDEX, $3, (Node*)$5); }
 	| '(' pattern ')'		{ $$ = $2; }
 	| MATCHFCN '(' pattern comma reg_expr ')'
@@ -432,7 +433,7 @@ varlist:
 
 varname:
 	  VAR			{ $$ = celltonode($1, CVAR); }
-	| ARG 			{ $$ = op1(ARG, (Node *) $1); }
+	| ARG 			{ $$ = op1(ARG, itonp($1)); }
 	| VARNF			{ $$ = op1(VARNF, (Node *) $1); }
 	;
 
@@ -446,9 +447,9 @@ while:
 void setfname(Cell *p)
 {
 	if (isarr(p))
-		ERROR "%s is an array, not a function", p->nval SYNTAX;
+		SYNTAX("%s is an array, not a function", p->nval);
 	else if (isfcn(p))
-		ERROR "you can't define function %s more than once", p->nval SYNTAX;
+		SYNTAX("you can't define function %s more than once", p->nval);
 	curfname = p->nval;
 }
 
@@ -478,7 +479,7 @@ void checkdup(Node *vl, Cell *cp)	/* check if name already in list */
 	char *s = cp->nval;
 	for ( ; vl; vl = vl->nnext) {
 		if (strcmp(s, ((Cell *)(vl->narg[0]))->nval) == 0) {
-			ERROR "duplicate argument %s", s SYNTAX;
+			SYNTAX("duplicate argument %s", s);
 			break;
 		}
 	}

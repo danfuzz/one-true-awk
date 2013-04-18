@@ -107,7 +107,7 @@ void arginit(int ac, char **av)	/* set up ARGV and ARGC */
 	cp->sval = (char *) ARGVtab;
 	for (i = 0; i < ac; i++) {
 		sprintf(temp, "%d", i);
-		if (isnumber(*av))
+		if (is_number(*av))
 			setsymtab(temp, *av, atof(*av), STR|NUM, ARGVtab);
 		else
 			setsymtab(temp, *av, 0.0, STR, ARGVtab);
@@ -126,8 +126,10 @@ void envinit(char **envp)	/* set up ENVIRON variable */
 	for ( ; *envp; envp++) {
 		if ((p = strchr(*envp, '=')) == NULL)
 			continue;
+		if( p == *envp ) /* no left hand side name in env string */
+			continue;
 		*p++ = 0;	/* split into two strings at = */
-		if (isnumber(p))
+		if (is_number(p))
 			setsymtab(*envp, p, atof(p), STR|NUM, ENVtab);
 		else
 			setsymtab(*envp, p, 0.0, STR, ENVtab);
@@ -143,7 +145,7 @@ Array *makesymtab(int n)	/* make a new symbol table */
 	ap = (Array *) malloc(sizeof(Array));
 	tp = (Cell **) calloc(n, sizeof(Cell *));
 	if (ap == NULL || tp == NULL)
-		ERROR "out of space in makesymtab" FATAL;
+		FATAL("out of space in makesymtab");
 	ap->nelem = 0;
 	ap->size = n;
 	ap->tab = tp;
@@ -210,7 +212,7 @@ Cell *setsymtab(char *n, char *s, Awkfloat f, unsigned t, Array *tp)
 	}
 	p = (Cell *) malloc(sizeof(Cell));
 	if (p == NULL)
-		ERROR "out of space for symbol table at %s", n FATAL;
+		FATAL("out of space for symbol table at %s", n);
 	p->nval = tostring(n);
 	p->sval = s ? tostring(s) : tostring("");
 	p->fval = f;
@@ -261,11 +263,11 @@ void rehash(Array *tp)	/* rehash items in small table into big one */
 
 Cell *lookup(char *s, Array *tp)	/* look for s in tp */
 {
-	Cell *p, *prev = NULL;
+	Cell *p;
 	int h;
 
 	h = hash(s, tp->size);
-	for (p = tp->tab[h]; p != NULL; prev = p, p = p->cnext)
+	for (p = tp->tab[h]; p != NULL; p = p->cnext)
 		if (strcmp(s, p->nval) == 0)
 			return(p);	/* found it */
 	return(NULL);			/* not found */
@@ -287,6 +289,8 @@ Awkfloat setfval(Cell *vp, Awkfloat f)	/* set float val of a Cell */
 		donefld = 0;	/* mark $1... invalid */
 		donerec = 1;
 	}
+	if (freeable(vp))
+		xfree(vp->sval); /* free any previous string */
 	vp->tval &= ~STR;	/* mark string invalid */
 	vp->tval |= NUM;	/* mark number ok */
 	   dprintf( ("setfval %p: %s = %g, t=%o\n", vp, vp->nval, f, vp->tval) );
@@ -296,11 +300,11 @@ Awkfloat setfval(Cell *vp, Awkfloat f)	/* set float val of a Cell */
 void funnyvar(Cell *vp, char *rw)
 {
 	if (isarr(vp))
-		ERROR "can't %s %s; it's an array name.", rw, vp->nval FATAL;
+		FATAL("can't %s %s; it's an array name.", rw, vp->nval);
 	if (vp->tval & FCN)
-		ERROR "can't %s %s; it's a function.", rw, vp->nval FATAL;
-	ERROR "funny variable %p: n=%s s=\"%s\" f=%g t=%o",
-		vp, vp->nval, vp->sval, vp->fval, vp->tval WARNING;
+		FATAL("can't %s %s; it's a function.", rw, vp->nval);
+	WARNING("funny variable %p: n=%s s=\"%s\" f=%g t=%o",
+		vp, vp->nval, vp->sval, vp->fval, vp->tval);
 }
 
 char *setsval(Cell *vp, char *s)	/* set string val of a Cell */
@@ -341,7 +345,7 @@ Awkfloat getfval(Cell *vp)	/* get float val of a Cell */
 		recbld();
 	if (!isnum(vp)) {	/* not a number */
 		vp->fval = atof(vp->sval);	/* best guess */
-		if (isnumber(vp->sval) && !(vp->tval&CON))
+		if (is_number(vp->sval) && !(vp->tval&CON))
 			vp->tval |= NUM;	/* make NUM only sparingly */
 	}
 	   dprintf( ("getfval %p: %s = %g, t=%o\n", vp, vp->nval, vp->fval, vp->tval) );
@@ -380,25 +384,32 @@ char *tostring(char *s)	/* make a copy of string s */
 
 	p = (char *) malloc(strlen(s)+1);
 	if (p == NULL)
-		ERROR "out of space in tostring on %s", s FATAL;
+		FATAL("out of space in tostring on %s", s);
 	strcpy(p, s);
 	return(p);
 }
 
-char *qstring(char *s, int delim)	/* collect string up to next delim */
+char *qstring(char *is, int delim)	/* collect string up to next delim */
 {
+	char *os = is;
 	int c, n;
-	char *buf = 0, *bp;
+	uschar *s = is;
+	uschar *buf, *bp;
 
-	if ((buf = (char *) malloc(strlen(s)+3)) == NULL)
-		ERROR "out of space in qstring(%s)", s);
+	if ((buf = (uschar *) malloc(strlen(s)+3)) == NULL)
+		FATAL( "out of space in qstring(%s)", s);
 	for (bp = buf; (c = *s) != delim; s++) {
 		if (c == '\n')
-			ERROR "newline in string %.10s...", buf SYNTAX;
+			SYNTAX( "newline in string %.20s...", os );
 		else if (c != '\\')
 			*bp++ = c;
-		else {	/* \something */	
-			switch (c = *++s) {
+		else {	/* \something */
+			c = *++s;
+			if (c == 0) {	/* \ at end */
+				*bp++ = '\\';
+				break;	/* for loop */
+			}	
+			switch (c) {
 			case '\\':	*bp++ = '\\'; break;
 			case 'n':	*bp++ = '\n'; break;
 			case 't':	*bp++ = '\t'; break;
