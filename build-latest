@@ -51,8 +51,7 @@ git commit -a -m "Clear out the latest/ directory. (via ${progName})"
 
 for dir in $(cat versions/order.txt); do
     rm -rf latest
-    mkdir latest || exit 1
-    cp ${dir}/* latest || exit 1
+    cp -r "versions/${dir}" latest || exit 1
     git add latest || exit 1
     git commit -a -m "${dir}. (History generated via ${progName})" || exit 1
 done
