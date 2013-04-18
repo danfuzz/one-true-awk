@@ -1,10 +1,8 @@
-#ifndef lint
-static char sccsid[] = "@(#)parse.c	4.2 8/11/83";
-#endif
-
-#include "awk.def"
+#include <stdio.h>
+#include <stdlib.h>
+#include "awk.def.h"
 #include "awk.h"
-#include "stdio.h"
+
 node *ALLOC(n)
 {
 	register node *x;
