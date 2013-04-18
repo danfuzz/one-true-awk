@@ -20,8 +20,10 @@ cell	*nfloc;		/* NF */
 syminit()
 {
 	setsymtab("0", tostring("0"), 0.0, NUM|STR|CON|FLD, symtab);
+	/* this one is used for if(x)... tests: */
+	setsymtab("$zero&null", tostring(""), 0.0, NUM|STR|CON|FLD, symtab);
 	recloc = setsymtab("$record", record, 0.0, STR|FLD, symtab);
-	dprintf("recloc %o lookup %o\n", recloc, lookup("$record", symtab), NULL);
+	dprintf("recloc %o lookup %o\n", recloc, lookup("$record", symtab, 0), NULL);
 	FS = &setsymtab("FS", tostring(" "), 0.0, STR|FLD, symtab)->sval;
 	RS = &setsymtab("RS", tostring("\n"), 0.0, STR|FLD, symtab)->sval;
 	OFS = &setsymtab("OFS", tostring(" "), 0.0, STR|FLD, symtab)->sval;
@@ -39,11 +41,11 @@ cell **makesymtab()
 	int i;
 	cell **cp;
 
-	cp = (char *) malloc(MAXSYM * sizeof(cell *));
+	cp = (cell **) malloc(MAXSYM * sizeof(cell *));
 	if (cp == NULL)
 		error(FATAL, "out of space in makesymtab");
 	for (i = 0; i < MAXSYM; i++)
-		*((cell **) cp + i) = 0;
+		cp[i] = 0;
 	return(cp);
 }
 
@@ -76,7 +78,7 @@ cell **tab;
 	register cell *p;
 	cell *lookup();
 
-	if (n != NULL && (p = lookup(n, tab)) != NULL) {
+	if (n != NULL && (p = lookup(n, tab, 0)) != NULL) {
 		xfree(s);
 		dprintf("setsymtab found %o: %s", p, p->nval, NULL);
 		dprintf(" %s %g %o\n", p->sval, p->fval, p->tval);
@@ -98,7 +100,7 @@ cell **tab;
 }
 
 hash(s)	/* form hash value for string s */
-register char *s;
+register unsigned char *s;
 {
 	register int hashval;
 
@@ -107,14 +109,15 @@ register char *s;
 	return(hashval % MAXSYM);
 }
 
-cell *lookup(s, tab)	/* look for s in tab */
+cell *lookup(s, tab, flag)	/* look for s in tab, flag must match*/
 register char *s;
 cell **tab;
 {
 	register cell *p;
 
 	for (p = tab[hash(s)]; p != NULL; p = p->nextval)
-		if (strcmp(s, p->nval) == 0)
+		if (strcmp(s, p->nval) == 0 &&
+			(flag == 0 || flag == p->tval))
 			return(p);	/* found it */
 	return(NULL);	/* not found */
 }
@@ -129,7 +132,7 @@ awkfloat f;
 		error(FATAL, "can't set $0");
 	vp->tval &= ~STR;	/* mark string invalid */
 	vp->tval |= NUM;	/* mark number ok */
-	if ((vp->tval & FLD) && isnull(vp->nval))
+	if ((vp->tval & FLD) && vp->nval == 0)
 		donerec = 0;
 	return(vp->fval = f);
 }
@@ -144,7 +147,7 @@ char *s;
 		error(FATAL, "can't set $0");
 	vp->tval &= ~NUM;
 	vp->tval |= STR;
-	if ((vp->tval & FLD) && isnull(vp->nval))
+	if ((vp->tval & FLD) && vp->nval == 0)
 		donerec = 0;
 	if (!(vp->tval&FLD))
 		xfree(vp->sval);
@@ -155,7 +158,6 @@ char *s;
 awkfloat getfval(vp)
 register cell *vp;
 {
-	awkfloat atof();
 
 	if (vp->sval == record && donerec == 0)
 		recbld();

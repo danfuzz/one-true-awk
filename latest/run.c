@@ -12,7 +12,7 @@ struct
 } files[FILENUM];
 FILE *popen();
 
-extern obj execute(), nodetoobj(), fieldel(), dopa2();
+extern obj execute(), nodetoobj(), fieldel(), dopa2(), gettemp();
 #define PA2NUM	29
 int pairstack[PA2NUM], paircnt;
 node *winner = (node *)NULL;
@@ -24,7 +24,7 @@ obj	false	={ OBOOL, BFALSE, 0 };
 
 run()
 {
-	return(execute(winner).otype);
+	execute(winner);
 }
 
 obj execute(u) node *u;
@@ -72,11 +72,6 @@ obj program(a, n) node **a;
 		tempfree(x);
 	}
 	while (getrec()) {
-		recloc->tval &= ~NUM;
-		recloc->tval |= STR;
-		++nrloc->fval;
-		nrloc->tval &= ~STR;
-		nrloc->tval |= NUM;
 		x = execute(a[1]);
 		if (isexit(x)) break;
 		tempfree(x);
@@ -89,6 +84,15 @@ obj program(a, n) node **a;
 		tempfree(x);
 	}
 	return(true);
+}
+
+obj getline()
+{
+	obj x;
+
+	x = gettemp();
+	setfval(x.optr, (awkfloat) getrec());
+	return(x);
 }
 
 obj array(a,n) node **a;
@@ -117,7 +121,7 @@ obj arrayel(a,b) node *a; obj b;
 		x->tval |= ARR;
 		x->sval = (char *) makesymtab();
 	}
-	y.optr = setsymtab(s, tostring(""), 0.0, STR, x->sval);
+	y.optr = setsymtab(s, tostring(""), 0.0, STR|NUM, x->sval);
 	y.otype = OCELL;
 	y.osub = CVAR;
 	return(y);
@@ -246,7 +250,7 @@ obj indirect(a,n) node **a;
 
 obj substr(a, nnn) node **a;
 {
-	char *s, *p, temp[100];
+	char *s, temp;
 	obj x;
 	int k, m, n;
 
@@ -273,27 +277,25 @@ obj substr(a, nnn) node **a;
 	else if (n > k - m)
 		n = k - m;
 	dprintf("substr: m=%d, n=%d, s=%s\n", m, n, s);
-	p = temp;
-	s += m - 1;
-	while (n-- > 0)
-		*p++ = *s++;
-	*p = '\0';
 	x = gettemp();
-	setsval(x.optr, temp);
+	temp = s[n+m-1];	/* with thanks to John Linderman */
+	s[n+m-1] = '\0';
+	setsval(x.optr, s + m - 1);
+	s[n+m-1] = temp;
 	return(x);
 }
 
 obj sindex(a, nnn) node **a;
 {
-	obj x, y;
+	obj x;
 	char *s1, *s2, *p1, *p2, *q;
 
 	x = execute(a[0]);
 	s1 = getsval(x.optr);
 	tempfree(x);
-	y = execute(a[1]);
-	s2 = getsval(y.optr);
-	tempfree(y);
+	x = execute(a[1]);
+	s2 = getsval(x.optr);
+	tempfree(x);
 
 	x = gettemp();
 	for (p1 = s1; *p1 != '\0'; p1++) {
@@ -310,7 +312,7 @@ obj sindex(a, nnn) node **a;
 
 char *format(s,a) char *s; node *a;
 {
-	char *buf, *p, fmt[100], *t, *os;
+	char *buf, *p, fmt[200], *t, *os;
 	obj x;
 	int flag = 0;
 	awkfloat xf;
@@ -324,7 +326,6 @@ char *format(s,a) char *s; node *a;
 		}
 		if (*(s+1) == '%') {
 			*p++ = '%';
-			*p++ = '%';
 			s += 2;
 			continue;
 		}
@@ -332,7 +333,7 @@ char *format(s,a) char *s; node *a;
 			if (*s >= 'a' && *s <= 'z' && *s != 'l')
 				break;
 		*t = '\0';
-		if (t > fmt + 100)
+		if (t >= fmt + sizeof(fmt))
 			error(FATAL, "format item %.20s... too long", os);
 		switch (*s) {
 		case 'f': case 'e': case 'g':
@@ -347,6 +348,9 @@ char *format(s,a) char *s; node *a;
 			break;
 		case 'o': case 'x':
 			flag = *(s-1)=='l' ? 2 : 3;
+			break;
+		case 'c':
+			flag = 3;
 			break;
 		case 's':
 			flag = 4;
@@ -412,28 +416,29 @@ obj arith(a,n) node **a;
 	default:
 		error(FATAL, "illegal arithmetic operator %d", n);
 	case ADD:
-		setfval(z.optr, i+j);
+		i += j;
 		break;
 	case MINUS:
-		setfval(z.optr, i-j);
+		i -= j;
 		break;
 	case MULT:
-		setfval(z.optr, i*j);
+		i *= j;
 		break;
 	case DIVIDE:
 		if (j == 0)
 			error(FATAL, "division by zero");
-		setfval(z.optr, i/j);
+		i /= j;
 		break;
 	case MOD:
 		if (j == 0)
 			error(FATAL, "division by zero");
-		setfval(z.optr, i-j*(long)(i/j));
+		i = i - j*(long)(i/j);
 		break;
 	case UMINUS:
-		setfval(z.optr, -i);
+		i = -i;
 		break;
 	}
+	setfval(z.optr, i);
 	return(z);
 }
 
@@ -466,8 +471,15 @@ obj assign(a,n) node **a;
 	x = execute(a[0]);
 	y = execute(a[1]);
 	if (n == ASSIGN) {	/* ordinary assignment */
-		if (y.optr->tval&STR) setsval(x.optr, y.optr->sval);
-		if (y.optr->tval&NUM) setfval(x.optr, y.optr->fval);
+		if ((y.optr->tval & (STR|NUM)) == (STR|NUM)) {
+			setsval(x.optr, y.optr->sval);
+			x.optr->fval = y.optr->fval;
+			x.optr->tval |= NUM;
+		}
+		else if (y.optr->tval & STR)
+			setsval(x.optr, y.optr->sval);
+		else if (y.optr->tval & NUM)
+			setfval(x.optr, y.optr->fval);
 		tempfree(y);
 		return(x);
 	}
@@ -475,46 +487,48 @@ obj assign(a,n) node **a;
 	yf = getfval(y.optr);
 	switch (n) {
 	case ADDEQ:
-		setfval(x.optr, xf + yf);
+		xf += yf;
 		break;
 	case SUBEQ:
-		setfval(x.optr, xf - yf);
+		xf -= yf;
 		break;
 	case MULTEQ:
-		setfval(x.optr, xf * yf);
+		xf *= yf;
 		break;
 	case DIVEQ:
 		if (yf == 0)
 			error(FATAL, "division by zero");
-		setfval(x.optr, xf / yf);
+		xf /= yf;
 		break;
 	case MODEQ:
 		if (yf == 0)
 			error(FATAL, "division by zero");
-		setfval(x.optr, xf - yf*(long)(xf/yf));
+		xf = xf - yf*(long)(xf/yf);
 		break;
 	default:
 		error(FATAL, "illegal assignment operator %d", n);
 		break;
 	}
 	tempfree(y);
+	setfval(x.optr, xf);
 	return(x);
 }
 
 obj cat(a,q) node **a;
 {
 	obj x,y,z;
-	int n;
+	int n1, n2;
 	char *s;
 
 	x = execute(a[0]);
 	y = execute(a[1]);
 	getsval(x.optr);
 	getsval(y.optr);
-	n = strlen(x.optr->sval) + strlen(y.optr->sval);
-	s = (char *)malloc(n+1);
+	n1 = strlen(x.optr->sval);
+	n2 = strlen(y.optr->sval);
+	s = (char *) malloc(n1 + n2 + 1);
 	strcpy(s, x.optr->sval);
-	strcat(s, y.optr->sval);
+	strcpy(s+n1, y.optr->sval);
 	tempfree(y);
 	z = gettemp();
 	z.optr->sval = s;
@@ -565,7 +579,7 @@ obj aprintf(a,n) node **a;
 
 	x = asprintf(a,n);
 	if (a[1]==NULL) {
-		printf(x.optr->sval);
+		printf("%s", x.optr->sval);
 		tempfree(x);
 		return(true);
 	}
@@ -578,9 +592,9 @@ obj split(a,nnn) node **a;
 	obj x;
 	cell *ap;
 	register char *s, *p;
-	char *t, temp[100], num[5];
+	char *t, temp, num[5];
 	register int sep;
-	int n;
+	int n, flag;
 
 	x = execute(a[0]);
 	s = getsval(x.optr);
@@ -592,34 +606,53 @@ obj split(a,nnn) node **a;
 		sep = getsval(x.optr)[0];
 		tempfree(x);
 	}
-	n = 0;
 	ap = (cell *) a[1];
 	freesymtab(ap);
 	dprintf("split: s=|%s|, a=%s, sep=|%c|\n", s, ap->nval, sep);
 	ap->tval &= ~STR;
 	ap->tval |= ARR;
 	ap->sval = (char *) makesymtab();
-	/* here we go */
-	for (;;) {
-		if (sep == ' ')
+
+	n = 0;
+	if (sep == ' ')
+		for (n = 0; ; ) {
 			while (*s == ' ' || *s == '\t' || *s == '\n')
 				s++;
-		if (*s == '\0')
-			break;
-		n++;
-		for (p=s, t=temp; (*t = *p) != '\0'; p++, t++)
-			if (*p == sep
-			  || sep == ' ' && (*p == '\t' || *p == '\n')
-			  || sep == '\t' && *p == '\n')
+			if (*s == 0)
 				break;
-		*t = '\0';
-		dprintf("n=%d, s=|%s|, temp=|%s|\n", n, s, temp);
-		sprintf(num, "%d", n);
-		setsymtab(num, tostring(temp), 0.0, STR, ap->sval);
-		if (*p == '\0')	/* all done */
-			break;
-		s = p + 1;
-	}
+			n++;
+			t = s;
+			do
+				s++;
+			while (*s!=' ' && *s!='\t' && *s!='\n' && *s!='\0');
+			temp = *s;
+			*s = '\0';
+			sprintf(num, "%d", n);
+			if (isnumber(t))
+				setsymtab(num, tostring(t), atof(t), STR|NUM, ap->sval);
+			else
+				setsymtab(num, tostring(t), 0.0, STR, ap->sval);
+			*s = temp;
+			if (*s != 0)
+				s++;
+		}
+	else if (*s != 0)
+		for (;;) {
+			n++;
+			t = s;
+			while (*s != sep && *s != '\n' && *s != '\0')
+				s++;
+			temp = *s;
+			*s = '\0';
+			sprintf(num, "%d", n);
+			if (isnumber(t))
+				setsymtab(num, tostring(t), atof(t), STR|NUM, ap->sval);
+			else
+				setsymtab(num, tostring(t), 0.0, STR, ap->sval);
+			*s = temp;
+			if (*s++ == 0)
+				break;
+		}
 	x = gettemp();
 	x.optr->tval = NUM;
 	x.optr->fval = n;
@@ -697,9 +730,7 @@ obj instat(a, n) node **a;
 	tp = (cell **) arrayp->sval;
 	for (i = 0; i < MAXSYM; i++) {	/* this routine knows too much */
 		for (cp = tp[i]; cp != NULL; cp = cp->nextval) {
-			xfree(vp->sval);
-			vp->sval = tostring(cp->nval);
-			vp->tval = STR;
+			setsval(vp, cp->nval);
 			x = execute(a[2]);
 			if (isbreak(x)) {
 				x = true;
@@ -714,7 +745,7 @@ obj instat(a, n) node **a;
 
 obj jump(a,n) node **a;
 {
-	obj x;
+	obj x, y;
 
 	x.otype = OJUMP;
 	switch (n) {
@@ -722,6 +753,10 @@ obj jump(a,n) node **a;
 		error(FATAL, "illegal jump type %d", n);
 		break;
 	case EXIT:
+		if (a[0] != 0) {
+			y = execute(a[0]);
+			errorflag = getfval(y.optr);
+		}
 		x.osub = JEXIT;
 		break;
 	case NEXT:
@@ -828,5 +863,8 @@ redirprint(s, a, b) char *s; node *b;
 	files[i].fname = tostring(x.optr->sval);
 doit:
 	fprintf(files[i].fp, "%s", s);
+#ifndef gcos
+	fflush(files[i].fp);	/* in case someone is waiting for the output */
+#endif
 	tempfree(x);
 }
