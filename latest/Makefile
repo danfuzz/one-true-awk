@@ -1,15 +1,17 @@
 CFLAGS=-O
 YFLAGS=-d
+FP =			# -f for machines without floating point
+FMT = -i		# nothing for machines without floating point
 
 all:	awk
 
 cp:	awk
-	cp awk /bin/awk
+	cp awk ${DESTDIR}/usr/bin/awk
 	rm *.o awk.h proc awk proctab.c y.tab.h
 
 cmp:	awk
-	cmp awk /bin/awk
-	rm *.o awk.h proc awk proctab.c y.tab.h
+	cmp awk ${DESTDIR}/usr/bin/awk
+	rm *.o awk.h proc proctab.c y.tab.h
 
 FILES=awk.lx.o b.o main.o token.o tran.o lib.o run.o parse.o proctab.o 
 SOURCE=awk.def awk.g.y awk.lx.l b.c lib.c main.c parse.c proctab.c \
@@ -17,7 +19,7 @@ SOURCE=awk.def awk.g.y awk.lx.l b.c lib.c main.c parse.c proctab.c \
 	run.c token.c tran.c
 
 awk:	$(FILES) awk.g.o
-	cc -i -s $(CFLAGS) awk.g.o $(FILES) -lm -o awk
+	cc ${FMT} ${FP} -s $(CFLAGS) awk.g.o $(FILES) -lm -o awk
 
 y.tab.h:	awk.g.o
 
@@ -31,7 +33,7 @@ token.c:	awk.h
 	rm temp
 
 src:	$(SOURCE) test.a tokenscript makefile
-	cp $? /usr/src/cmd/awk
+	cp $? ${DESTDIR}/usr/src/cmd/awk
 	touch src
 
 profile:	awk.g.o $(FILES)
@@ -51,3 +53,6 @@ proctab.c:	proc
 	proc > proctab.c
 proc:	awk.h proc.o token.o
 	cc -o proc proc.c token.o
+
+clean:
+	rm -f *.o
