@@ -1,54 +1,36 @@
-#	Makefile	4.3	86/05/15
-#
-CFLAGS=-O
-YFLAGS=-d
-FILES=awk.lx.o b.o main.o token.o tran.o lib.o run.o parse.o proctab.o freeze.o
-SOURCE=awk.def awk.g.y awk.lx.l b.c lib.c main.c parse.c \
-	proc.c freeze.c\
-	run.c token.c tran.c
+#	@(#)Makefile	4.12 (Berkeley) 5/11/90
 
-awk:	$(FILES) awk.g.o
-	cc $(CFLAGS) awk.g.o  $(FILES)  -lm -o awk
+YFLAGS=	-d
+CFLAGS+=-I. -I${.CURDIR}
+PROG=	awk
+SRCS=	awk.lx.c b.c lib.c main.c parse.c proctab.c freeze.c run.c tran.c
+OBJS+=	token.o awk.g.o
+CLEANFILES+=	token.c proctab.c proc.o proc awk.h awk.lx.c y.tab.h
 
-y.tab.h:	awk.g.o
+DPADD=	${LIBM}
+LDADD=	-lm
 
-awk.h:	y.tab.h
-	-cmp -s y.tab.h awk.h || cp y.tab.h awk.h
+token.c: awk.h
+	echo '#include "awk.h"' > ${.TARGET}
+	echo 'struct toke { char *tnm; int yval; } tok[] = {' >> ${.TARGET}
+	sed 's/#define \([^ ]*\) \(.*\)/"\1", \2,/' \
+	    < awk.h >> ${.TARGET}
+	echo '};' >> ${.TARGET}
+	echo 'char *tokname(n)' >> ${.TARGET}
+	echo '{' >> ${.TARGET}
+	echo '	if (n <= 256 || n >= LASTTOKEN)' >> ${.TARGET}
+	echo '		n = 257;' >> ${.TARGET}
+	echo '	return(tok[n - 257].tnm);' >> ${.TARGET}
+	echo '}' >> ${.TARGET}
 
-$(FILES):	awk.h awk.def
+awk.h: awk.g.o
+	rm -f awk.h
+	cp y.tab.h awk.h
 
-token.c:	awk.h
-	ex - <tokenscript
+proctab.c: proc
+	./proc > proctab.c
 
-get:
-	for i in $(SOURCE) Makefile tokenscript README; do \
-		cp /usr/src/bin/awk/$$i .;
-	done
+proc: token.o proc.o
+	${CC} -o ${.TARGET} proc.o token.o
 
-install:
-	install -s awk ${DESTDIR}/bin
-
-profile:	awk.g.o $(FILES) mon.o
-	cc -p -i awk.g.o $(FILES) mon.o -lm
-
-find:
-	egrep -n "$(PAT)" *.[ylhc] awk.def
-
-list:
-	-pr $(SOURCE) Makefile tokenscript README EXPLAIN
-
-lint:
-	lint -spu b.c main.c token.c tran.c run.c lib.c parse.c -lm |\
-		egrep -v '^(error|free|malloc)'
-
-proctab.c:	proc
-	proc >proctab.c
-
-proc:	awk.h proc.o token.o
-	cc -o proc proc.o token.o
-
-clean:
-	-rm -f *.o t.* *temp* *.out *junk* y.tab.* awk.h proc proctab.c awk yacc*
-
-diffs:
-	-for i in $(SOURCE); do echo $$i:; diff $$i /usr/src/cmd/awk | ind; done
+.include <bsd.prog.mk>

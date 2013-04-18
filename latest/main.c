@@ -1,6 +1,21 @@
+/*-
+ * Copyright (c) 1991 The Regents of the University of California.
+ * All rights reserved.
+ *
+ * This module is believed to contain source code proprietary to AT&T.
+ * Use and redistribution is subject to the Berkeley Software License
+ * Agreement and your Software Agreement with AT&T (Western Electric).
+ */
+
 #ifndef lint
-static char sccsid[] = "@(#)main.c	4.4 (Berkeley) 12/8/84";
-#endif
+char copyright[] =
+"@(#) Copyright (c) 1991 The Regents of the University of California.\n\
+ All rights reserved.\n";
+#endif /* not lint */
+
+#ifndef lint
+static char sccsid[] = "@(#)main.c	4.6 (Berkeley) 4/17/91";
+#endif /* not lint */
 
 #include "stdio.h"
 #include "ctype.h"
@@ -33,9 +48,13 @@ main(argc, argv) int argc; char *argv[]; {
 		/* character after f to see if it's -f file or -Fx.
 		*/
 		if (argv[0][0] == '-' && TOLOWER(argv[0][1]) == 'f' && argv[0][2] == '\0') {
-			yyin = fopen(argv[1], "r");
-			if (yyin == NULL)
-				error(FATAL, "can't open %s", argv[1]);
+			if (argv[1][0] == '-' && argv[1][1] == '\0')
+				yyin = stdin;
+			else {
+				yyin = fopen(argv[1], "r");
+				if (yyin == NULL)
+					error(FATAL, "can't open %s", argv[1]);
+			}
 			argc--;
 			argv++;
 			break;
