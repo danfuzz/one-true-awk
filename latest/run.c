@@ -299,7 +299,7 @@ Cell *call(Node **a, int n)	/* function call.  very kludgy and fragile */
 		}
 	}
 	tempfree(fcn);
-	if (isexit(y) || isnext(y) || isnextfile(y))
+	if (isexit(y) || isnext(y))
 		return y;
 	tempfree(y);		/* this can free twice! */
 	z = fp->retval;			/* return value */
@@ -1375,7 +1375,7 @@ Cell *dostat(Node **a, int n)	/* do a[0]; while(a[1]) */
 		x = execute(a[0]);
 		if (isbreak(x))
 			return True;
-		if (isnext(x) || isnextfile(x) || isexit(x) || isret(x))
+		if (isnext(x) || isexit(x) || isret(x))
 			return(x);
 		tempfree(x);
 		x = execute(a[1]);
@@ -1661,7 +1661,8 @@ Cell *closefile(Node **a, int n)
 	n = n;
 	x = execute(a[0]);
 	getsval(x);
-	for (i = 0; i < FOPEN_MAX; i++)
+	stat = -1;
+	for (i = 0; i < FOPEN_MAX; i++) {
 		if (files[i].fname && strcmp(x->sval, files[i].fname) == 0) {
 			if (ferror(files[i].fp))
 				WARNING( "i/o error occurred on %s", files[i].fname );
@@ -1676,15 +1677,18 @@ Cell *closefile(Node **a, int n)
 			files[i].fname = NULL;	/* watch out for ref thru this */
 			files[i].fp = NULL;
 		}
+	}
 	tempfree(x);
-	return(True);
+	x = gettemp();
+	setfval(x, (Awkfloat) stat);
+	return(x);
 }
 
 void closeall(void)
 {
 	int i, stat;
 
-	for (i = 0; i < FOPEN_MAX; i++)
+	for (i = 0; i < FOPEN_MAX; i++) {
 		if (files[i].fp) {
 			if (ferror(files[i].fp))
 				WARNING( "i/o error occurred on %s", files[i].fname );
@@ -1695,6 +1699,7 @@ void closeall(void)
 			if (stat == EOF)
 				WARNING( "i/o error occurred while closing %s", files[i].fname );
 		}
+	}
 }
 
 void backsub(char **pb_ptr, char **sptr_ptr);

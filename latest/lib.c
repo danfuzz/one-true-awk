@@ -661,6 +661,8 @@ int isclvar(char *s)	/* is s of form var=something ? */
 }
 
 /* strtod is supposed to be a proper test of what's a valid number */
+/* appears to be broken in gcc on linux: thinks 0x123 is a valid FP number */
+/* wrong: violates 4.10.1.4 of ansi C standard */
 
 #include <math.h>
 int is_number(char *s)

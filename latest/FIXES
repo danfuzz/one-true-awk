@@ -25,6 +25,28 @@ THIS SOFTWARE.
 This file lists all bug fixes, changes, etc., made since the AWK book
 was sent to the printers in August, 1987.
 
+Nov 15, 2000:
+	fixed a bug introduced in august 1997 that caused expressions
+	like $f[1] to be syntax errors.  thanks to arnold robbins for
+	noticing this and providing a fix.
+
+Oct 30, 2000:
+	fixed some nextfile bugs: not handling all cases.  thanks to
+	arnold robbins for pointing this out.  new regressions added.
+
+	close() is now a function.  it returns whatever the library
+	fclose returns, and -1 for closing a file or pipe that wasn't
+	opened.
+
+Sep 24, 2000:
+	permit \n explicitly in character classes; won't work right
+	if comes in as "[\n]" but ok as /[\n]/, because of multiple
+	processing of \'s.  thanks to arnold robbins.
+
+July 5, 2000:
+	minor fiddles in tran.c to keep compilers happy about uschar.
+	thanks to norman wilson.
+
 May 25, 2000:
 	yet another attempt at making 8-bit input work, with another
 	band-aid in b.c (member()), and some (uschar) casts to head 
@@ -76,6 +98,7 @@ Apr 21, 1999:
 Apr 16, 1999:
 	with code kindly provided by Bruce Lilly, awk now parses 
 	/=/ and similar constructs more sensibly in more places.
+	Bruce also provided some helpful test cases.
 
 Apr 5, 1999:
 	changed true/false to True/False in run.c to make it

@@ -393,7 +393,7 @@ char *qstring(char *is, int delim)	/* collect string up to next delim */
 {
 	char *os = is;
 	int c, n;
-	uschar *s = is;
+	uschar *s = (uschar *) is;
 	uschar *buf, *bp;
 
 	if ((buf = (uschar *) malloc(strlen(s)+3)) == NULL)
@@ -433,5 +433,5 @@ char *qstring(char *is, int delim)	/* collect string up to next delim */
 		}
 	}
 	*bp++ = 0;
-	return buf;
+	return (char *) buf;
 }

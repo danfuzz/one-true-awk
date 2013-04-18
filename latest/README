@@ -37,7 +37,7 @@ which should produce a sequence of messages roughly like this:
 
 	yacc -d awkgram.y
 
-conflicts: 42 shift/reduce, 83 reduce/reduce
+conflicts: 43 shift/reduce, 85 reduce/reduce
 	mv y.tab.c ytab.c
 	mv y.tab.h ytab.h
 	cc -O -c ytab.c

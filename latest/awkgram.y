@@ -316,7 +316,6 @@ st:
 stmt:
 	  BREAK st		{ if (!inloop) SYNTAX("break illegal outside of loops");
 				  $$ = stat1(BREAK, NIL); }
-	| CLOSE pattern st	{ $$ = stat1(CLOSE, $2); }
 	| CONTINUE st		{  if (!inloop) SYNTAX("continue illegal outside of loops");
 				  $$ = stat1(CONTINUE, NIL); }
 	| do {inloop++;} stmt {--inloop;} WHILE '(' pattern ')' st
@@ -365,6 +364,7 @@ term:
 	| BLTIN				{ $$ = op2(BLTIN, itonp($1), rectonode()); }
 	| CALL '(' ')'			{ $$ = op2(CALL, celltonode($1,CVAR), NIL); }
 	| CALL '(' patlist ')'		{ $$ = op2(CALL, celltonode($1,CVAR), $3); }
+	| CLOSE term			{ $$ = op1(CLOSE, $2); }
 	| DECR var			{ $$ = op1(PREDECR, $2); }
 	| INCR var			{ $$ = op1(PREINCR, $2); }
 	| var DECR			{ $$ = op1(POSTDECR, $1); }
