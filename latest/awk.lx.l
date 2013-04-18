@@ -1,3 +1,5 @@
+/*	awk.lx.l	4.2	83/02/09	*/
+
 %Start A str chc sc reg comment
 
 %{
@@ -7,7 +9,7 @@
 extern int	yylval;
 extern int	mustfld;
 
-int	lineno	1;
+int	lineno	= 1;
 #ifdef	DEBUG
 #	define	RETURN(x)	{if (dbg) ptoken(x); return(x); }
 #else
@@ -63,7 +65,7 @@ WS	[ \t]
 <A>"="		{ yylval = ASSIGN; RETURN(ASGNOP); }
 
 <A>"$"{D}+	{	if (atoi(yytext+1)==0) {
-				yylval = lookup("$record", symtab, 0);
+				yylval = (hack)lookup("$record", symtab, 0);
 				RETURN(STRING);
 			} else {
 				yylval = fieldadr(atoi(yytext+1));
@@ -71,9 +73,9 @@ WS	[ \t]
 			}
 		}
 <A>"$"{WS}*	{ RETURN(INDIRECT); }
-<A>NF		{ mustfld=1; yylval = setsymtab(yytext, NULL, 0.0, NUM, symtab); RETURN(VAR); }
+<A>NF		{ mustfld=1; yylval = (hack)setsymtab(yytext, EMPTY, 0.0, NUM, symtab); RETURN(VAR); }
 <A>({D}+("."?){D}*|"."{D}+)((e|E)("+"|-)?{D}+)?	{
-		yylval = setsymtab(yytext, NULL, atof(yytext), CON|NUM, symtab); RETURN(NUMBER); }
+		yylval = (hack)setsymtab(yytext, EMPTY, atof(yytext), CON|NUM, symtab); RETURN(NUMBER); }
 <A>"}"{WS}*\n	{ BEGIN sc; lineno++; RETURN(';'); }
 <A>"}"		{ BEGIN sc; RETURN(';'); }
 <A>;\n		{ lineno++; RETURN(';'); }
@@ -99,7 +101,7 @@ WS	[ \t]
 <A>int		{ yylval = FINT; RETURN(FNCN); }
 <A>exp		{ yylval = FEXP; RETURN(FNCN); }
 <A>sqrt		{ yylval = FSQRT; RETURN(FNCN); }
-<A>{A}{B}*	{ yylval = setsymtab(yytext, tostring(""), 0.0, STR|NUM, symtab); RETURN(VAR); }
+<A>{A}{B}*	{ yylval = (hack)setsymtab(yytext, tostring(""), 0.0, STR|NUM, symtab); RETURN(VAR); }
 <A>\"		{ BEGIN str; clen=0; }
 
 <A>#		{ BEGIN comment; }
@@ -132,7 +134,7 @@ WS	[ \t]
 
 <str>\"		{ char *s; BEGIN A; cbuf[clen]=0; s = tostring(cbuf);
 		cbuf[clen] = ' '; cbuf[++clen] = 0;
-		yylval = setsymtab(cbuf, s, 0.0, CON|STR, symtab); RETURN(STRING); }
+		yylval = (hack)setsymtab(cbuf, s, 0.0, CON|STR, symtab); RETURN(STRING); }
 <str>\n		{ yyerror("newline in string"); lineno++; BEGIN A; }
 <str>"\\\""	{ cbuf[clen++]='"'; }
 <str,chc>"\\"n	{ cbuf[clen++]='\n'; }
@@ -141,7 +143,7 @@ WS	[ \t]
 <str>.		{ CADD; }
 
 <chc>"\\""]"	{ cbuf[clen++]=']'; }
-<chc>"]"	{ BEGIN reg; cbuf[clen]=0; yylval = tostring(cbuf);
+<chc>"]"	{ BEGIN reg; cbuf[clen]=0; yylval = (hack)tostring(cbuf);
 		if (cflag==0) { RETURN(CCL); }
 		else { RETURN(NCCL); } }
 <chc>\n		{ yyerror("newline in character class"); lineno++; BEGIN A; }

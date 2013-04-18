@@ -1,3 +1,7 @@
+#ifndef lint
+static char sccsid[] = "@(#)token.c	4.2 8/11/83";
+#endif
+
 #include "awk.h"
 struct tok
 {	char *tnm;
