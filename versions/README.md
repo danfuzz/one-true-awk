@@ -40,6 +40,8 @@ Origins / Sources Of The Code Contained Herein
 * 1986-06-05 &mdash; 4.3BSD
   via [The Unix Archive](http://minnie.tuhs.org/TUHS/archive_sites.html).
 
+* 1989-10-11 &mdash; System V Release 4, from OpenSolaris.
+
 * 1992-08-01 &mdash; 4.4BSD Alpha
   via [The Unix Archive](http://minnie.tuhs.org/TUHS/archive_sites.html).
 
