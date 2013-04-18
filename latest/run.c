@@ -1,6 +1,6 @@
 #include "awk.def"
 #include	"math.h"
-#define RECSIZE 512
+#define RECSIZE BUFSIZ
 #include "awk.h"
 #include "stdio.h"
 
