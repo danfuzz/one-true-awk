@@ -326,6 +326,7 @@ char *format(s,a) char *s; node *a;
 		}
 		if (*(s+1) == '%') {
 			*p++ = '%';
+			*p++ = '%';
 			s += 2;
 			continue;
 		}
@@ -471,15 +472,8 @@ obj assign(a,n) node **a;
 	x = execute(a[0]);
 	y = execute(a[1]);
 	if (n == ASSIGN) {	/* ordinary assignment */
-		if ((y.optr->tval & (STR|NUM)) == (STR|NUM)) {
-			setsval(x.optr, y.optr->sval);
-			x.optr->fval = y.optr->fval;
-			x.optr->tval |= NUM;
-		}
-		else if (y.optr->tval & STR)
-			setsval(x.optr, y.optr->sval);
-		else if (y.optr->tval & NUM)
-			setfval(x.optr, y.optr->fval);
+		if (y.optr->tval&STR) setsval(x.optr, y.optr->sval);
+		if (y.optr->tval&NUM) setfval(x.optr, y.optr->fval);
 		tempfree(y);
 		return(x);
 	}

@@ -100,7 +100,7 @@ cell **tab;
 }
 
 hash(s)	/* form hash value for string s */
-register unsigned char *s;
+register char *s;
 {
 	register int hashval;
 
