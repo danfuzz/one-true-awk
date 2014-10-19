@@ -39,7 +39,7 @@ char	*fields;
 int	fieldssize = RECSIZE;
 
 Cell	**fldtab;	/* pointers to Cells */
-char	inputFS[100];
+char	inputFS[100] = " ";
 
 #define	MAXFLD	200
 int	nfields	= MAXFLD;	/* last allocated slot for $i */
@@ -113,8 +113,10 @@ int getrec(char **pbuf, int *pbufsize, int isrecord)	/* get next input record */
 	}
 	   dprintf( ("RS=<%s>, FS=<%s>, ARGC=%g, FILENAME=%s\n",
 		*RS, *FS, *ARGC, *FILENAME) );
-	donefld = 0;
-	donerec = 1;
+	if (isrecord) {
+		donefld = 0;
+		donerec = 1;
+	}
 	buf[0] = 0;
 	while (argno < *ARGC || infile == stdin) {
 		   dprintf( ("argno=%d, file=|%s|\n", argno, file) );
@@ -438,34 +440,28 @@ void recbld(void)	/* create $0 from $1..$NF if necessary */
 {
 	int i;
 	char *r, *p;
-	char *buf = record;
-	int bufsize = recsize;
 
 	if (donerec == 1)
 		return;
-	r = buf;
+	r = record;
 	for (i = 1; i <= *NF; i++) {
 		p = getsval(fldtab[i]);
-		if (!adjbuf(&buf, &bufsize, 1+strlen(p)+r-buf, recsize, &r, "recbld 1"))
-			ERROR "created $0 `%.30s...' too long", buf FATAL;
+		if (!adjbuf(&record, &recsize, 1+strlen(p)+r-record, recsize, &r, "recbld 1"))
+			ERROR "created $0 `%.30s...' too long", record FATAL;
 		while ((*r = *p++) != 0)
 			r++;
 		if (i < *NF) {
-			if (!adjbuf(&buf, &bufsize, 2+strlen(*OFS)+r-buf, recsize, &r, "recbld 2"))
-				ERROR "created $0 `%.30s...' too long", buf FATAL;
+			if (!adjbuf(&record, &recsize, 2+strlen(*OFS)+r-record, recsize, &r, "recbld 2"))
+				ERROR "created $0 `%.30s...' too long", record FATAL;
 			for (p = *OFS; (*r = *p++) != 0; )
 				r++;
 		}
 	}
-	if (!adjbuf(&buf, &bufsize, 2+r-buf, recsize, &r, "recbld 3"))
-		ERROR "built giant record `%.30s...'", buf FATAL;
+	if (!adjbuf(&record, &recsize, 2+r-record, recsize, &r, "recbld 3"))
+		ERROR "built giant record `%.30s...'", record FATAL;
 	*r = '\0';
 	   dprintf( ("in recbld inputFS=%s, fldtab[0]=%p\n", inputFS, fldtab[0]) );
 
-	if (buf != record) {	/* increased size of record */
-		record = buf;	/* BUG?  memory leak? */
-		recsize = bufsize;
-	}
 	if (freeable(fldtab[0]))
 		xfree(fldtab[0]->sval);
 	fldtab[0]->tval = REC | STR | DONTFREE;
