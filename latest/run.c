@@ -1,14 +1,25 @@
-#ifndef lint
-static char sccsid[] = "@(#)run.c	4.5 12/4/84";
-#endif
+/*-
+ * Copyright (c) 1991 The Regents of the University of California.
+ * All rights reserved.
+ *
+ * This module is believed to contain source code proprietary to AT&T.
+ * Use and redistribution is subject to the Berkeley Software License
+ * Agreement and your Software Agreement with AT&T (Western Electric).
+ */
 
+#ifndef lint
+static char sccsid[] = "@(#)run.c	4.9 (Berkeley) 4/17/91";
+#endif /* not lint */
+
+#include "sys/param.h"
 #include "awk.def"
-#include	"math.h"
+#include "math.h"
 #include "awk.h"
 #include "stdio.h"
+#include "fcntl.h"
 #define RECSIZE BUFSIZ
 
-#define FILENUM	10
+#define FILENUM	NOFILE
 struct
 {
 	FILE *fp;
@@ -372,7 +383,7 @@ char *format(s,a) char *s; node *a;
 			break;
 		}
 		if (flag == 0) {
-			sprintf(p, "%s", fmt);
+			(void)sprintf(p, "%s", fmt);
 			p += strlen(p);
 			continue;
 		}
@@ -382,10 +393,10 @@ char *format(s,a) char *s; node *a;
 		a = a->nnext;
 		if (flag != 4)	/* watch out for converting to numbers! */
 			xf = getfval(x.optr);
-		if (flag==1) sprintf(p, fmt, xf);
-		else if (flag==2) sprintf(p, fmt, (long)xf);
-		else if (flag==3) sprintf(p, fmt, (int)xf);
-		else if (flag==4) sprintf(p, fmt, x.optr->sval==NULL ? "" : getsval(x.optr));
+		if (flag==1) (void)sprintf(p, fmt, xf);
+		else if (flag==2) (void)sprintf(p, fmt, (long)xf);
+		else if (flag==3) (void)sprintf(p, fmt, (int)xf);
+		else if (flag==4) (void)sprintf(p, fmt, x.optr->sval==NULL ? "" : getsval(x.optr));
 		tempfree(x);
 		p += strlen(p);
 		s++;
@@ -639,7 +650,7 @@ obj split(a,nnn) node **a;
 			while (*s!=' ' && *s!='\t' && *s!='\n' && *s!='\0');
 			temp = *s;
 			*s = '\0';
-			sprintf(num, "%d", n);
+			(void)sprintf(num, "%d", n);
 			if (isnumber(t))
 				setsymtab(num, tostring(t), atof(t), STR|NUM, ap->sval);
 			else
@@ -656,7 +667,7 @@ obj split(a,nnn) node **a;
 				s++;
 			temp = *s;
 			*s = '\0';
-			sprintf(num, "%d", n);
+			(void)sprintf(num, "%d", n);
 			if (isnumber(t))
 				setsymtab(num, tostring(t), atof(t), STR|NUM, ap->sval);
 			else
@@ -873,6 +884,8 @@ redirprint(s, a, b) char *s; node *b;
 		files[i].fp = fopen(x.optr->sval, "w");
 	if (files[i].fp == NULL)
 		error(FATAL, "can't open file %s", x.optr->sval);
+	if (fcntl(fileno(files[i].fp), F_SETFD, 1) < 0)
+		error(FATAL, "close on exec failure");
 	files[i].fname = tostring(x.optr->sval);
 	files[i].type = a;
 doit:
