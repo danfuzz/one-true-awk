@@ -62,6 +62,12 @@ Origins / Sources Of The Code Contained Herein
 
 * 2002-01-01 &mdash; from
   [FreeBSD Subversion](http://svn.freebsd.org/base/vendor/one-true-awk/).
+  This version has a `version` string dating it to 2002-01-01, though there
+  is a comment in `FIXES` that indicates modification as of 2002-02-10.
+
+* 2002-01-01b &mdash; from the collection of Aharon Robbins. This is very
+  similar to `2002-01-01`, with the main difference being the more consistent
+  use of the type `uschar` in this one.
 
 * 2002-02-10 &mdash; from
   [Debian Snapshot](http://snapshot.debian.org/package/original-awk/).
