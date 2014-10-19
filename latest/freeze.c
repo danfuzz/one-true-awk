@@ -1,11 +1,11 @@
-#ifndef lint
-static char sccsid[] = "@(#)freeze.c	4.2 8/11/83";
-#endif
-
 #include "stdio.h"
-freeze(s) char *s;
-{	int fd;
+
+freeze(s)
+        char *s;
+{
+        int fd;
 	unsigned int *len;
+
 	len = (unsigned int *)sbrk(0);
 	if((fd = creat(s, 0666)) < 0) {
 		perror(s);
@@ -17,9 +17,12 @@ freeze(s) char *s;
 	return(0);
 }
 
-thaw(s) char *s;
-{	int fd;
+thaw(s)
+        char *s;
+{
+        int fd;
 	unsigned int *len;
+
 	if(*s == 0) {
 		fprintf(stderr, "empty restore file\n");
 		return(1);

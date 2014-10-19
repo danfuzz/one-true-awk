@@ -5,7 +5,7 @@
 %token	LT LE GT GE EQ NE
 %token	MATCH NOTMATCH
 %token	APPEND
-%token	ADD MINUS MULT DIVIDE MOD UMINUS 
+%token	ADD MINUS MULT DIVIDE MOD UMINUS
 %token	ASSIGN ADDEQ SUBEQ MULTEQ DIVEQ MODEQ
 %token	JUMP
 %token	XBEGIN XEND
@@ -33,9 +33,9 @@
 %token	LASTTOKEN	/* has to be last */
 
 %{
-#include "awk.def"
-#ifndef	DEBUG	
-#	define	PUTS(x)
+#include "awk.def.h"
+#ifndef	DEBUG
+#   define PUTS(x)
 #endif
 %}
 %%
@@ -109,7 +109,7 @@ term:
 	| FNCN		{ PUTS("func");
 			$$ = op2(FNCN, $1, valtonode(lookup("$record", symtab, 0), CFLD));
 			}
-	| FNCN '(' ')'	{ PUTS("func()"); 
+	| FNCN '(' ')'	{ PUTS("func()");
 			$$ = op2(FNCN, $1, valtonode(lookup("$record", symtab, 0), CFLD));
 			}
 	| FNCN '(' expr ')'	{ PUTS("func(expr)"); $$ = op2(FNCN, $1, $3); }
@@ -153,7 +153,7 @@ pa_stat:
 	  pattern	{ PUTS("pattern"); $$ = stat2(PASTAT, $1, genprint()); }
 	| pattern '{' stat_list '}'	{ PUTS("pattern {...}"); $$ = stat2(PASTAT, $1, $3); }
 	| pattern ',' pattern		{ PUTS("srch,srch"); $$ = pa2stat($1, $3, genprint()); }
-	| pattern ',' pattern '{' stat_list '}'	
+	| pattern ',' pattern '{' stat_list '}'
 					{ PUTS("srch, srch {...}"); $$ = pa2stat($1, $3, $5); }
 	| '{' stat_list '}'	{ PUTS("null pattern {...}"); $$ = stat2(PASTAT, nullstat, $2); }
 	;
@@ -227,11 +227,11 @@ st:
 simple_stat:
 	  PRINT print_list redir expr
 		{ PUTS("print>stat"); $$ = stat3($1, $2, $3, $4); }
-	| PRINT print_list	
+	| PRINT print_list
 		{ PUTS("print list"); $$ = stat3($1, $2, nullstat, nullstat); }
 	| PRINTF print_list redir expr
 		{ PUTS("printf>stat"); $$ = stat3($1, $2, $3, $4); }
-	| PRINTF print_list	
+	| PRINTF print_list
 		{ PUTS("printf list"); $$ = stat3($1, $2, nullstat, nullstat); }
 	| expr	{ PUTS("expr"); $$ = exptostat($1); }
 	|		{ PUTS("null simple statement"); $$ = (hack)nullstat; }

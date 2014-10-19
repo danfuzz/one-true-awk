@@ -1,34 +1,46 @@
-#ifndef lint
-static char sccsid[] = "@(#)run.c	4.4 8/11/83";
-#endif
-
-#include "awk.def"
-#include	"math.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include "awk.def.h"
 #include "awk.h"
-#include "stdio.h"
+
 #define RECSIZE BUFSIZ
 
 #define FILENUM	10
+#define PA2NUM	29
+#define MAXTMP  20
+
 struct
 {
 	FILE *fp;
+	int type;
 	char *fname;
 } files[FILENUM];
-FILE *popen();
 
 extern obj execute(), nodetoobj(), fieldel(), dopa2(), gettemp();
-#define PA2NUM	29
+
 int pairstack[PA2NUM], paircnt;
+
 node *winner = (node *)NULL;
-#define MAXTMP 20
+
 cell tmps[MAXTMP];
-static cell nullval ={EMPTY,EMPTY,0.0,NUM,0};
-obj	true	={ OBOOL, BTRUE, 0 };
-obj	false	={ OBOOL, BFALSE, 0 };
+
+static cell nullval = { EMPTY, EMPTY, 0.0, NUM, 0 };
+
+obj	true	= { OBOOL, BTRUE, 0 };
+obj	false	= { OBOOL, BFALSE, 0 };
 
 run()
 {
+	register int i;
+
 	execute(winner);
+
+	/* Wait for children to complete if output to a pipe. */
+	for (i=0; i<FILENUM; i++)
+		if (files[i].fp && files[i].type == '|')
+			pclose(files[i].fp);
 }
 
 obj execute(u) node *u;
@@ -36,7 +48,6 @@ obj execute(u) node *u;
 	register obj (*proc)();
 	obj x;
 	node *a;
-	extern char *printname[];
 
 	if (u==(node *)NULL)
 		return(true);
@@ -866,6 +877,7 @@ redirprint(s, a, b) char *s; node *b;
 	if (files[i].fp == NULL)
 		error(FATAL, "can't open file %s", x.optr->sval);
 	files[i].fname = tostring(x.optr->sval);
+	files[i].type = a;
 doit:
 	fprintf(files[i].fp, "%s", s);
 #ifndef gcos

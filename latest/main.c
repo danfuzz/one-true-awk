@@ -1,11 +1,9 @@
-#ifndef lint
-static char sccsid[] = "@(#)main.c	4.2 8/11/83";
-#endif
-
-#include "stdio.h"
-#include "ctype.h"
-#include "awk.def"
+#include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include "awk.def.h"
 #include "awk.h"
+
 #define TOLOWER(c)	(isupper(c) ? tolower(c) : c) /* ugh!!! */
 
 int	dbg	= 0;
@@ -20,11 +18,13 @@ extern	errorflag;	/* non-zero if any syntax errors; set by yyerror */
 int filefd, symnum, ansfd;
 char *filelist;
 extern int maxsym, errno;
-main(argc, argv) int argc; char *argv[]; {
+
+main(argc, argv)
+        int argc;
+        char *argv[];
+{
 	if (argc == 1)
 		error(FATAL, "Usage: awk [-f source | 'cmds'] [files]");
-	if (strcmp(argv[0], "a.out"))
-		logit(argc, argv);
 	syminit();
 	while (argc > 1) {
 		argc--;
@@ -90,31 +90,6 @@ main(argc, argv) int argc; char *argv[]; {
 	}
 	run();
 	exit(errorflag);
-}
-
-logit(n, s) char *s[];
-{	int i, tvec[2];
-	FILE *f, *g;
-	char buf[512];
-	if ((f=fopen("/crp/pjw/awkhist/awkhist", "a"))==NULL)
-		return;
-	time(tvec);
-	fprintf(f, "%-8s %s", getlogin(), ctime(tvec));
-	for (i=0; i<n; i++)
-		fprintf(f, "'%s'", s[i]);
-	putc('\n', f);
-	if (strcmp(s[1], "-f")) {
-		fclose(f);
-		return;
-	}
-	if ((g=fopen(s[2], "r"))==NULL) {
-		fclose(f);
-		return;
-	}
-	while ((i=fread(buf, 1, 512, g))>0)
-		fwrite(buf, 1, i, f);
-	fclose(f);
-	fclose(g);
 }
 
 yywrap()
