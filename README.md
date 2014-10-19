@@ -43,9 +43,9 @@ Acknowledgments
   and beyond in finding versions to include here.
 
 * Olivier Dulac, <http://stackoverflow.com/users/1841533/olivier-dulac>,
-  who provided some good suggestions via 
+  who provided some good suggestions via
   [StackOverflow](http://stackoverflow.com/questions/15687108/).
 
 * Jlliagre, <http://stackoverflow.com/users/211665/jlliagre>,
-  who provided some good suggestions via 
+  who provided some good suggestions via
   [StackOverflow](http://stackoverflow.com/questions/15687108/).
