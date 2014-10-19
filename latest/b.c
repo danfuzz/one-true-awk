@@ -694,9 +694,9 @@ Node *unary(Node *np)
  * must be less than twice the size of their full name.
  */
 struct charclass {
-	const char *cc_name;
+	const uschar *cc_name;
 	int cc_namelen;
-	const char *cc_expand;
+	const uschar *cc_expand;
 } charclasses[] = {
 	{ "alnum",	5,	"0-9A-Za-z" },
 	{ "alpha",	5,	"A-Za-z" },
@@ -771,7 +771,7 @@ int relex(void)		/* lexical analyzer for reparse */
 				if (cc->cc_name != NULL && prestr[1 + cc->cc_namelen] == ':' &&
 				    prestr[2 + cc->cc_namelen] == ']') {
 					prestr += cc->cc_namelen + 3;
-					for (p = (const uschar *) cc->cc_expand; *p; p++)
+					for (p = cc->cc_expand; *p; p++)
 						*bp++ = *p;
 				} else
 					*bp++ = c;
