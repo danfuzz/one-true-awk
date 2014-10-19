@@ -25,6 +25,10 @@ THIS SOFTWARE.
 This file lists all bug fixes, changes, etc., made since the AWK book
 was sent to the printers in August, 1987.
 
+Feb 8, 2010:
+	i give up.  replaced isblank with isspace in b.c; there are
+	no consistent header files.
+
 Nov 26, 2009:
 	fixed a long-standing issue with when FS takes effect.  a
 	change to FS is now noticed immediately for subsequent splits.
