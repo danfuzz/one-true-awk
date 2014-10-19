@@ -126,6 +126,8 @@ void envinit(char **envp)	/* set up ENVIRON variable */
 	for ( ; *envp; envp++) {
 		if ((p = strchr(*envp, '=')) == NULL)
 			continue;
+		if( p == *envp ) /* no left hand side name in env string */
+			continue;
 		*p++ = 0;	/* split into two strings at = */
 		if (is_number(p))
 			setsymtab(*envp, p, atof(p), STR|NUM, ENVtab);
@@ -387,13 +389,14 @@ char *tostring(char *s)	/* make a copy of string s */
 	return(p);
 }
 
-char *qstring(char *s, int delim)	/* collect string up to next delim */
+char *qstring(char *is, int delim)	/* collect string up to next delim */
 {
-	char *os = s;
+	char *os = is;
 	int c, n;
-	char *buf, *bp;
+	uschar *s = is;
+	uschar *buf, *bp;
 
-	if ((buf = (char *) malloc(strlen(s)+3)) == NULL)
+	if ((buf = (uschar *) malloc(strlen(s)+3)) == NULL)
 		FATAL( "out of space in qstring(%s)", s);
 	for (bp = buf; (c = *s) != delim; s++) {
 		if (c == '\n')

@@ -33,7 +33,7 @@ THIS SOFTWARE.
 #include "awk.h"
 #include "ytab.h"
 
-#define	HAT	(NCHARS-1)	/* matches ^ in regular expr */
+#define	HAT	(NCHARS-2)	/* matches ^ in regular expr */
 				/* NCHARS is 2**n */
 #define MAXLIN 22
 
@@ -61,9 +61,9 @@ int	maxsetvec = 0;
 
 int	rtok;		/* next token in current re */
 int	rlxval;
-char	*rlxstr;
-char	*prestr;	/* current position in current re */
-char	*lastre;	/* origin of last re */
+static uschar	*rlxstr;
+static uschar	*prestr;	/* current position in current re */
+static uschar	*lastre;	/* origin of last re */
 
 static	int setcnt;
 static	int poscnt;
@@ -96,7 +96,7 @@ fa *makedfa(char *s, int anchor)	/* returns dfa for reg expr s */
 		  && strcmp(fatab[i]->restr, s) == 0) {
 			fatab[i]->use = now++;
 			return fatab[i];
-	}
+		}
 	pfa = mkdfa(s, anchor);
 	if (nfatab < NFA) {	/* room for another */
 		fatab[nfatab] = pfa;
@@ -143,7 +143,7 @@ fa *mkdfa(char *s, int anchor)	/* does the real work of making a dfa */
 	*f->posns[1] = 0;
 	f->initstat = makeinit(f, anchor);
 	f->anchor = anchor;
-	f->restr = tostring(s);
+	f->restr = (uschar *) tostring(s);
 	return f;
 }
 
@@ -230,11 +230,11 @@ void freetr(Node *p)	/* free parse tree */
 
 int hexstr(char **pp)	/* find and eval hex string at pp, return new p */
 {			/* only pick up one 8-bit byte (2 chars) */
-	char *p;
+	uschar *p;
 	int n = 0;
 	int i;
 
-	for (i = 0, p = *pp; i < 2 && isxdigit(*p); i++, p++) {
+	for (i = 0, p = (uschar *) *pp; i < 2 && isxdigit(*p); i++, p++) {
 		if (isdigit(*p))
 			n = 16 * n + *p - '0';
 		else if (*p >= 'a' && *p <= 'f')
@@ -242,7 +242,7 @@ int hexstr(char **pp)	/* find and eval hex string at pp, return new p */
 		else if (*p >= 'A' && *p <= 'F')
 			n = 16 * n + *p - 'A' + 10;
 	}
-	*pp = p;
+	*pp = (char *) p;
 	return n;
 }
 
@@ -282,33 +282,34 @@ int quoted(char **pp)	/* pick up next thing after a \\ */
 	return c;
 }
 
-char *cclenter(char *p)	/* add a character class */
+char *cclenter(char *argp)	/* add a character class */
 {
 	int i, c, c2;
-	char *op, *bp;
-	static char *buf = 0;
+	uschar *p = (uschar *) argp;
+	uschar *op, *bp;
+	static uschar *buf = 0;
 	static int bufsz = 100;
 
 	op = p;
-	if (buf == 0 && (buf = (char *) malloc(bufsz)) == NULL)
+	if (buf == 0 && (buf = (uschar *) malloc(bufsz)) == NULL)
 		FATAL("out of space for character class [%.10s...] 1", p);
 	bp = buf;
 	for (i = 0; (c = *p++) != 0; ) {
 		if (c == '\\') {
-			c = quoted(&p);
+			c = quoted((char **) &p);
 		} else if (c == '-' && i > 0 && bp[-1] != 0) {
 			if (*p != 0) {
 				c = bp[-1];
 				c2 = *p++;
 				if (c2 == '\\')
-					c2 = quoted(&p);
+					c2 = quoted((char **) &p);
 				if (c > c2) {	/* empty; ignore */
 					bp--;
 					i--;
 					continue;
 				}
 				while (c < c2) {
-					if (!adjbuf(&buf, &bufsz, bp-buf+2, 100, &bp, 0))
+					if (!adjbuf((char **) &buf, &bufsz, bp-buf+2, 100, (char **) &bp, 0))
 						FATAL("out of space for character class [%.10s...] 2", p);
 					*bp++ = ++c;
 					i++;
@@ -316,7 +317,7 @@ char *cclenter(char *p)	/* add a character class */
 				continue;
 			}
 		}
-		if (!adjbuf(&buf, &bufsz, bp-buf+2, 100, &bp, 0))
+		if (!adjbuf((char **) &buf, &bufsz, bp-buf+2, 100, (char **) &bp, 0))
 			FATAL("out of space for character class [%.10s...] 3", p);
 		*bp++ = c;
 		i++;
@@ -324,7 +325,7 @@ char *cclenter(char *p)	/* add a character class */
 	*bp = 0;
 	dprintf( ("cclenter: in = |%s|, out = |%s|\n", op, buf) );
 	xfree(op);
-	return(tostring(buf));
+	return (char *) tostring((char *) buf);
 }
 
 void overflo(char *s)
@@ -445,8 +446,10 @@ void follow(Node *v)	/* collects leaves that can follow v into setvec */
 	}
 }
 
-int member(int c, char *s)	/* is c in s? */
+int member(int c, char *sarg)	/* is c in s? */
 {
+	uschar *s = (uschar *) sarg;
+
 	while (*s)
 		if (c == *s++)
 			return(1);
@@ -491,13 +494,14 @@ int pmatch(fa *f, char *p0)	/* longest match, for sub */
 				s = ns;
 			else
 				s = cgoto(f, s, *q);
-			if (s == 1)	/* no transition */
+			if (s == 1) {	/* no transition */
 				if (patlen >= 0) {
 					patbeg = (char *) p;
 					return(1);
 				}
 				else
 					goto nextin;	/* no match */
+			}
 		} while (*q++ != 0);
 		if (f->out[s])
 			patlen = q-p-1;	/* don't count $ */
@@ -542,12 +546,13 @@ int nematch(fa *f, char *p0)	/* non-empty match, for sub */
 				s = ns;
 			else
 				s = cgoto(f, s, *q);
-			if (s == 1)	/* no transition */
+			if (s == 1) {	/* no transition */
 				if (patlen > 0) {
 					patbeg = (char *) p;
 					return(1);
 				} else
 					goto nnextin;	/* no nonempty match */
+			}
 		} while (*q++ != 0);
 		if (f->out[s])
 			patlen = q-p-1;	/* don't count $ */
@@ -580,7 +585,7 @@ Node *reparse(char *p)	/* parses regular expression pointed to by p */
 	Node *np;
 
 	dprintf( ("reparse <%s>\n", p) );
-	lastre = prestr = p;	/* prestr points to string to be parsed */
+	lastre = prestr = (uschar *) p;	/* prestr points to string to be parsed */
 	rtok = relex();
 	if (rtok == '\0')
 		FATAL("empty regular expression");
@@ -611,11 +616,11 @@ Node *primary(void)
 		rtok = relex();
 		return (unary(op2(DOT, NIL, NIL)));
 	case CCL:
-		np = op2(CCL, NIL, (Node*) cclenter(rlxstr));
+		np = op2(CCL, NIL, (Node*) cclenter((char *) rlxstr));
 		rtok = relex();
 		return (unary(np));
 	case NCCL:
-		np = op2(NCCL, NIL, (Node *) cclenter(rlxstr));
+		np = op2(NCCL, NIL, (Node *) cclenter((char *) rlxstr));
 		rtok = relex();
 		return (unary(np));
 	case '^':
@@ -682,9 +687,9 @@ int relex(void)		/* lexical analyzer for reparse */
 {
 	int c, n;
 	int cflag;
-	static char *buf = 0;
+	static uschar *buf = 0;
 	static int bufsz = 100;
-	char *bp;
+	uschar *bp;
 
 	switch (c = *prestr++) {
 	case '|': return OR;
@@ -699,13 +704,13 @@ int relex(void)		/* lexical analyzer for reparse */
 	case ')':
 		return c;
 	case '\\':
-		rlxval = quoted(&prestr);
+		rlxval = quoted((char **) &prestr);
 		return CHAR;
 	default:
 		rlxval = c;
 		return CHAR;
 	case '[': 
-		if (buf == 0 && (buf = (char *) malloc(bufsz)) == NULL)
+		if (buf == 0 && (buf = (uschar *) malloc(bufsz)) == NULL)
 			FATAL("out of space in reg expr %.10s..", lastre);
 		bp = buf;
 		if (*prestr == '^') {
@@ -715,7 +720,7 @@ int relex(void)		/* lexical analyzer for reparse */
 		else
 			cflag = 0;
 		n = 2 * strlen(prestr)+1;
-		if (!adjbuf(&buf, &bufsz, n, n, &bp, 0))
+		if (!adjbuf((char **) &buf, &bufsz, n, n, (char **) &bp, 0))
 			FATAL("out of space for reg expr %.10s...", lastre);
 		for (; ; ) {
 			if ((c = *prestr++) == '\\') {
@@ -731,7 +736,7 @@ int relex(void)		/* lexical analyzer for reparse */
 				*bp++ = c;
 			} else if (c == ']') {
 				*bp++ = 0;
-				rlxstr = tostring(buf);
+				rlxstr = (uschar *) tostring((char *) buf);
 				if (cflag == 0)
 					return CCL;
 				else
@@ -747,7 +752,7 @@ int cgoto(fa *f, int s, int c)
 	int i, j, k;
 	int *p, *q;
 
-	if (c < 0)
+	if (c < 0 || c > 255)
 		FATAL("can't happen: neg char %d in cgoto", c);
 	while (f->accept >= maxsetvec) {	/* guessing here! */
 		maxsetvec *= 4;
@@ -766,8 +771,8 @@ int cgoto(fa *f, int s, int c)
 			if ((k == CHAR && c == ptoi(f->re[p[i]].lval.np))
 			 || (k == DOT && c != 0 && c != HAT)
 			 || (k == ALL && c != 0)
-			 || (k == CCL && member(c, f->re[p[i]].lval.up))
-			 || (k == NCCL && !member(c, f->re[p[i]].lval.up) && c != 0 && c != HAT)) {
+			 || (k == CCL && member(c, (char *) f->re[p[i]].lval.up))
+			 || (k == NCCL && !member(c, (char *) f->re[p[i]].lval.up) && c != 0 && c != HAT)) {
 				q = f->re[p[i]].lfollow;
 				for (j = 1; j <= *q; j++) {
 					if (q[j] >= maxsetvec) {

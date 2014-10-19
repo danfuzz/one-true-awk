@@ -209,7 +209,7 @@ typedef struct rrow {
 	union {
 		int i;
 		Node *np;
-		char *up;
+		uschar *up;
 	} lval;		/* because Al stores a pointer in it! */
 	int	*lfollow;
 } rrow;
@@ -217,7 +217,7 @@ typedef struct rrow {
 typedef struct fa {
 	uschar	gototab[NSTATES][NCHARS];
 	uschar	out[NSTATES];
-	char	*restr;
+	uschar	*restr;
 	int	*posns[NSTATES];
 	int	anchor;
 	int	use;
