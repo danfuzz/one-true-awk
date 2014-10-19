@@ -728,8 +728,8 @@ int relex(void)		/* lexical analyzer for reparse */
 				if ((c = *prestr++) == '\0')
 					FATAL("nonterminated character class %.20s...", lastre);
 				*bp++ = c;
-			} else if (c == '\n') {
-				FATAL("newline in character class %.20s...", lastre);
+			/* } else if (c == '\n') { */
+			/* 	FATAL("newline in character class %.20s...", lastre); */
 			} else if (c == '\0') {
 				FATAL("nonterminated character class %.20s", lastre);
 			} else if (bp == buf) {	/* 1st char is special */
