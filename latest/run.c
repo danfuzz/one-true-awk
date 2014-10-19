@@ -1,6 +1,6 @@
 #include "awk.def"
 #include	"math.h"
-#define RECSIZE BUFSIZ
+#define RECSIZE 512
 #include "awk.h"
 #include "stdio.h"
 
@@ -31,7 +31,7 @@ obj execute(u) node *u;
 {
 	register obj (*proc)();
 	obj x;
-	register node *a;
+	node *a;
 	extern char *printname[];
 
 	if (u==(node *)NULL)
@@ -43,8 +43,7 @@ obj execute(u) node *u;
 			proc=dopa2;
 		else {
 			if (notlegal(a->nobj))
-				error(FATAL, "illegal procedure %o %s", proctab[a->nobj-FIRSTTOKEN],
-					printname[a->nobj-FIRSTTOKEN]);
+				error(FATAL, "illegal statement %o", a);
 			proc = proctab[a->nobj-FIRSTTOKEN];
 		}
 		x = (*proc)(a->narg,a->nobj);
@@ -180,11 +179,11 @@ obj relop(a,n) node **a;
 
 	x = execute(a[0]);
 	y = execute(a[1]);
-	if ((x.optr->tval&NUM)==0 && (y.optr->tval&NUM)==0)
-		i = strcmp(x.optr->sval, y.optr->sval);
-	else {
-		j = getfval(x.optr) - getfval(y.optr);
+	if (x.optr->tval&NUM && y.optr->tval&NUM) {
+		j = x.optr->fval - y.optr->fval;
 		i = j<0? -1: (j>0? 1: 0);
+	} else {
+		i = strcmp(getsval(x.optr), getsval(y.optr));
 	}
 	tempfree(x);
 	tempfree(y);
@@ -284,7 +283,7 @@ obj substr(a, nnn) node **a;
 	return(x);
 }
 
-obj index(a, nnn) node **a;
+obj sindex(a, nnn) node **a;
 {
 	obj x, y;
 	char *s1, *s2, *p1, *p2, *q;
@@ -301,7 +300,7 @@ obj index(a, nnn) node **a;
 		for (q=p1, p2=s2; *p2 != '\0' && *q == *p2; q++, p2++)
 			;
 		if (*p2 == '\0') {
-			setfval(x.optr, (float) (p1 - s1 + 1));	/* origin 1 */
+			setfval(x.optr, (awkfloat) (p1 - s1 + 1));	/* origin 1 */
 			return(x);
 		}
 	}
@@ -358,6 +357,7 @@ char *format(s,a) char *s; node *a;
 		}
 		if (flag == 0) {
 			sprintf(p, "%s", fmt);
+			p += strlen(p);
 			continue;
 		}
 		if (a == NULL)
@@ -651,7 +651,11 @@ obj whilestat(a,n) node **a;
 		if (!istrue(x)) return(x);
 		tempfree(x);
 		x = execute(a[1]);
-		if (isbreak(x) || isnext(x) || isexit(x))
+		if (isbreak(x)) {
+			x = true;
+			return(x);
+		}
+		if (isnext(x) || isexit(x))
 			return(x);
 		tempfree(x);
 	}
@@ -693,6 +697,7 @@ obj instat(a, n) node **a;
 	tp = (cell **) arrayp->sval;
 	for (i = 0; i < MAXSYM; i++) {	/* this routine knows too much */
 		for (cp = tp[i]; cp != NULL; cp = cp->nextval) {
+			xfree(vp->sval);
 			vp->sval = tostring(cp->nval);
 			vp->tval = STR;
 			x = execute(a[2]);
@@ -825,13 +830,3 @@ doit:
 	fprintf(files[i].fp, "%s", s);
 	tempfree(x);
 }
-
-#ifdef	gcos
-
-FILE *popen(s1, s2)	/* fake */
-char *s1, *s2;
-{
-	error(FATAL, "can't open pipe %s on gcos\n", s1);
-}
-
-#endif
