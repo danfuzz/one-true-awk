@@ -70,7 +70,8 @@ Origins / Sources Of The Code Contained Herein
   use of the type `uschar` in this one.
 
 * 2002-02-10 &mdash; from
-  [Debian Snapshot](http://snapshot.debian.org/package/original-awk/).
+  [Debian Snapshot](http://snapshot.debian.org/package/original-awk/)
+  and the collection of Aharon Robbins.
 
 * 2002-11-29 &mdash; from
   [FreeBSD Subversion](http://svn.freebsd.org/base/vendor/one-true-awk/).
