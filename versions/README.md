@@ -56,6 +56,12 @@ Origins / Sources Of The Code Contained Herein
 
 * 1998-10-19 &mdash; from the collection of Aharon Robbins.
 
+* 1999-03-05 &mdash; from the collection of Aharon Robbins.
+
+* 1999-04-16 &mdash; from the collection of Aharon Robbins.
+
+* 1999-06-02 &mdash; from the collection of Aharon Robbins.
+
 * 2000-05-25 &mdash; from
   [Debian Snapshot](http://snapshot.debian.org/package/original-awk/)
   and the collection of Aharon Robbins.
