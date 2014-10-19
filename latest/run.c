@@ -1,8 +1,12 @@
+#ifndef lint
+static char sccsid[] = "@(#)run.c	4.4 8/11/83";
+#endif
+
 #include "awk.def"
 #include	"math.h"
-#define RECSIZE 512
 #include "awk.h"
 #include "stdio.h"
+#define RECSIZE BUFSIZ
 
 #define FILENUM	10
 struct
@@ -18,7 +22,7 @@ int pairstack[PA2NUM], paircnt;
 node *winner = (node *)NULL;
 #define MAXTMP 20
 cell tmps[MAXTMP];
-static cell nullval ={0,0,0.0,NUM,0};
+static cell nullval ={EMPTY,EMPTY,0.0,NUM,0};
 obj	true	={ OBOOL, BTRUE, 0 };
 obj	false	={ OBOOL, BFALSE, 0 };
 
@@ -116,7 +120,7 @@ obj arrayel(a,b) node *a; obj b;
 	s = getsval(b.optr);
 	x = (cell *) a;
 	if (!(x->tval&ARR)) {
-		xfree(x->sval);
+		strfree(x->sval);
 		x->tval &= ~STR;
 		x->tval |= ARR;
 		x->sval = (char *) makesymtab();
@@ -212,7 +216,7 @@ obj relop(a,n) node **a;
 tempfree(a) obj a;
 {
 	if (!istemp(a)) return;
-	xfree(a.optr->sval);
+	strfree(a.optr->sval);
 	a.optr->tval = 0;
 }
 
@@ -325,7 +329,6 @@ char *format(s,a) char *s; node *a;
 			continue;
 		}
 		if (*(s+1) == '%') {
-			*p++ = '%';
 			*p++ = '%';
 			s += 2;
 			continue;
@@ -472,8 +475,15 @@ obj assign(a,n) node **a;
 	x = execute(a[0]);
 	y = execute(a[1]);
 	if (n == ASSIGN) {	/* ordinary assignment */
-		if (y.optr->tval&STR) setsval(x.optr, y.optr->sval);
-		if (y.optr->tval&NUM) setfval(x.optr, y.optr->fval);
+		if ((y.optr->tval & (STR|NUM)) == (STR|NUM)) {
+			setsval(x.optr, y.optr->sval);
+			x.optr->fval = y.optr->fval;
+			x.optr->tval |= NUM;
+		}
+		else if (y.optr->tval & STR)
+			setsval(x.optr, y.optr->sval);
+		else if (y.optr->tval & NUM)
+			setfval(x.optr, y.optr->fval);
 		tempfree(y);
 		return(x);
 	}
@@ -735,6 +745,7 @@ obj instat(a, n) node **a;
 			tempfree(x);
 		}
 	}
+	return (true);
 }
 
 obj jump(a,n) node **a;
@@ -839,7 +850,7 @@ redirprint(s, a, b) char *s; node *b;
 	x = execute(b);
 	getsval(x.optr);
 	for (i=0; i<FILENUM; i++)
-		if (strcmp(x.optr->sval, files[i].fname) == 0)
+		if (files[i].fp && strcmp(x.optr->sval, files[i].fname) == 0)
 			goto doit;
 	for (i=0; i<FILENUM; i++)
 		if (files[i].fp == 0)

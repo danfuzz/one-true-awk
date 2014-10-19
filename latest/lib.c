@@ -1,3 +1,7 @@
+#ifndef lint
+static char sccsid[] = "@(#)lib.c	4.3 8/11/83";
+#endif
+
 #include "stdio.h"
 #include "awk.def"
 #include "awk.h"
@@ -8,13 +12,14 @@ char	*file;
 #define	RECSIZE	(5 * 512)
 char	record[RECSIZE];
 char	fields[RECSIZE];
+char	EMPTY[] = "";
 
 #define	MAXFLD	100
 int	donefld;	/* 1 = implies rec broken into fields */
 int	donerec;	/* 1 = record is valid (no flds have changed) */
 int	mustfld;	/* 1 = NF seen, so always break*/
 
-#define	FINIT	{0, NULL, 0.0, FLD|STR}
+#define	FINIT	{EMPTY, EMPTY, 0.0, FLD|STR}
 cell fldtab[MAXFLD] = {	/*room for fields */
 	{ "$record", record, 0.0, STR|FLD},
 	FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT,
@@ -122,7 +127,7 @@ fldbld()
 			if (i >= MAXFLD)
 				error(FATAL, "record `%.20s...' has too many fields", record);
 			if (!(fldtab[i].tval&FLD))
-				xfree(fldtab[i].sval);
+				strfree(fldtab[i].sval);
 			fldtab[i].sval = fr;
 			fldtab[i].tval = FLD | STR;
 			do
@@ -136,7 +141,7 @@ fldbld()
 			if (i >= MAXFLD)
 				error(FATAL, "record `%.20s...' has too many fields", record);
 			if (!(fldtab[i].tval&FLD))
-				xfree(fldtab[i].sval);
+				strfree(fldtab[i].sval);
 			fldtab[i].sval = fr;
 			fldtab[i].tval = FLD | STR;
 			while (*r != sep && *r != '\n' && *r != '\0')	/* \n always a separator */
@@ -148,9 +153,9 @@ fldbld()
 	*fr = 0;
 	for (j=MAXFLD-1; j>i; j--) {	/* clean out junk from previous record */
 		if (!(fldtab[j].tval&FLD))
-			xfree(fldtab[j].sval);
+			strfree(fldtab[j].sval);
 		fldtab[j].tval = STR | FLD;
-		fldtab[j].sval = NULL;
+		fldtab[j].sval = EMPTY;
 	}
 	maxfld = i;
 	donefld = 1;
@@ -225,6 +230,8 @@ register char *s;
 	int point;
 	char *es;
 
+	if (s == NULL) 
+		return (0);
 	d1 = d2 = point = 0;
 	while (*s == ' ' || *s == '\t' || *s == '\n')
 		s++;
@@ -235,11 +242,13 @@ register char *s;
 	if (!isdigit(*s) && *s != '.')
 		return(0);
 	if (isdigit(*s)) {
-		d1++;
 		do {
+			d1++;
 			s++;
 		} while (isdigit(*s));
 	}
+	if(d1 >= MAXEXPON)
+		return(0);	/* too many digits to convert */
 	if (*s == '.') {
 		point++;
 		s++;

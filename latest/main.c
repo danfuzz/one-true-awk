@@ -1,3 +1,7 @@
+#ifndef lint
+static char sccsid[] = "@(#)main.c	4.2 8/11/83";
+#endif
+
 #include "stdio.h"
 #include "ctype.h"
 #include "awk.def"
@@ -5,6 +9,8 @@
 #define TOLOWER(c)	(isupper(c) ? tolower(c) : c) /* ugh!!! */
 
 int	dbg	= 0;
+int	svflg	= 0;
+int	rstflg	= 0;
 int	svargc;
 char	**svargv, **xargv;
 extern FILE	*yyin;	/* lex input file */
@@ -49,6 +55,17 @@ main(argc, argv) int argc; char *argv[]; {
 		} else if (strcmp("-d", argv[0])==0) {
 			dbg = 1;
 		}
+		else if(strcmp("-S", argv[0]) == 0) {
+			svflg = 1;
+		}
+		else if(strncmp("-R", argv[0], 2) == 0) {
+			if(thaw(argv[0] + 2) == 0)
+				rstflg = 1;
+			else {
+				fprintf(stderr, "not restored\n");
+				exit(1);
+			}
+		}
 	}
 	if (argc <= 1) {
 		argv[0][0] = '-';
@@ -60,10 +77,17 @@ main(argc, argv) int argc; char *argv[]; {
 	svargv = ++argv;
 	dprintf("svargc=%d svargv[0]=%s\n", svargc, svargv[0], NULL);
 	*FILENAME = *svargv;	/* initial file name */
-	yyparse();
+	if(rstflg == 0)
+		yyparse();
 	dprintf("errorflag=%d\n", errorflag, NULL, NULL);
 	if (errorflag)
 		exit(errorflag);
+	if(svflg) {
+		svflg = 0;
+		if(freeze("awk.out") != 0)
+			fprintf(stderr, "not saved\n");
+		exit(0);
+	}
 	run();
 	exit(errorflag);
 }
@@ -72,7 +96,7 @@ logit(n, s) char *s[];
 {	int i, tvec[2];
 	FILE *f, *g;
 	char buf[512];
-	if ((f=fopen("/usr/pjw/awk/awkhist", "a"))==NULL)
+	if ((f=fopen("/crp/pjw/awkhist/awkhist", "a"))==NULL)
 		return;
 	time(tvec);
 	fprintf(f, "%-8s %s", getlogin(), ctime(tvec));
