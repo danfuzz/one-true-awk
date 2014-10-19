@@ -96,7 +96,7 @@ Keyword keywords[] ={	/* keep sorted: binary searched */
 #define	RET(x)	return(x)
 #endif
 
-int peek()
+int peek(void)
 {
 	int c = input();
 	unput(c);

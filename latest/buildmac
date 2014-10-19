@@ -1,0 +1,31 @@
+# MPW Shell script to build Awk using Apple's MRC compiler.
+# 22 Jan 1999 - Created by Dan Allen.
+#
+# Porting to Mac notes:
+# 
+# 1.  main in main.c needs to have its prototype changed to:
+# 
+#     int main(int argc, char *argv[], char *environ[])
+#
+# 2.  Awkfloat in awk.h needs to be defined as double.
+#     This is the default I believe, but just in case...
+#
+# These can be put under " #ifdef powerc" for portability's sake.
+#
+#
+
+MRC ytab.c -w off -opt speed
+MRC b.c -w off -opt speed
+MRC main.c -w off -opt speed
+MRC parse.c -w off -opt speed
+MRC maketab.c -w off -opt speed
+PPCLink -o maketab maketab.c.o "{PPCLibraries}InterfaceLib" "{PPCLibraries}MathLib" "{PPCLibraries}StdCLib" "{PPCLibraries}StdCRuntime.o" "{PPCLibraries}PPCCRuntime.o" "{PPCLibraries}PPCToolLibs.o" -t MPST -c 'MPS '
+maketab > proctab.c
+MRC proctab.c -w off -opt speed
+MRC tran.c -w off -opt speed
+MRC lib.c -w off -opt speed
+MRC run.c -w off -opt speed
+MRC lex.c -w off -opt speed
+MRC missing95.c -w off -opt speed
+PPCLink -o awk ytab.c.o b.c.o main.c.o parse.c.o proctab.c.o tran.c.o lib.c.o run.c.o lex.c.o missing95.c.o "{PPCLibraries}InterfaceLib" "{PPCLibraries}MathLib" "{PPCLibraries}StdCLib" "{PPCLibraries}StdCRuntime.o" "{PPCLibraries}PPCCRuntime.o" "{PPCLibraries}PPCToolLibs.o" -d
+SetFile awk -d . -m . -t MPST -c 'MPS '
