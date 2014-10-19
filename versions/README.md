@@ -73,6 +73,8 @@ Origins / Sources Of The Code Contained Herein
   [Debian Snapshot](http://snapshot.debian.org/package/original-awk/)
   and the collection of Aharon Robbins.
 
+* 2002-06-28 &mdash; from the collection of Aharon Robbins.
+
 * 2002-11-29 &mdash; from
   [FreeBSD Subversion](http://svn.freebsd.org/base/vendor/one-true-awk/).
 
