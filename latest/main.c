@@ -77,7 +77,7 @@ iloop:
 logit(n, s) char *s[];
 {	int i, tvec[2];
 	FILE *f, *g;
-	char buf[512];
+	char buf[BUFSIZ];
 	if ((f=fopen("/usr/pjw/awk/awkhist", "a"))==NULL)
 		return;
 	time(tvec);
@@ -93,7 +93,7 @@ logit(n, s) char *s[];
 		fclose(f);
 		return;
 	}
-	while ((i=fread(buf, 1, 512, g))>0)
+	while ((i=fread(buf, 1, BUFSIZ, g))>0)
 		fwrite(buf, 1, i, f);
 	fclose(f);
 	fclose(g);
@@ -105,9 +105,9 @@ yywrap()
 }
 
 msgfiles()
-{	char buf[512], *p, *q, **s;
+{	char buf[BUFSIZ], *p, *q, **s;
 	int n;
-	n=read(filefd, buf, 512);
+	n=read(filefd, buf, BUFSIZ);
 	if (n<=0)	/*no one at other end?*/ {
 		perror("no files");
 		exit(errno);

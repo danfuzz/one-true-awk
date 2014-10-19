@@ -5,7 +5,7 @@
 
 FILE	*infile	= NULL;
 char	*file;
-#define	RECSIZE	512
+#define	RECSIZE	BUFSIZ
 char	record[RECSIZE];
 char	fields[RECSIZE];
 
