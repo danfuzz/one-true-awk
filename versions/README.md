@@ -57,7 +57,8 @@ Origins / Sources Of The Code Contained Herein
 * 2000-10-30 &mdash; from the collection of Aharon Robbins.
 
 * 2000-11-15 &mdash; from
-  [FreeBSD Subversion](http://svn.freebsd.org/base/vendor/one-true-awk/).
+  [FreeBSD Subversion](http://svn.freebsd.org/base/vendor/one-true-awk/)
+  and the collection of Aharon Robbins.
 
 * 2002-01-01 &mdash; from
   [FreeBSD Subversion](http://svn.freebsd.org/base/vendor/one-true-awk/).
