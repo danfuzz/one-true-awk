@@ -1,5 +1,5 @@
 /****************************************************************
-Copyright (C) AT&T 1993
+Copyright (C) AT&T and Lucent Technologies 1996
 All Rights Reserved
 
 Permission to use, copy, modify, and distribute this software and
@@ -7,31 +7,34 @@ its documentation for any purpose and without fee is hereby
 granted, provided that the above copyright notice appear in all
 copies and that both that the copyright notice and this
 permission notice and warranty disclaimer appear in supporting
-documentation, and that the name of AT&T or any of its entities
-not be used in advertising or publicity pertaining to
-distribution of the software without specific, written prior
-permission.
+documentation, and that the names of AT&T or Lucent Technologies
+or any of their entities not be used in advertising or publicity
+pertaining to distribution of the software without specific,
+written prior permission.
 
-AT&T DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
-INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
-IN NO EVENT SHALL AT&T OR ANY OF ITS ENTITIES BE LIABLE FOR ANY
-SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
-IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
-ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
-THIS SOFTWARE.
+AT&T AND LUCENT DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
+SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+FITNESS. IN NO EVENT SHALL AT&T OR LUCENT OR ANY OF THEIR
+ENTITIES BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL
+DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE
+USE OR PERFORMANCE OF THIS SOFTWARE.
 ****************************************************************/
 
 %{
 #include <stdio.h>
+#include <string.h>
 #include "awk.h"
-yywrap(void) { return(1); }
+
+void checkdup(Node *list, Cell *item);
+int yywrap(void) { return(1); }
 
 Node	*beginloc = 0;
 Node	*endloc = 0;
 int	infunc	= 0;	/* = 1 if in arglist or body of func */
 int	inloop	= 0;	/* = 1 if in while, for, do */
-uchar	*curfname = 0;	/* current function name */
+char	*curfname = 0;	/* current function name */
 Node	*arglist = 0;	/* list of args for current function */
 %}
 
@@ -39,7 +42,7 @@ Node	*arglist = 0;	/* list of args for current function */
 	Node	*p;
 	Cell	*cp;
 	int	i;
-	uchar	*s;
+	char	*s;
 }
 
 %token	<i>	FIRSTTOKEN	/* must be first */
@@ -50,7 +53,7 @@ Node	*arglist = 0;	/* list of args for current function */
 %token	<i>	FINAL DOT ALL CCL NCCL CHAR OR STAR QUEST PLUS
 %token	<i>	AND BOR APPEND EQ GE GT LE LT NE IN
 %token	<i>	ARG BLTIN BREAK CLOSE CONTINUE DELETE DO EXIT FOR FUNC 
-%token	<i>	SUB GSUB IF INDEX LSUBSTR MATCHFCN NEXT
+%token	<i>	SUB GSUB IF INDEX LSUBSTR MATCHFCN NEXT NEXTFILE
 %token	<i>	ADD MINUS MULT DIVIDE MOD
 %token	<i>	ASSIGN ASGNOP ADDEQ SUBEQ MULTEQ DIVEQ MODEQ POWEQ
 %token	<i>	PRINT PRINTF SPRINTF
@@ -64,8 +67,9 @@ Node	*arglist = 0;	/* list of args for current function */
 %type	<s>	reg_expr
 %type	<p>	simple_stmt opt_simple_stmt stmt stmtlist
 %type	<p>	var varname funcname varlist
-%type	<p>	for if while
-%type	<i>	pst opt_pst lbrace rparen comma nl opt_nl and bor
+%type	<p>	for if else while
+%type	<i>	do st
+%type	<i>	pst opt_pst lbrace rbrace rparen comma nl opt_nl and bor
 %type	<i>	subop print
 
 %right	ASGNOP
@@ -272,7 +276,7 @@ rbrace:
 re:
 	   reg_expr
 		{ $$ = op3(MATCH, NIL, rectonode(), (Node*)makedfa($1, 0)); }
-	| NOT re			{ $$ = op1(NOT, notnull($2)); }
+	| NOT re	{ $$ = op1(NOT, notnull($2)); }
 	;
 
 reg_expr:
@@ -289,13 +293,14 @@ simple_stmt:
 	| print prarg GT term		{ $$ = stat3($1, $2, (Node *) $3, $4); }
 	| print prarg			{ $$ = stat3($1, $2, NIL, NIL); }
 	| DELETE varname '[' patlist ']' { $$ = stat2(DELETE, makearr($2), $4); }
-	| DELETE varname		{ yyclearin; ERROR "you can only delete array[element]" SYNTAX; $$ = stat1(DELETE, $2); }
+	| DELETE varname		 { $$ = stat2(DELETE, makearr($2), 0); }
 	| pattern			{ $$ = exptostat($1); }
 	| error				{ yyclearin; ERROR "illegal statement" SYNTAX; }
 	;
 
 st:
-	  nl | ';' opt_nl
+	  nl
+	| ';' opt_nl
 	;
 
 stmt:
@@ -315,6 +320,9 @@ stmt:
 	| NEXT st	{ if (infunc)
 				ERROR "next is illegal inside a function" SYNTAX;
 			  $$ = stat1(NEXT, NIL); }
+	| NEXTFILE st	{ if (infunc)
+				ERROR "nextfile is illegal inside a function" SYNTAX;
+			  $$ = stat1(NEXTFILE, NIL); }
 	| RETURN pattern st	{ $$ = stat1(RETURN, $2); }
 	| RETURN st		{ $$ = stat1(RETURN, NIL); }
 	| simple_stmt st
@@ -408,7 +416,9 @@ var:
 varlist:
 	  /* nothing */		{ arglist = $$ = 0; }
 	| VAR			{ arglist = $$ = valtonode($1,CVAR); }
-	| varlist comma VAR	{ arglist = $$ = linkum($1,valtonode($3,CVAR)); }
+	| varlist comma VAR	{
+			checkdup($1, $3);
+			arglist = $$ = linkum($1,valtonode($3,CVAR)); }
 	;
 
 varname:
@@ -433,12 +443,12 @@ void setfname(Cell *p)
 	curfname = p->nval;
 }
 
-constnode(Node *p)
+int constnode(Node *p)
 {
 	return isvalue(p) && ((Cell *) (p->narg[0]))->csub == CCON;
 }
 
-uchar *strnode(Node *p)
+char *strnode(Node *p)
 {
 	return ((Cell *)(p->narg[0]))->sval;
 }
@@ -451,5 +461,16 @@ Node *notnull(Node *n)
 		return n;
 	default:
 		return op2(NE, n, nullnode);
+	}
+}
+
+void checkdup(Node *vl, Cell *cp)	/* check if name already in list */
+{
+	char *s = cp->nval;
+	for ( ; vl; vl = vl->nnext) {
+		if (strcmp(s, ((Cell *)(vl->narg[0]))->nval) == 0) {
+			ERROR "duplicate argument %s", s SYNTAX;
+			break;
+		}
 	}
 }

@@ -1,5 +1,5 @@
 /****************************************************************
-Copyright (C) AT&T 1993
+Copyright (C) AT&T and Lucent Technologies 1996
 All Rights Reserved
 
 Permission to use, copy, modify, and distribute this software and
@@ -7,23 +7,26 @@ its documentation for any purpose and without fee is hereby
 granted, provided that the above copyright notice appear in all
 copies and that both that the copyright notice and this
 permission notice and warranty disclaimer appear in supporting
-documentation, and that the name of AT&T or any of its entities
-not be used in advertising or publicity pertaining to
-distribution of the software without specific, written prior
-permission.
+documentation, and that the names of AT&T or Lucent Technologies
+or any of their entities not be used in advertising or publicity
+pertaining to distribution of the software without specific,
+written prior permission.
 
-AT&T DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
-INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
-IN NO EVENT SHALL AT&T OR ANY OF ITS ENTITIES BE LIABLE FOR ANY
-SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
-IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
-ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
-THIS SOFTWARE.
+AT&T AND LUCENT DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
+SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+FITNESS. IN NO EVENT SHALL AT&T OR LUCENT OR ANY OF THEIR
+ENTITIES BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL
+DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE
+USE OR PERFORMANCE OF THIS SOFTWARE.
 ****************************************************************/
 
 typedef double	Awkfloat;
-typedef	/*unsigned*/ char uchar;
+
+/* unsigned char is more trouble than it's worth */
+
+typedef	unsigned char uschar;
 
 #define	xfree(a)	{ if ((a) != NULL) { free((char *) a); a = NULL; } }
 
@@ -46,40 +49,52 @@ extern int	compile_time;	/* 1 if compiling, 0 if running */
 #define	RECSIZE	(3 * 1024)	/* sets limit on records, fields, etc., etc. */
 extern int	recsize;	/* variable version */
 
-extern uchar	**FS;
-extern uchar	**RS;
-extern uchar	**ORS;
-extern uchar	**OFS;
-extern uchar	**OFMT;
+extern char	**FS;
+extern char	**RS;
+extern char	**ORS;
+extern char	**OFS;
+extern char	**OFMT;
 extern Awkfloat *NR;
 extern Awkfloat *FNR;
 extern Awkfloat *NF;
-extern uchar	**FILENAME;
-extern uchar	**SUBSEP;
+extern char	**FILENAME;
+extern char	**SUBSEP;
 extern Awkfloat *RSTART;
 extern Awkfloat *RLENGTH;
 
-extern uchar	*record;	/* points to $0 */
+extern char	*record;	/* points to $0 */
 extern int	lineno;		/* line number in awk program */
 extern int	errorflag;	/* 1 if error has occurred */
 extern int	donefld;	/* 1 if record broken into fields */
 extern int	donerec;	/* 1 if record is valid (no fld has changed */
+extern char	inputFS[];	/* FS at time of input, for field splitting */
 
 extern int	dbg;
 
-#define	CBUFLEN	400
-extern uchar	cbuf[CBUFLEN];	/* miscellaneous character collection */
+typedef struct {
+	char	*cbuf;
+	int	clen;
+	int	cmax;
+} Gstring;		/* a string that grows */
 
-extern	uchar	*patbeg;	/* beginning of pattern matched */
+extern Gstring	*newGstring(void);		/* constructor */
+extern void	delGstring(Gstring *);		/* destructor */
+extern char	*cadd(Gstring *gs, int c);	/* function to grow with */
+extern void	caddreset(Gstring *gs);		/* set cbuf empty */
+extern void	cunadd(Gstring *gs);		/* back up one char in cbuf */
+
+extern Gstring	*gs;	/* used by lex */
+
+extern	char	*patbeg;	/* beginning of pattern matched */
 extern	int	patlen;		/* length of pattern matched.  set in b.c */
 
 /* Cell:  all information about a variable or constant */
 
 typedef struct Cell {
-	uchar	ctype;		/* OCELL, OBOOL, OJUMP, etc. */
-	uchar	csub;		/* CCON, CTEMP, CFLD, etc. */
-	uchar	*nval;		/* name, for variables only */
-	uchar	*sval;		/* string value */
+	uschar	ctype;		/* OCELL, OBOOL, OJUMP, etc. */
+	uschar	csub;		/* CCON, CTEMP, CFLD, etc. */
+	char	*nval;		/* name, for variables only */
+	char	*sval;		/* string value */
 	Awkfloat fval;		/* value as number */
 	unsigned tval;		/* type info: STR|NUM|ARR|FCN|FLD|CON|DONTFREE */
 	struct Cell *cnext;	/* ptr to next if chained */
@@ -157,6 +172,7 @@ extern Node	*nullnode;
 #define CNAME	3 
 #define CVAR	2
 #define CFLD	1
+#define	CUNK	0
 
 /* bool subtypes */
 #define BTRUE	11
@@ -168,6 +184,7 @@ extern Node	*nullnode;
 #define	JBREAK	23
 #define	JCONT	24
 #define	JRET	25
+#define	JNEXTFILE	26
 
 /* node types */
 #define NVALUE	1
@@ -186,6 +203,7 @@ extern	int	pairstack[], paircnt;
 #define	isbreak(n)	((n)->csub == JBREAK)
 #define	iscont(n)	((n)->csub == JCONT)
 #define	isnext(n)	((n)->csub == JNEXT)
+#define	isnextfile(n)	((n)->csub == JNEXTFILE)
 #define	isret(n)	((n)->csub == JRET)
 #define isstr(n)	((n)->tval & STR)
 #define isnum(n)	((n)->tval & NUM)
@@ -204,17 +222,21 @@ extern	int	pairstack[], paircnt;
 
 typedef struct rrow {
 	int	ltype;
-	long	lval;	/* because Al stores a pointer in it! */
+	union {
+		int i;
+		Node *np;
+		char *up;
+	} lval;		/* because Al stores a pointer in it! */
 	int	*lfollow;
 } rrow;
 
 typedef struct fa {
-	uchar	*restr;
+	char	*restr;
 	int	anchor;
 	int	use;
-	uchar	gototab[NSTATES][NCHARS];
+	uschar	gototab[NSTATES][NCHARS];
 	int	*posns[NSTATES];
-	uchar	out[NSTATES];
+	uschar	out[NSTATES];
 	int	initstat;
 	int	curstat;
 	int	accept;

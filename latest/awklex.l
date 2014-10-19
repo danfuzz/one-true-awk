@@ -2,7 +2,7 @@
 
 %{
 /****************************************************************
-Copyright (C) AT&T 1993
+Copyright (C) AT&T and Lucent Technologies 1996
 All Rights Reserved
 
 Permission to use, copy, modify, and distribute this software and
@@ -10,19 +10,19 @@ its documentation for any purpose and without fee is hereby
 granted, provided that the above copyright notice appear in all
 copies and that both that the copyright notice and this
 permission notice and warranty disclaimer appear in supporting
-documentation, and that the name of AT&T or any of its entities
-not be used in advertising or publicity pertaining to
-distribution of the software without specific, written prior
-permission.
+documentation, and that the names of AT&T or Lucent Technologies
+or any of their entities not be used in advertising or publicity
+pertaining to distribution of the software without specific,
+written prior permission.
 
-AT&T DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
-INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
-IN NO EVENT SHALL AT&T OR ANY OF ITS ENTITIES BE LIABLE FOR ANY
-SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
-IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
-ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
-THIS SOFTWARE.
+AT&T AND LUCENT DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
+SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+FITNESS. IN NO EVENT SHALL AT&T OR LUCENT OR ANY OF THEIR
+ENTITIES BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL
+DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE
+USE OR PERFORMANCE OF THIS SOFTWARE.
 ****************************************************************/
 
 /* some of this depends on behavior of lex that
@@ -35,7 +35,7 @@ THIS SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 #include "awk.h"
-#include "y.tab.h"
+#include "ytab.h"
 
 extern YYSTYPE	yylval;
 extern int	infunc;
@@ -44,6 +44,7 @@ int	lineno	= 1;
 int	bracecnt = 0;
 int	brackcnt  = 0;
 int	parencnt = 0;
+
 #define DEBUG
 #ifdef	DEBUG
 #	define	RET(x)	{if(dbg)printf("lex %s [%s]\n", tokname(x), yytext); return(x); }
@@ -51,15 +52,14 @@ int	parencnt = 0;
 #	define	RET(x)	return(x)
 #endif
 
-#define	CADD	cbuf[clen++] = yytext[0]; \
-		if (clen >= CBUFLEN-1) { \
-			ERROR "string/reg expr %.30s... too long", cbuf SYNTAX; \
+#define	CADD	if (cadd(gs, yytext[0]) == 0) { \
+			ERROR "string/reg expr %.30s... too long", gs->cbuf SYNTAX; \
 			BEGIN A; \
 		}
 
-uchar	cbuf[CBUFLEN];
-uchar	*s;
-int	clen, cflag;
+char	*s;
+Gstring	*gs = 0;	/* initialized in main() */
+int	cflag;
 %}
 
 A	[a-zA-Z_]
@@ -118,11 +118,11 @@ WS	[ \t]
 <A>"$NF"	{ unputstr("(NF)"); return(INDIRECT); }
 <A>"$"{A}{B}*	{ int c, n;
 		  c = input(); unput(c);
-		  if (c == '(' || c == '[' || infunc && (n=isarg(yytext+1)) >= 0) {
+		  if (c == '(' || c == '[' || (infunc && (n=isarg(yytext+1)) >= 0)) {
 			unputstr(yytext+1);
 			return(INDIRECT);
 		  } else {
-			yylval.cp = setsymtab(yytext+1,"",0.0,STR|NUM,symtab);
+			yylval.cp = setsymtab(yytext+1, "", 0.0, STR|NUM, symtab);
 			RET(IVAR);
 		  }
 		}
@@ -140,6 +140,7 @@ WS	[ \t]
 <A>if		{ RET(IF); }
 <A>else		{ RET(ELSE); }
 <A>next		{ RET(NEXT); }
+<A>nextfile	{ RET(NEXTFILE); }
 <A>exit		{ RET(EXIT); }
 <A>break	{ RET(BREAK); }
 <A>continue	{ RET(CONTINUE); }
@@ -177,7 +178,7 @@ WS	[ \t]
 			yylval.i = n;
 			RET(ARG);
 		  } else {
-			yylval.cp = setsymtab(yytext,"",0.0,STR|NUM,symtab);
+			yylval.cp = setsymtab(yytext, "", 0.0, STR|NUM, symtab);
 			if (c == '(') {
 				RET(CALL);
 			} else {
@@ -185,7 +186,7 @@ WS	[ \t]
 			}
 		  }
 		}
-<A>\"		{ BEGIN str; clen = 0; }
+<A>\"		{ BEGIN str; caddreset(gs); }
 
 <A>"}"		{ if (--bracecnt < 0) ERROR "extra }" SYNTAX; BEGIN sc; RET(';'); }
 <A>"]"		{ if (--brackcnt < 0) ERROR "extra ]" SYNTAX; RET(']'); }
@@ -196,35 +197,36 @@ WS	[ \t]
 		  else if (yytext[0] == '(') parencnt++;
 		  RET(yylval.i = yytext[0]); /* everything else */ }
 
-<reg>\\.	{ cbuf[clen++] = '\\'; cbuf[clen++] = yytext[1]; }
-<reg>\n		{ ERROR "newline in regular expression %.10s...", cbuf SYNTAX; lineno++; BEGIN A; }
+<reg>\\.	{ cadd(gs, '\\'); cadd(gs, yytext[1]); }
+<reg>\n		{ ERROR "newline in regular expression %.10s...", gs->cbuf SYNTAX; lineno++; BEGIN A; }
 <reg>"/"	{ BEGIN A;
-		  cbuf[clen] = 0;
-		  yylval.s = tostring(cbuf);
+		  cadd(gs, 0);
+		  yylval.s = tostring(gs->cbuf);
 		  unput('/');
 		  RET(REGEXPR); }
 <reg>.		{ CADD; }
 
 <str>\"		{ BEGIN A;
-		  cbuf[clen] = 0; s = tostring(cbuf);
-		  cbuf[clen] = ' '; cbuf[++clen] = 0;
-		  yylval.cp = setsymtab(cbuf, s, 0.0, CON|STR, symtab);
+		  cadd(gs, 0); s = tostring(gs->cbuf);
+		  cunadd(gs);
+		  cadd(gs, ' '); cadd(gs, 0);
+		  yylval.cp = setsymtab(gs->cbuf, s, 0.0, CON|STR, symtab);
 		  RET(STRING); }
-<str>\n		{ ERROR "newline in string %.10s...", cbuf SYNTAX; lineno++; BEGIN A; }
-<str>"\\\""	{ cbuf[clen++] = '"'; }
-<str>"\\"n	{ cbuf[clen++] = '\n'; }
-<str>"\\"t	{ cbuf[clen++] = '\t'; }
-<str>"\\"f	{ cbuf[clen++] = '\f'; }
-<str>"\\"r	{ cbuf[clen++] = '\r'; }
-<str>"\\"b	{ cbuf[clen++] = '\b'; }
-<str>"\\"v	{ cbuf[clen++] = '\v'; }	/* these ANSIisms may not be known by */
-<str>"\\"a	{ cbuf[clen++] = '\007'; }	/* your compiler. hence 007 for bell */
-<str>"\\\\"	{ cbuf[clen++] = '\\'; }
+<str>\n		{ ERROR "newline in string %.10s...", gs->cbuf SYNTAX; lineno++; BEGIN A; }
+<str>"\\\""	{ cadd(gs, '"'); }
+<str>"\\"n	{ cadd(gs, '\n'); }
+<str>"\\"t	{ cadd(gs, '\t'); }
+<str>"\\"f	{ cadd(gs, '\f'); }
+<str>"\\"r	{ cadd(gs, '\r'); }
+<str>"\\"b	{ cadd(gs, '\b'); }
+<str>"\\"v	{ cadd(gs, '\v'); }	/* these ANSIisms may not be known by */
+<str>"\\"a	{ cadd(gs, '\007'); }	/* your compiler. hence 007 for bell */
+<str>"\\\\"	{ cadd(gs, '\\'); }
 <str>"\\"({O}{O}{O}|{O}{O}|{O}) { int n;
-		  sscanf(yytext+1, "%o", &n); cbuf[clen++] = n; }
+		  sscanf(yytext+1, "%o", &n); cadd(gs, n); }
 <str>"\\"x({H}+) { int n;	/* ANSI permits any number! */
-		  sscanf(yytext+2, "%x", &n); cbuf[clen++] = n; }
-<str>"\\".	{ cbuf[clen++] = yytext[1]; }
+		  sscanf(yytext+2, "%x", &n); cadd(gs, n); }
+<str>"\\".	{ cadd(gs, yytext[1]); }
 <str>.		{ CADD; }
 
 %%
@@ -232,7 +234,7 @@ WS	[ \t]
 void startreg(void)	/* start parsing a regular expression */
 {
 	BEGIN reg;
-	clen = 0;
+	caddreset(gs);
 }
 
 /* input() and unput() are transcriptions of the standard lex
@@ -240,18 +242,18 @@ void startreg(void)	/* start parsing a regular expression */
    printing.  God help us all if someone changes how lex works.
 */
 
-uchar	ebuf[300];
-uchar	*ep = ebuf;
+char	ebuf[300];
+char	*ep = ebuf;
 
-input(void)	/* get next lexical input character */
+int input(void)	/* get next lexical input character */
 {
-	register int c;
-	extern uchar *lexprog;
+	int c;
+	extern char *lexprog;
 
 	if (yysptr > yysbuf)
 		c = U(*--yysptr);
 	else if (lexprog != NULL) {	/* awk '...' */
-		if (c = *lexprog)
+		if ((c = *lexprog) != 0)
 			lexprog++;
 	} else				/* awk -f ... */
 		c = pgetc();
@@ -281,4 +283,50 @@ void unputstr(char *s)	/* put a string back on input */
 
 	for (i = strlen(s)-1; i >= 0; i--)
 		unput(s[i]);
+}
+
+/* growing-string code */
+
+const int CBUFLEN = 400;
+
+Gstring *newGstring()
+{
+	Gstring *gs = (Gstring *) malloc(sizeof(Gstring));
+	char *cp = (char *) malloc(CBUFLEN);
+
+	if (gs == 0 || cp == 0)
+		ERROR "Out of space for strings" FATAL;
+	gs->cbuf = cp;
+	gs->cmax = CBUFLEN;
+	gs->clen = 0;
+	return gs;
+}
+
+char *cadd(Gstring *gs, int c)	/* add one char to gs->cbuf, grow as needed */
+{
+	if (gs->clen >= gs->cmax) {	/* need to grow */
+		gs->cmax *= 4;
+		gs->cbuf = (char *) realloc((void *) gs->cbuf, gs->cmax);
+
+	}
+	if (gs->cbuf != 0)
+		gs->cbuf[gs->clen++] = c;
+	return gs->cbuf;
+}
+
+void caddreset(Gstring *gs)
+{
+	gs->clen = 0;
+}
+
+void cunadd(Gstring *gs)
+{
+	if (gs->clen > 0)
+		gs->clen--;
+}
+
+void delGstring(Gstring *gs)
+{
+	free((void *) gs->cbuf);
+	free((void *) gs);
 }
