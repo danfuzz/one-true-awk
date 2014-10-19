@@ -79,4 +79,4 @@ names:
 	@echo $(LISTING)
 
 clean:
-	rm -f a.out *.o maketab # proctab.c
+	rm -f a.out *.o *.obj maketab maketab.exe # proctab.c

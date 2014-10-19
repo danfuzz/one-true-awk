@@ -25,7 +25,10 @@ THIS SOFTWARE.
 This file lists all bug fixes, changes, etc., made since the AWK book
 was sent to the printers in August, 1987.
 
-Jan 1, 2001:
+Feb 10, 2002:
+	changed types in posix chars structure to quiet solaris cc.
+
+Jan 1, 2002:
 	fflush() or fflush("") flushes all files and pipes.
 
 	length(arrayname) returns number of elements; thanks to 
@@ -37,7 +40,7 @@ Jan 1, 2001:
 Nov 16, 2001:
 	added support for posix character class names like [:digit:],
 	which are not exactly shorter than [0-9] and perhaps no more
-	portable.  thanks to dag-erlang smorgrav for code.
+	portable.  thanks to dag-erling smorgrav for code.
 
 Feb 16, 2001:
 	removed -m option; no longer needed, and it was actually
