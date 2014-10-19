@@ -1,119 +1,177 @@
-/*-
- * Copyright (c) 1991 The Regents of the University of California.
- * All rights reserved.
- *
- * This module is believed to contain source code proprietary to AT&T.
- * Use and redistribution is subject to the Berkeley Software License
- * Agreement and your Software Agreement with AT&T (Western Electric).
- */
+/****************************************************************
+Copyright (C) AT&T 1993
+All Rights Reserved
 
-#ifndef lint
-char copyright[] =
-"@(#) Copyright (c) 1991 The Regents of the University of California.\n\
- All rights reserved.\n";
-#endif /* not lint */
+Permission to use, copy, modify, and distribute this software and
+its documentation for any purpose and without fee is hereby
+granted, provided that the above copyright notice appear in all
+copies and that both that the copyright notice and this
+permission notice and warranty disclaimer appear in supporting
+documentation, and that the name of AT&T or any of its entities
+not be used in advertising or publicity pertaining to
+distribution of the software without specific, written prior
+permission.
 
-#ifndef lint
-static char sccsid[] = "@(#)main.c	4.6 (Berkeley) 4/17/91";
-#endif /* not lint */
+AT&T DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
+IN NO EVENT SHALL AT&T OR ANY OF ITS ENTITIES BE LIABLE FOR ANY
+SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+THIS SOFTWARE.
+****************************************************************/
 
-#include "stdio.h"
-#include "ctype.h"
-#include "awk.def"
+char	*version = "version July 23, 1993";
+
+#define DEBUG
+#include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+#include <signal.h>
 #include "awk.h"
-#define TOLOWER(c)	(isupper(c) ? tolower(c) : c) /* ugh!!! */
+#include "y.tab.h"
+
+extern	char	**environ;
+extern	int	nfields;
 
 int	dbg	= 0;
-int	ldbg	= 0;
-int	svflg	= 0;
-int	rstflg	= 0;
-int	svargc;
-char	**svargv, **xargv;
-extern FILE	*yyin;	/* lex input file */
-char	*lexprog;	/* points to program argument if it exists */
-extern	errorflag;	/* non-zero if any syntax errors; set by yyerror */
+uchar	*cmdname;	/* gets argv[0] for error messages */
+extern	FILE	*yyin;	/* lex input file */
+uchar	*lexprog;	/* points to program argument if it exists */
+extern	int errorflag;	/* non-zero if any syntax errors; set by yyerror */
+int	compile_time = 2;	/* for error printing: */
+				/* 2 = cmdline, 1 = compile, 0 = running */
 
-int filefd, symnum, ansfd;
-char *filelist;
-extern int maxsym, errno;
-main(argc, argv) int argc; char *argv[]; {
-	if (argc == 1)
-		error(FATAL, "Usage: awk [-f source | 'cmds'] [files]");
-	syminit();
-	while (argc > 1) {
-		argc--;
-		argv++;
-		/* this nonsense is because gcos argument handling */
-		/* folds -F into -f.  accordingly, one checks the next
-		/* character after f to see if it's -f file or -Fx.
-		*/
-		if (argv[0][0] == '-' && TOLOWER(argv[0][1]) == 'f' && argv[0][2] == '\0') {
-			if (argv[1][0] == '-' && argv[1][1] == '\0')
-				yyin = stdin;
-			else {
-				yyin = fopen(argv[1], "r");
-				if (yyin == NULL)
-					error(FATAL, "can't open %s", argv[1]);
-			}
+uchar	*pfile[20];	/* program filenames from -f's */
+int	npfile = 0;	/* number of filenames */
+int	curpfile = 0;	/* current filename */
+
+
+main(int argc, uchar *argv[])
+{
+	uchar *fs = NULL, *marg;
+	int temp;
+
+	cmdname = argv[0];
+	if (argc == 1) {
+		fprintf(stderr, "Usage: %s [-f programfile | 'program'] [-Ffieldsep] [-v var=value] [-mf n] [-mr n] [files]\n", cmdname);
+		exit(1);
+	}
+	signal(SIGFPE, fpecatch);
+	yyin = NULL;
+	symtab = makesymtab(NSYMTAB);
+	while (argc > 1 && argv[1][0] == '-' && argv[1][1] != '\0') {
+		if (strcmp((char *) argv[1], "--") == 0) {	/* explicit end of args */
 			argc--;
 			argv++;
 			break;
-		} else if (argv[0][0] == '-' && TOLOWER(argv[0][1]) == 'f') {	/* set field sep */
-			if (argv[0][2] == 't')	/* special case for tab */
-				**FS = '\t';
-			else
-				**FS = argv[0][2];
-			continue;
-		} else if (argv[0][0] != '-') {
-			dprintf("cmds=|%s|\n", argv[0], NULL, NULL);
-			yyin = NULL;
-			lexprog = argv[0];
-			argv[0] = argv[-1];	/* need this space */
+		}
+		switch (argv[1][1]) {
+		case 'f':	/* next argument is program filename */
+			argc--;
+			argv++;
+			if (argc <= 1)
+				ERROR "no program filename" FATAL;
+			pfile[npfile++] = argv[1];
 			break;
-		} else if (strcmp("-d", argv[0])==0) {
-			dbg = 1;
-		}
-		else if (strcmp("-l", argv[0])==0) {
-			ldbg = 1;
-		}
-		else if(strcmp("-S", argv[0]) == 0) {
-			svflg = 1;
-		}
-		else if(strncmp("-R", argv[0], 2) == 0) {
-			if(thaw(argv[0] + 2) == 0)
-				rstflg = 1;
-			else {
-				fprintf(stderr, "not restored\n");
-				exit(1);
+		case 'F':	/* set field separator */
+			if (argv[1][2] != 0) {	/* arg is -Fsomething */
+				if (argv[1][2] == 't' && argv[1][3] == 0)	/* wart: t=>\t */
+					fs = (uchar *) "\t";
+				else if (argv[1][2] != 0)
+					fs = &argv[1][2];
+			} else {		/* arg is -F something */
+				argc--; argv++;
+				if (argc > 1 && argv[1][0] == 't' && argv[1][1] == 0)	/* wart: t=>\t */
+					fs = (uchar *) "\t";
+				else if (argc > 1 && argv[1][0] != 0)
+					fs = &argv[1][0];
 			}
+			if (fs == NULL || *fs == '\0')
+				ERROR "field separator FS is empty" WARNING;
+			break;
+		case 'v':	/* -v a=1 to be done NOW.  one -v for each */
+			if (argv[1][2] == '\0' && --argc > 1 && isclvar((++argv)[1]))
+				setclvar(argv[1]);
+			break;
+		case 'm':	/* more memory: -mr=record, -mf=fields */
+			marg = argv[1];
+			if (argv[1][3])
+				temp = atoi(&argv[1][3]);
+			else {
+				argv++; argc--;
+				temp = atoi(&argv[1][0]);
+			}
+			switch (marg[2]) {
+			case 'r':	recsize = temp; break;
+			case 'f':	nfields = temp; break;
+			default: ERROR "unknown option %s\n", marg FATAL;
+			}
+			break;
+		case 'd':
+			dbg = atoi(&argv[1][2]);
+			if (dbg == 0)
+				dbg = 1;
+			printf("awk %s\n", version);
+			break;
+		default:
+			ERROR "unknown option %s ignored", argv[1] WARNING;
+			break;
 		}
+		argc--;
+		argv++;
 	}
-	if (argc <= 1) {
-		argv[0][0] = '-';
-		argv[0][1] = '\0';
-		argc++;
-		argv--;
+	/* argv[1] is now the first argument */
+	if (npfile == 0) {	/* no -f; first argument is program */
+		if (argc <= 1) {
+			if (dbg)
+				exit(0);
+			ERROR "no program given" FATAL;
+		}
+		dprintf( ("program = |%s|\n", argv[1]) );
+		lexprog = argv[1];
+		argc--;
+		argv++;
 	}
-	svargc = --argc;
-	svargv = ++argv;
-	dprintf("svargc=%d svargv[0]=%s\n", svargc, svargv[0], NULL);
-	*FILENAME = *svargv;	/* initial file name */
-	if(rstflg == 0)
-		yyparse();
-	dprintf("errorflag=%d\n", errorflag, NULL, NULL);
-	if (errorflag)
-		exit(errorflag);
-	if(svflg) {
-		svflg = 0;
-		if(freeze("awk.out") != 0)
-			fprintf(stderr, "not saved\n");
-		exit(0);
-	}
-	run();
-	exit(errorflag);
+	recinit(recsize);
+	syminit();
+	compile_time = 1;
+	argv[0] = cmdname;	/* put prog name at front of arglist */
+	dprintf( ("argc=%d, argv[0]=%s\n", argc, argv[0]) );
+	arginit(argc, argv);
+	envinit(environ);
+	yyparse();
+	if (fs)
+		*FS = tostring(qstring(fs, '\0'));
+	dprintf( ("errorflag=%d\n", errorflag) );
+	if (errorflag == 0) {
+		compile_time = 0;
+		run(winner);
+	} else
+		bracecheck();
+	return(errorflag);
 }
 
-yywrap()
+pgetc(void)		/* get 1 character from awk program */
 {
-	return(1);
+	int c;
+
+	for (;;) {
+		if (yyin == NULL) {
+			if (curpfile >= npfile)
+				return EOF;
+			if (strcmp((char *) pfile[curpfile], "-") == 0)
+				yyin = stdin;
+			else if ((yyin = fopen((char *) pfile[curpfile], "r")) == NULL)
+				ERROR "can't open file %s", pfile[curpfile] FATAL;
+		}
+		if ((c = getc(yyin)) != EOF)
+			return c;
+		if (yyin != stdin)
+			fclose(yyin);
+		yyin = NULL;
+		curpfile++;
+	}
 }

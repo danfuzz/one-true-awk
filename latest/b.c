@@ -1,266 +1,415 @@
-/*-
- * Copyright (c) 1991 The Regents of the University of California.
- * All rights reserved.
- *
- * This module is believed to contain source code proprietary to AT&T.
- * Use and redistribution is subject to the Berkeley Software License
- * Agreement and your Software Agreement with AT&T (Western Electric).
- */
+/****************************************************************
+Copyright (C) AT&T 1993
+All Rights Reserved
 
-#ifndef lint
-static char sccsid[] = "@(#)b.c	4.4 (Berkeley) 4/17/91";
-#endif /* not lint */
+Permission to use, copy, modify, and distribute this software and
+its documentation for any purpose and without fee is hereby
+granted, provided that the above copyright notice appear in all
+copies and that both that the copyright notice and this
+permission notice and warranty disclaimer appear in supporting
+documentation, and that the name of AT&T or any of its entities
+not be used in advertising or publicity pertaining to
+distribution of the software without specific, written prior
+permission.
 
-#include "awk.def"
-#include "stdio.h"
+AT&T DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
+IN NO EVENT SHALL AT&T OR ANY OF ITS ENTITIES BE LIABLE FOR ANY
+SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+THIS SOFTWARE.
+****************************************************************/
+
+/* lasciate ogni speranza, voi ch'entrate. */
+
+#define	DEBUG
+
+#include <ctype.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include "awk.h"
+#include "y.tab.h"
 
-extern node *op2();
-extern struct fa *cgotofn();
-#define MAXLIN 256
-#define NCHARS 128
-#define NSTATES 256
+#define	HAT	(NCHARS-1)	/* matches ^ in regular expr */
+				/* NCHARS is 2**n */
+#define MAXLIN 512
 
-#define type(v)	v->nobj
-#define left(v)	v->narg[0]
-#define right(v)	v->narg[1]
-#define parent(v)	v->nnext
+#define type(v)		(v)->nobj
+#define left(v)		(v)->narg[0]
+#define right(v)	(v)->narg[1]
+#define parent(v)	(v)->nnext
 
-#define LEAF	case CCL: case NCCL: case CHAR: case DOT:
-#define UNARY	case FINAL: case STAR: case PLUS: case QUEST:
+#define LEAF	case CCL: case NCCL: case CHAR: case DOT: case FINAL: case ALL:
+#define UNARY	case STAR: case PLUS: case QUEST:
 
-/* encoding in tree nodes:
-	leaf (CCL, NCCL, CHAR, DOT): left is index, right contains value or pointer to value
-	unary (FINAL, STAR, PLUS, QUEST): left is child, right is null
+/* encoding in tree Nodes:
+	leaf (CCL, NCCL, CHAR, DOT, FINAL, ALL):
+		left is index, right contains value or pointer to value
+	unary (STAR, PLUS, QUEST): left is child, right is null
 	binary (CAT, OR): left and right are children
 	parent contains pointer to parent
 */
 
-struct fa {
-	int cch;
-	struct fa *st;
-};
 
-int	*state[NSTATES];
-int	*foll[MAXLIN];
-char	chars[MAXLIN];
+uchar	chars[MAXLIN];
 int	setvec[MAXLIN];
-node	*point[MAXLIN];
+int	tmpset[MAXLIN];
+Node	*point[MAXLIN];
 
-int	setcnt;
-int	line;
-int	maxfoll;  /* index of highest foll[] entry set by cfoll() */
+int	rtok;		/* next token in current re */
+int	rlxval;
+uchar	*rlxstr;
+uchar	*prestr;	/* current position in current re */
+uchar	*lastre;	/* origin of last re */
 
+static	int setcnt;
+static	int poscnt;
 
-struct fa *makedfa(p)	/* returns dfa for tree pointed to by p */
-node *p;
+uchar	*patbeg;
+int	patlen;
+
+#define	NFA	20	/* cache this many dynamic fa's */
+fa	*fatab[NFA];
+int	nfatab	= 0;	/* entries in fatab */
+
+fa *makedfa(uchar *s, int anchor)	/* returns dfa for reg expr s */
 {
-	node *p1;
-	struct fa *fap;
-	p1 = op2(CAT, op2(STAR, op2(DOT, (node *) 0, (node *) 0), (node *) 0), p);
-		/* put DOT STAR in front of reg. exp. */
-	p1 = op2(FINAL, p1, (node *) 0);		/* install FINAL node */
+	int i, use, nuse;
+	fa *pfa;
 
-	line = 0;
+	if (compile_time)	/* a constant for sure */
+		return mkdfa(s, anchor);
+	for (i = 0; i < nfatab; i++)	/* is it there already? */
+		if (fatab[i]->anchor == anchor && strcmp(fatab[i]->restr,s) == 0) {
+			fatab[i]->use++;
+			return fatab[i];
+	}
+	pfa = mkdfa(s, anchor);
+	if (nfatab < NFA) {	/* room for another */
+		fatab[nfatab] = pfa;
+		fatab[nfatab]->use = 1;
+		nfatab++;
+		return pfa;
+	}
+	use = fatab[0]->use;	/* replace least-recently used */
+	nuse = 0;
+	for (i = 1; i < nfatab; i++)
+		if (fatab[i]->use < use) {
+			use = fatab[i]->use;
+			nuse = i;
+		}
+	freefa(fatab[nuse]);
+	fatab[nuse] = pfa;
+	pfa->use = 1;
+	return pfa;
+}
+
+fa *mkdfa(uchar *s, int anchor)	/* does the real work of making a dfa */
+				/* anchor = 1 for anchored matches, else 0 */
+{
+	Node *p, *p1;
+	fa *f;
+
+	p = reparse(s);
+	p1 = op2(CAT, op2(STAR, op2(ALL, NIL, NIL), NIL), p);
+		/* put ALL STAR in front of reg.  exp. */
+	p1 = op2(CAT, p1, op2(FINAL, NIL, NIL));
+		/* put FINAL after reg.  exp. */
+
+	poscnt = 0;
 	penter(p1);	/* enter parent pointers and leaf indices */
-	point[line] = p1;	/* FINAL node */
-	setvec[0] = 1;		/* for initial DOT STAR */
-	cfoll(p1);	/* set up follow sets */
-	fap = cgotofn();
-	freetr(p1);	/* add this when alloc works */
-	return(fap);
+	if ((f = (fa *) calloc(1, sizeof(fa) + poscnt*sizeof(rrow))) == NULL)
+		overflo("out of space for fa");
+	f->accept = poscnt-1;	/* penter has computed number of positions in re */
+	cfoll(f, p1);	/* set up follow sets */
+	freetr(p1);
+	if ((f->posns[0] = (int *) calloc(1, *(f->re[0].lfollow)*sizeof(int))) == NULL)
+			overflo("out of space in makedfa");
+	if ((f->posns[1] = (int *) calloc(1, sizeof(int))) == NULL)
+		overflo("out of space in makedfa");
+	*f->posns[1] = 0;
+	f->initstat = makeinit(f, anchor);
+	f->anchor = anchor;
+	f->restr = tostring(s);
+	return f;
 }
 
-penter(p)	/* set up parent pointers and leaf indices */
-node *p;
+int makeinit(fa *f, int anchor)
 {
-	switch(type(p)) {
-		LEAF
-			left(p) = (node *) line;
-			point[line++] = p;
-			break;
-		UNARY
-			penter(left(p));
-			parent(left(p)) = p;
-			break;
-		case CAT:
-		case OR:
-			penter(left(p));
-			penter(right(p));
-			parent(left(p)) = p;
-			parent(right(p)) = p;
-			break;
-		default:
-			error(FATAL, "unknown type %d in penter\n", type(p));
-			break;
+	register int i, k;
+
+	f->curstat = 2;
+	f->out[2] = 0;
+	f->reset = 0;
+	k = *(f->re[0].lfollow);
+	xfree(f->posns[2]);			
+	if ((f->posns[2] = (int *) calloc(1, (k+1)*sizeof(int))) == NULL)
+		overflo("out of space in makeinit");
+	for (i=0; i<=k; i++) {
+		(f->posns[2])[i] = (f->re[0].lfollow)[i];
+	}
+	if ((f->posns[2])[1] == f->accept)
+		f->out[2] = 1;
+	for (i=0; i<NCHARS; i++)
+		f->gototab[2][i] = 0;
+	f->curstat = cgoto(f, 2, HAT);
+	if (anchor) {
+		*f->posns[2] = k-1;	/* leave out position 0 */
+		for (i=0; i<k; i++) {
+			(f->posns[0])[i] = (f->posns[2])[i];
+		}
+
+		f->out[0] = f->out[2];
+		if (f->curstat != 2)
+			--(*f->posns[f->curstat]);
+	}
+	return f->curstat;
+}
+
+void penter(Node *p)	/* set up parent pointers and leaf indices */
+{
+	switch (type(p)) {
+	LEAF
+		left(p) = (Node *) poscnt;
+		if (poscnt >= MAXLIN)
+			overflo("leaf index overflow in penter");
+		point[poscnt++] = p;
+		break;
+	UNARY
+		penter(left(p));
+		parent(left(p)) = p;
+		break;
+	case CAT:
+	case OR:
+		penter(left(p));
+		penter(right(p));
+		parent(left(p)) = p;
+		parent(right(p)) = p;
+		break;
+	default:	/* can't happen */
+		ERROR "unknown type %d in penter", type(p) FATAL;
+		break;
 	}
 }
 
-freetr(p)	/* free parse tree and follow sets */
-node *p;
+void freetr(Node *p)	/* free parse tree */
 {
-	switch(type(p)) {
-		LEAF
-			foll_free((int) left(p));
-			xfree(p);
-			break;
-		UNARY
-			freetr(left(p));
-			xfree(p);
-			break;
-		case CAT:
-		case OR:
-			freetr(left(p));
-			freetr(right(p));
-			xfree(p);
-			break;
-		default:
-			error(FATAL, "unknown type %d in freetr", type(p));
-			break;
+	switch (type(p)) {
+	LEAF
+		xfree(p);
+		break;
+	UNARY
+		freetr(left(p));
+		xfree(p);
+		break;
+	case CAT:
+	case OR:
+		freetr(left(p));
+		freetr(right(p));
+		xfree(p);
+		break;
+	default:	/* can't happen */
+		ERROR "unknown type %d in freetr", type(p) FATAL;
+		break;
 	}
 }
-char *cclenter(p)
-register char *p;
+
+/* in the parsing of regular expressions, metacharacters like . have */
+/* to be seen literally;  \056 is not a metacharacter. */
+
+hexstr(char **pp)	/* find and eval hex string at pp, return new p */
 {
-	register i, c;
-	char *op;
+	char *p;
+	int n = 0;
+
+	for (p = *pp; isxdigit(*p); p++) {
+		if (isdigit(*p))
+			n = 16 * n + *p - '0';
+		else if (*p >= 'a' && *p <= 'f')
+			n = 16 * n + *p - 'a' + 10;
+		else if (*p >= 'A' && *p <= 'F')
+			n = 16 * n + *p - 'A' + 10;
+	}
+	*pp = p;
+	return n;
+}
+
+#define isoctdigit(c) ((c) >= '0' && (c) <= '8')	/* multiple use of arg */
+
+quoted(char **pp)	/* pick up next thing after a \\ */
+			/* and increment *pp */
+{
+	char *p = *pp;
+	int c;
+
+	if ((c = *p++) == 't')
+		c = '\t';
+	else if (c == 'n')
+		c = '\n';
+	else if (c == 'f')
+		c = '\f';
+	else if (c == 'r')
+		c = '\r';
+	else if (c == 'b')
+		c = '\b';
+	else if (c == '\\')
+		c = '\\';
+	else if (c == 'x') {	/* hexadecimal goo follows */
+		c = hexstr(&p);
+	} else if (isoctdigit(c)) {	/* \d \dd \ddd */
+		int n = c - '0';
+		if (isoctdigit(*p)) {
+			n = 8 * n + *p++ - '0';
+			if (isoctdigit(*p))
+				n = 8 * n + *p++ - '0';
+		}
+		c = n;
+	} /* else */
+		/* c = c; */
+	*pp = p;
+	return c;
+}
+
+uchar *cclenter(uchar *p)	/* add a character class */
+{
+	register int i, c, c2;
+	uchar *op;
 
 	op = p;
 	i = 0;
 	while ((c = *p++) != 0) {
-		if (c == '-' && i > 0 && chars[i-1] != 0) {
+		if (c == '\\') {
+			c = quoted(&p);
+		} else if (c == '-' && i > 0 && chars[i-1] != 0) {
 			if (*p != 0) {
 				c = chars[i-1];
-				while (c < *p) {
-					if (i >= MAXLIN)
-						overflo();
+				c2 = *p++;
+				if (c2 == '\\')
+					c2 = quoted(&p);
+				while (c < c2) {
+					if (i >= MAXLIN-1)
+						overflo("character class too big");
 					chars[i++] = ++c;
 				}
-				p++;
 				continue;
 			}
 		}
-		if (i >= MAXLIN)
-			overflo();
+		if (i >= MAXLIN-1)
+			overflo("character class too big");
 		chars[i++] = c;
 	}
 	chars[i++] = '\0';
-	dprintf("cclenter: in = |%s|, out = |%s|\n", op, chars, NULL);
+	dprintf( ("cclenter: in = |%s|, out = |%s|\n", op, chars) );
 	xfree(op);
 	return(tostring(chars));
 }
 
-overflo()
+void overflo(uchar *s)
 {
-	error(FATAL, "regular expression too long\n");
+	ERROR "regular expression too big: %.30s...", s FATAL;
 }
 
-cfoll(v)		/* enter follow set of each leaf of vertex v into foll[leaf] */
-register node *v;
+void cfoll(fa *f, Node *v)	/* enter follow set of each leaf of vertex v into lfollow[leaf] */
 {
-	register i;
-	int prev;
-	int *add();
+	register int i;
+	register int *p;
 
-	maxfoll = -1;
-	switch(type(v)) {
-		LEAF
-			setcnt = 0;
-			for (i=1; i<=line; i++)
-				setvec[i] = 0;
-			follow(v);
-			if (notin(foll, ( (int) left(v))-1, &prev)) {
-				foll[(int) left(v)] = add(setcnt);
-			}
-			else
-				foll[ (int) left(v)] = foll[prev];
-			if ((int)left(v) > maxfoll)
-				maxfoll = (int)left(v);
-			break;
-		UNARY
-			cfoll(left(v));
-			break;
-		case CAT:
-		case OR:
-			cfoll(left(v));
-			cfoll(right(v));
-			break;
-		default:
-			error(FATAL, "unknown type %d in cfoll", type(v));
+	switch (type(v)) {
+	LEAF
+		f->re[(int) left(v)].ltype = type(v);
+		f->re[(int) left(v)].lval = (long) right(v);	/* assumes ptr & long fit */
+		for (i=0; i<=f->accept; i++)
+			setvec[i] = 0;
+		setcnt = 0;
+		follow(v);	/* computes setvec and setcnt */
+		if ((p = (int *) calloc(1, (setcnt+1)*sizeof(int))) == NULL)
+			overflo("out of space building follow set");
+		f->re[(int) left(v)].lfollow = p;
+		*p = setcnt;
+		for (i = f->accept; i >= 0; i--)
+			if (setvec[i] == 1) *++p = i;
+		break;
+	UNARY
+		cfoll(f,left(v));
+		break;
+	case CAT:
+	case OR:
+		cfoll(f,left(v));
+		cfoll(f,right(v));
+		break;
+	default:	/* can't happen */
+		ERROR "unknown type %d in cfoll", type(v) FATAL;
 	}
 }
 
-first(p)			/* collects initially active leaves of p into setvec */
-register node *p;		/* returns 0 or 1 depending on whether p matches empty string */
+first(Node *p)	/* collects initially active leaves of p into setvec */
+		/* returns 0 or 1 depending on whether p matches empty string */
 {
-	register b;
+	register int b;
 
-	switch(type(p)) {
-		LEAF
-			if (setvec[(int) left(p)] != 1) {
-				setvec[(int) left(p)] = 1;
-				setcnt++;
-			}
-			if (type(p) == CCL && (*(char *) right(p)) == '\0')
-				return(0);		/* empty CCL */
-			else return(1);
-		case FINAL:
-		case PLUS:
-			if (first(left(p)) == 0) return(0);
-			return(1);
-		case STAR:
-		case QUEST:
-			first(left(p));
-			return(0);
-		case CAT:
-			if (first(left(p)) == 0 && first(right(p)) == 0) return(0);
-			return(1);
-		case OR:
-			b = first(right(p));
-			if (first(left(p)) == 0 || b == 0) return(0);
-			return(1);
+	switch (type(p)) {
+	LEAF
+		if (setvec[(int) left(p)] != 1) {
+			setvec[(int) left(p)] = 1;
+			setcnt++;
+		}
+		if (type(p) == CCL && (*(uchar *) right(p)) == '\0')
+			return(0);		/* empty CCL */
+		else return(1);
+	case PLUS:
+		if (first(left(p)) == 0) return(0);
+		return(1);
+	case STAR:
+	case QUEST:
+		first(left(p));
+		return(0);
+	case CAT:
+		if (first(left(p)) == 0 && first(right(p)) == 0) return(0);
+		return(1);
+	case OR:
+		b = first(right(p));
+		if (first(left(p)) == 0 || b == 0) return(0);
+		return(1);
 	}
-	error(FATAL, "unknown type %d in first\n", type(p));
+	ERROR "unknown type %d in first", type(p) FATAL;	/* can't happen */
 	return(-1);
 }
 
-follow(v)
-node *v;		/* collects leaves that can follow v into setvec */
+void follow(Node *v)	/* collects leaves that can follow v into setvec */
 {
-	node *p;
+	Node *p;
 
 	if (type(v) == FINAL)
 		return;
 	p = parent(v);
 	switch (type(p)) {
-		case STAR:
-		case PLUS:	first(v);
+	case STAR:
+	case PLUS:
+		first(v);
+		follow(p);
+		return;
+
+	case OR:
+	case QUEST:
+		follow(p);
+		return;
+
+	case CAT:
+		if (v == left(p)) {	/* v is left child of p */
+			if (first(right(p)) == 0) {
 				follow(p);
 				return;
-
-		case OR:
-		case QUEST:	follow(p);
-				return;
-
-		case CAT:	if (v == left(p)) {	/* v is left child of p */
-					if (first(right(p)) == 0) {
-						follow(p);
-						return;
-					}
-				}
-				else		/* v is right child */
-					follow(p);
-				return;
-		case FINAL:	if (setvec[line] != 1) {
-					setvec[line] = 1;
-					setcnt++;
-				}
-				return;
+			}
+		} else		/* v is right child */
+			follow(p);
+		return;
 	}
 }
 
-member(c, s)	/* is c in s? */
-register char c, *s;
+member(int c, uchar *s)	/* is c in s? */
 {
 	while (*s)
 		if (c == *s++)
@@ -268,303 +417,374 @@ register char c, *s;
 	return(0);
 }
 
-notin(array, n, prev)		/* is setvec in array[0] thru array[n]? */
-int **array;
-int *prev; {
-	register i, j;
-	int *ptr;
-	for (i=0; i<=n; i++) {
-		ptr = array[i];
-		if (*ptr == setcnt) {
-			for (j=0; j < setcnt; j++)
-				if (setvec[*(++ptr)] != 1) goto nxt;
-			*prev = i;
-			return(0);
-		}
-		nxt: ;
-	}
-	return(1);
-}
-
-int *add(n) {		/* remember setvec */
-	int *ptr, *p;
-	register i;
-	if ((p = ptr = (int *) malloc((n+1)*sizeof(int))) == NULL)
-		overflo();
-	*ptr = n;
-	dprintf("add(%d)\n", n, NULL, NULL);
-	for (i=1; i <= line; i++)
-		if (setvec[i] == 1) {
-			*(++ptr) = i;
-			dprintf("  ptr = %o, *ptr = %d, i = %d\n", ptr, *ptr, i);
-		}
-	dprintf("\n", NULL, NULL, NULL);
-	return(p);
-}
-
-struct fa *cgotofn()
+match(fa *f, uchar *p)	/* shortest match ? */
 {
-	register i, k;
-	register int *ptr;
-	char c;
-	char *p;
-	node *cp;
-	int j, n, s, ind, numtrans;
-	int finflg;
-	int curpos, num, prev;
-	struct fa *where[NSTATES];
+	register int s, ns;
 
-	int fatab[257];
-	struct fa *pfa;
-
-	char index[MAXLIN];
-	char iposns[MAXLIN];
-	int sposns[MAXLIN];
-	int spmax, spinit;
-
-	char symbol[NCHARS];
-	char isyms[NCHARS];
-	char ssyms[NCHARS];
-	int ssmax, ssinit;
-
-	for (i=0; i<=line; i++) index[i] = iposns[i] = setvec[i] = 0;
-	for (i=0; i<NCHARS; i++)  isyms[i] = symbol[i] = 0;
-	setcnt = 0;
-	/* compute initial positions and symbols of state 0 */
-	ssmax = 0;
-	ptr = state[0] = foll[0];
-	spinit = *ptr;
-	for (i=0; i<spinit; i++) {
-		curpos = *(++ptr);
-		sposns[i] = curpos;
-		iposns[curpos] = 1;
-		cp = point[curpos];
-		dprintf("i = %d, spinit = %d, curpos = %d\n", i, spinit, curpos);
-		switch (type(cp)) {
-			case CHAR:
-				k = (int) right(cp);
-				if (isyms[k] != 1) {
-					isyms[k] = 1;
-					ssyms[ssmax++] = k;
-				}
-				break;
-			case DOT:
-				for (k=1; k<NCHARS; k++) {
-					if (k != HAT) {
-						if (isyms[k] != 1) {
-							isyms[k] = 1;
-							ssyms[ssmax++] = k;
-						}
-					}
-				}
-				break;
-			case CCL:
-				for (p = (char *) right(cp); *p; p++) {
-					if (*p != HAT) {
-						if (isyms[*p] != 1) {
-							isyms[*p] = 1;
-							ssyms[ssmax++] = *p;
-						}
-					}
-				}
-				break;
-			case NCCL:
-				for (k=1; k<NCHARS; k++) {
-					if (k != HAT && !member(k, (char *) right(cp))) {
-						if (isyms[k] != 1) {
-							isyms[k] = 1;
-							ssyms[ssmax++] = k;
-						}
-					}
-				}
-		}
-	}
-	ssinit = ssmax;
-	n = 0;
-	for (s=0; s<=n; s++)  {
-	dprintf("s = %d\n", s, NULL, NULL);
-		ind = 0;
-		numtrans = 0;
-		finflg = 0;
-		if (*(state[s] + *state[s]) == line) {		/* s final? */
-			finflg = 1;
-			goto tenter;
-		}
-		spmax = spinit;
-		ssmax = ssinit;
-		ptr = state[s];
-		num = *ptr;
-		for (i=0; i<num; i++) {
-			curpos = *(++ptr);
-			if (iposns[curpos] != 1 && index[curpos] != 1) {
-				index[curpos] = 1;
-				sposns[spmax++] = curpos;
-			}
-			cp = point[curpos];
-			switch (type(cp)) {
-				case CHAR:
-					k = (int) right(cp);
-					if (isyms[k] == 0 && symbol[k] == 0) {
-						symbol[k] = 1;
-						ssyms[ssmax++] = k;
-					}
-					break;
-				case DOT:
-					for (k=1; k<NCHARS; k++) {
-						if (k != HAT) {
-							if (isyms[k] == 0 && symbol[k] == 0) {
-								symbol[k] = 1;
-								ssyms[ssmax++] = k;
-							}
-						}
-					}
-					break;
-				case CCL:
-					for (p = (char *) right(cp); *p; p++) {
-						if (*p != HAT) {
-							if (isyms[*p] == 0 && symbol[*p] == 0) {
-								symbol[*p] = 1;
-								ssyms[ssmax++] = *p;
-							}
-						}
-					}
-					break;
-				case NCCL:
-					for (k=1; k<NCHARS; k++) {
-						if (k != HAT && !member(k, (char *) right(cp))) {
-							if (isyms[k] == 0 && symbol[k] == 0) {
-								symbol[k] = 1;
-								ssyms[ssmax++] = k;
-							}
-						}
-					}
-			}
-		}
-		for (j=0; j<ssmax; j++) {	/* nextstate(s, ssyms[j]) */
-			c = ssyms[j];
-			symbol[c] = 0;
-			setcnt = 0;
-			for (k=0; k<=line; k++) setvec[k] = 0;
-			for (i=0; i<spmax; i++) {
-				index[sposns[i]] = 0;
-				cp = point[sposns[i]];
-				if ((k = type(cp)) != FINAL)
-					if (k == CHAR && c == (int) right(cp)
-					 || k == DOT
-					 || k == CCL && member(c, (char *) right(cp))
-					 || k == NCCL && !member(c, (char *) right(cp))) {
-						ptr = foll[sposns[i]];
-						num = *ptr;
-						for (k=0; k<num; k++) {
-							if (setvec[*(++ptr)] != 1
-								&& iposns[*ptr] != 1) {
-								setvec[*ptr] = 1;
-								setcnt++;
-							}
-						}
-					}
-			} /* end nextstate */
-			if (notin(state, n, &prev)) {
-				if (n >= NSTATES) {
-					dprintf("cgotofn: notin; state = %d, n = %d\n", state, n, NULL);
-					overflo();
-				}
-				state[++n] = add(setcnt);
-				dprintf("	delta(%d,%o) = %d", s,c,n);
-				dprintf(", ind = %d\n", ind+1, NULL, NULL);
-				fatab[++ind] = c;
-				fatab[++ind] = n;
-				numtrans++;
-			}
-			else {
-				if (prev != 0) {
-					dprintf("	delta(%d,%o) = %d", s,c,prev);
-					dprintf(", ind = %d\n", ind+1, NULL, NULL);
-					fatab[++ind] = c;
-					fatab[++ind] = prev;
-					numtrans++;
-				}
-			}
-		}
-	tenter:
-		if ((pfa = (struct fa *) malloc((numtrans + 1) * sizeof(struct fa))) == NULL)
-			overflo();
-		where[s] = pfa;
-		if (finflg)
-			pfa->cch = -1;		/* s is a final state */
-		else
-			pfa->cch = numtrans;
-		pfa->st = 0;
-		for (i=1, pfa += 1; i<=numtrans; i++, pfa++) {
-			pfa->cch = fatab[2*i-1];
-			pfa->st = (struct fa *) fatab[2*i];
-		}
-	}
-	for (i=0; i<=n; i++) {
-		/* N.b. state[0] == foll[0], not separately allocated */
-		if (i>0)
-			xfree(state[i]);       /* free state[i] */
-		pfa = where[i];
-		pfa->st = where[0];
-		dprintf("state %d: (%o)\n", i, pfa, NULL);
-		dprintf("	numtrans = %d,	default = %o\n", pfa->cch, pfa->st, NULL);
-		for (k=1; k<=pfa->cch; k++) {
-			(pfa+k)->st = where[ (int) (pfa+k)->st];
-			dprintf("	char = %o,	nextstate = %o\n",(pfa+k)->cch, (pfa+k)->st, NULL);
-		}
-	}
-	pfa = where[0];
-	if ((num = pfa->cch) < 0)
-		return(where[0]);
-	for (pfa += num; num; num--, pfa--)
-		if (pfa->cch == HAT) {
-			return(pfa->st);
-		}
-	return(where[0]);
-}
-
-match(pfa, p)
-register struct fa *pfa;
-register char *p;
-{
-	register count;
-	char c;
-	if (p == 0) return(0);
-	if (pfa->cch == 1) {		/* fast test for first character, if possible */
-		c = (++pfa)->cch;
-		do
-			if (c == *p) {
-				p++;
-				pfa = pfa->st;
-				goto adv;
-			}
-		while (*p++ != 0);
-		return(0);
-	}
-   adv: if ((count = pfa->cch) < 0) return(1);
+	s = f->reset ? makeinit(f,0) : f->initstat;
+	if (f->out[s])
+		return(1);
 	do {
-		for (pfa += count; count; count--, pfa--)
-			if (pfa->cch == *p) {
-				break;
-			}
-		pfa = pfa->st;
-		if ((count = pfa->cch) < 0) return(1);
-	} while(*p++ != 0);
+		if (ns=f->gototab[s][*p])
+			s = ns;
+		else
+			s = cgoto(f,s,*p);
+		if (f->out[s])
+			return(1);
+	} while (*p++ != 0);
 	return(0);
 }
 
-/*
- * Free foll[i], taking into account identical foll[] entries.
- * This is necessary because cfoll() uses the same physical follow set for
- * several foll[] entries when the set is identical.  Called by freetr().
- */
-foll_free(i)
-int i;
+pmatch(fa *f, uchar *p)	/* longest match, for sub */
 {
-	register int j;
-	int *p = foll[i];
-	if (p==NULL) return;
-	for (j=0; j<=maxfoll; j++) 
-		if (foll[j]==p) foll[j]=NULL;
-	xfree(p);
+	register int s, ns;
+	register uchar *q;
+	int i, k;
+
+	s = f->reset ? makeinit(f,1) : f->initstat;
+	patbeg = p;
+	patlen = -1;
+	do {
+		q = p;
+		do {
+			if (f->out[s])		/* final state */
+				patlen = q-p;
+			if (ns=f->gototab[s][*q])
+				s = ns;
+			else
+				s = cgoto(f,s,*q);
+			if (s == 1)	/* no transition */
+				if (patlen >= 0) {
+					patbeg = p;
+					return(1);
+				}
+				else
+					goto nextin;	/* no match */
+		} while (*q++ != 0);
+		if (f->out[s])
+			patlen = q-p-1;	/* don't count $ */
+		if (patlen >= 0) {
+			patbeg = p;
+			return(1);
+		}
+	nextin:
+		s = 2;
+		if (f->reset) {
+			for (i = 2; i <= f->curstat; i++)
+				xfree(f->posns[i]);
+			k = *f->posns[0];			
+			if ((f->posns[2] = (int *) calloc(1, (k+1)*sizeof(int))) == NULL)
+				overflo("out of space in pmatch");
+			for (i = 0; i <= k; i++)
+				(f->posns[2])[i] = (f->posns[0])[i];
+			f->initstat = f->curstat = 2;
+			f->out[2] = f->out[0];
+			for (i = 0; i < NCHARS; i++)
+				f->gototab[2][i] = 0;
+		}
+	} while (*p++ != 0);
+	return (0);
+}
+
+nematch(fa *f, uchar *p)	/* non-empty match, for sub */
+{
+	register int s, ns;
+	register uchar *q;
+	int i, k;
+
+	s = f->reset ? makeinit(f,1) : f->initstat;
+	patlen = -1;
+	while (*p) {
+		q = p;
+		do {
+			if (f->out[s])		/* final state */
+				patlen = q-p;
+			if (ns = f->gototab[s][*q])
+				s = ns;
+			else
+				s = cgoto(f,s,*q);
+			if (s == 1)	/* no transition */
+				if (patlen > 0) {
+					patbeg = p;
+					return(1);
+				} else
+					goto nnextin;	/* no nonempty match */
+		} while (*q++ != 0);
+		if (f->out[s])
+			patlen = q-p-1;	/* don't count $ */
+		if (patlen > 0 ) {
+			patbeg = p;
+			return(1);
+		}
+	nnextin:
+		s = 2;
+		if (f->reset) {
+			for (i = 2; i <= f->curstat; i++)
+				xfree(f->posns[i]);
+			k = *f->posns[0];			
+			if ((f->posns[2] = (int *) calloc(1, (k+1)*sizeof(int))) == NULL)
+				overflo("out of state space");
+			for (i = 0; i <= k; i++)
+				(f->posns[2])[i] = (f->posns[0])[i];
+			f->initstat = f->curstat = 2;
+			f->out[2] = f->out[0];
+			for (i = 0; i < NCHARS; i++)
+				f->gototab[2][i] = 0;
+		}
+		p++;
+	}
+	return (0);
+}
+
+Node *reparse(uchar *p)	/* parses regular expression pointed to by p */
+{			/* uses relex() to scan regular expression */
+	Node *np;
+
+	dprintf( ("reparse <%s>\n", p) );
+	lastre = prestr = p;	/* prestr points to string to be parsed */
+	rtok = relex();
+	if (rtok == '\0')
+		ERROR "empty regular expression" FATAL;
+	np = regexp();
+	if (rtok != '\0')
+		ERROR "syntax error in regular expression %s at %s", lastre, prestr FATAL;
+	return(np);
+}
+
+Node *regexp(void)	/* top-level parse of reg expr */
+{
+	return (alt(concat(primary())));
+}
+
+Node *primary(void)
+{
+	Node *np;
+
+	switch (rtok) {
+	case CHAR:
+		np = op2(CHAR, NIL, (Node *) rlxval);
+		rtok = relex();
+		return (unary(np));
+	case ALL:
+		rtok = relex();
+		return (unary(op2(ALL, NIL, NIL)));
+	case DOT:
+		rtok = relex();
+		return (unary(op2(DOT, NIL, NIL)));
+	case CCL:
+		np = op2(CCL, NIL, (Node*) cclenter(rlxstr));
+		rtok = relex();
+		return (unary(np));
+	case NCCL:
+		np = op2(NCCL, NIL, (Node *) cclenter(rlxstr));
+		rtok = relex();
+		return (unary(np));
+	case '^':
+		rtok = relex();
+		return (unary(op2(CHAR, NIL, (Node *) HAT)));
+	case '$':
+		rtok = relex();
+		return (unary(op2(CHAR, NIL, NIL)));
+	case '(':
+		rtok = relex();
+		if (rtok == ')') {	/* special pleading for () */
+			rtok = relex();
+			return unary(op2(CCL, NIL, (Node *) tostring("")));
+		}
+		np = regexp();
+		if (rtok == ')') {
+			rtok = relex();
+			return (unary(np));
+		}
+		else
+			ERROR "syntax error in regular expression %s at %s", lastre, prestr FATAL;
+	default:
+		ERROR "illegal primary in regular expression %s at %s", lastre, prestr FATAL;
+	}
+	return 0;	/*NOTREACHED*/
+}
+
+Node *concat(Node *np)
+{
+	switch (rtok) {
+	case CHAR: case DOT: case ALL: case CCL: case NCCL: case '$': case '(':
+		return (concat(op2(CAT, np, primary())));
+	}
+	return (np);
+}
+
+Node *alt(Node *np)
+{
+	if (rtok == OR) {
+		rtok = relex();
+		return (alt(op2(OR, np, concat(primary()))));
+	}
+	return (np);
+}
+
+Node *unary(Node *np)
+{
+	switch (rtok) {
+	case STAR:
+		rtok = relex();
+		return (unary(op2(STAR, np, NIL)));
+	case PLUS:
+		rtok = relex();
+		return (unary(op2(PLUS, np, NIL)));
+	case QUEST:
+		rtok = relex();
+		return (unary(op2(QUEST, np, NIL)));
+	default:
+		return (np);
+	}
+}
+
+relex(void)		/* lexical analyzer for reparse */
+{
+	register int c;
+	uchar cbuf[MAXLIN];
+	int clen, cflag;
+
+	switch (c = *prestr++) {
+	case '|': return OR;
+	case '*': return STAR;
+	case '+': return PLUS;
+	case '?': return QUEST;
+	case '.': return DOT;
+	case '\0': prestr--; return '\0';
+	case '^':
+	case '$':
+	case '(':
+	case ')':
+		return c;
+	case '\\':
+		rlxval = quoted(&prestr);
+		return CHAR;
+	default:
+		rlxval = c;
+		return CHAR;
+	case '[': 
+		clen = 0;
+		if (*prestr == '^') {
+			cflag = 1;
+			prestr++;
+		}
+		else
+			cflag = 0;
+		for ( ; clen < MAXLIN-1; ) {
+			if ((c = *prestr++) == '\\') {
+				cbuf[clen++] = '\\';
+				if ((c = *prestr++) == '\0')
+					ERROR "nonterminated character class %.20s...", lastre FATAL;
+				cbuf[clen++] = c;
+			} else if (c == ']') {
+				cbuf[clen] = 0;
+				rlxstr = tostring(cbuf);
+				if (cflag == 0)
+					return CCL;
+				else
+					return NCCL;
+			} else if (c == '\n') {
+				ERROR "newline in character class %.20s...", lastre FATAL;
+			} else if (c == '\0') {
+				ERROR "nonterminated character class %.20s", lastre FATAL;
+			} else
+				cbuf[clen++] = c;
+		}
+		if (clen >= MAXLIN-1)
+			ERROR "character class %.20s... too long", cbuf FATAL;
+	}
+	/* can't happen */
+	return 0;
+}
+
+int cgoto(fa *f, int s, int c)
+{
+	register int i, j, k;
+	register int *p, *q;
+
+	for (i = 0; i <= f->accept; i++)
+		setvec[i] = 0;
+	setcnt = 0;
+	/* compute positions of gototab[s,c] into setvec */
+	p = f->posns[s];
+	for (i = 1; i <= *p; i++) {
+		if ((k = f->re[p[i]].ltype) != FINAL) {
+			if (k == CHAR && c == f->re[p[i]].lval
+				|| k == DOT && c != 0 && c != HAT
+				|| k == ALL && c != 0
+				|| k == CCL && member(c, (uchar *) f->re[p[i]].lval)
+				|| k == NCCL && !member(c, (uchar *) f->re[p[i]].lval) && c != 0 && c != HAT) {
+					q = f->re[p[i]].lfollow;
+					for (j = 1; j <= *q; j++) {
+						if (setvec[q[j]] == 0) {
+							setcnt++;
+							setvec[q[j]] = 1;
+						}
+					}
+				}
+		}
+	}
+	/* determine if setvec is a previous state */
+	tmpset[0] = setcnt;
+	j = 1;
+	for (i = f->accept; i >= 0; i--)
+		if (setvec[i]) {
+			tmpset[j++] = i;
+		}
+	/* tmpset == previous state? */
+	for (i = 1; i <= f->curstat; i++) {
+		p = f->posns[i];
+		if ((k = tmpset[0]) != p[0])
+			goto different;
+		for (j = 1; j <= k; j++)
+			if (tmpset[j] != p[j])
+				goto different;
+		/* setvec is state i */
+		f->gototab[s][c] = i;
+		return i;
+	  different:;
+	}
+
+	/* add tmpset to current set of states */
+	if (f->curstat >= NSTATES-1) {
+		f->curstat = 2;
+		f->reset = 1;
+		for (i = 2; i < NSTATES; i++)
+			xfree(f->posns[i]);
+	} else
+		++(f->curstat);
+	for (i = 0; i < NCHARS; i++)
+		f->gototab[f->curstat][i] = 0;
+	xfree(f->posns[f->curstat]);
+	if ((p = (int *) calloc(1, (setcnt+1)*sizeof(int))) == NULL)
+		overflo("out of space in cgoto");
+
+	f->posns[f->curstat] = p;
+	f->gototab[s][c] = f->curstat;
+	for (i = 0; i <= setcnt; i++)
+		p[i] = tmpset[i];
+	if (setvec[f->accept])
+		f->out[f->curstat] = 1;
+	else
+		f->out[f->curstat] = 0;
+	return f->curstat;
+}
+
+
+void freefa(fa *f)	/* free a finite automaton */
+{
+	register int i;
+
+	if (f == NULL)
+		return;
+	for (i = 0; i <= f->curstat; i++)
+		xfree(f->posns[i]);
+	for (i = 0; i <= f->accept; i++) {
+		xfree(f->re[i].lfollow);
+		if (f->re[i].ltype == CCL || f->re[i].ltype == NCCL)
+			xfree(f->re[i].lval);
+	}
+	xfree(f->restr);
+	xfree(f);
 }

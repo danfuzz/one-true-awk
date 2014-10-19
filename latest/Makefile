@@ -1,36 +1,65 @@
-#	@(#)Makefile	4.12 (Berkeley) 5/11/90
+# /****************************************************************
+# Copyright (C) AT&T 1993
+# All Rights Reserved
+# 
+# Permission to use, copy, modify, and distribute this software and
+# its documentation for any purpose and without fee is hereby
+# granted, provided that the above copyright notice appear in all
+# copies and that both that the copyright notice and this
+# permission notice and warranty disclaimer appear in supporting
+# documentation, and that the name of AT&T or any of its entities
+# not be used in advertising or publicity pertaining to
+# distribution of the software without specific, written prior
+# permission.
+# 
+# AT&T DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+# INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
+# IN NO EVENT SHALL AT&T OR ANY OF ITS ENTITIES BE LIABLE FOR ANY
+# SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+# IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+# ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+# THIS SOFTWARE.
+# ****************************************************************/
 
-YFLAGS=	-d
-CFLAGS+=-I. -I${.CURDIR}
-PROG=	awk
-SRCS=	awk.lx.c b.c lib.c main.c parse.c proctab.c freeze.c run.c tran.c
-OBJS+=	token.o awk.g.o
-CLEANFILES+=	token.c proctab.c proc.o proc awk.h awk.lx.c y.tab.h
+YFLAGS = -d
+CFLAGS = -g
+CC = cc
 
-DPADD=	${LIBM}
-LDADD=	-lm
+OFILES = b.o main.o parse.o proctab.o tran.o lib.o run.o 
 
-token.c: awk.h
-	echo '#include "awk.h"' > ${.TARGET}
-	echo 'struct toke { char *tnm; int yval; } tok[] = {' >> ${.TARGET}
-	sed 's/#define \([^ ]*\) \(.*\)/"\1", \2,/' \
-	    < awk.h >> ${.TARGET}
-	echo '};' >> ${.TARGET}
-	echo 'char *tokname(n)' >> ${.TARGET}
-	echo '{' >> ${.TARGET}
-	echo '	if (n <= 256 || n >= LASTTOKEN)' >> ${.TARGET}
-	echo '		n = 257;' >> ${.TARGET}
-	echo '	return(tok[n - 257].tnm);' >> ${.TARGET}
-	echo '}' >> ${.TARGET}
+SOURCE = awk.h proto.h awk.g.y awk.lx.l b.c main.c maketab.c parse.c lib.c run.c tran.c
+CSOURCE = y.tab.c lex.yy.c b.c main.c proctab.c parse.c lib.c run.c tran.c
 
-awk.h: awk.g.o
-	rm -f awk.h
-	cp y.tab.h awk.h
+a.out:	awk.g.o awk.lx.o $(OFILES) $(ALLOC) awk.h
+	$(CC) $(CFLAGS) awk.g.o awk.lx.o $(OFILES) $(ALLOC)  -lm
 
-proctab.c: proc
-	./proc > proctab.c
+$(OFILES) awk.lx.o:	awk.h prevy.tab.h proto.h
 
-proc: token.o proc.o
-	${CC} -o ${.TARGET} proc.o token.o
+awk.g.o:	awk.h proto.h
 
-.include <bsd.prog.mk>
+prevy.tab.h:	y.tab.h
+	-cmp -s y.tab.h prevy.tab.h || (cp y.tab.h prevy.tab.h; echo change maketab)
+
+proctab.c:	maketab
+	./maketab >proctab.c
+
+maketab:	prevy.tab.h maketab.c
+	$(CC) $(CFLAGS) maketab.c -o maketab
+
+bundle:
+	@bundle README FIXES $(SOURCE) makefile awk.1
+
+bowell:	$(SOURCE) makefile NEW FIXES awktest.a
+	push bowell $? /usr/src/cmd/awk
+	touch bowell
+
+profile:
+	make 'CFLAGS=-p'
+
+install:	a.out
+	cp a.out /usr/bin/awk
+	strip /usr/bin/awk
+
+clean:
+	rm -f a.out *.o t.* *temp* *.out *junk* y.tab.* lex.yy.c prevy.tab.h maketab proctab.c foo* glop*
