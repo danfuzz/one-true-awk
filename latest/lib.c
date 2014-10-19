@@ -1,9 +1,11 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <ctype.h>
-#include "awk.def.h"
+#ifndef lint
+static char sccsid[] = "@(#)lib.c	4.4 9/17/84";
+#endif
+
+#include "stdio.h"
+#include "awk.def"
 #include "awk.h"
+#include "ctype.h"
 
 FILE	*infile	= NULL;
 char	*file;
@@ -30,21 +32,6 @@ cell fldtab[MAXFLD] = {	/*room for fields */
 };
 int	maxfld	= 0;	/* last used field */
 
-void
-error(int f, char *s, ...)
-{
-        va_list ap;
-
-        va_start(ap, s);
-	fprintf(stderr, "awk: ");
-	vfprintf(stderr, s, ap);
-	fprintf(stderr, "\n");
-        va_end(ap);
-	if (NR && *NR > 0)
-		fprintf(stderr, " record number %g\n", *NR);
-	if (f)
-		exit(2);
-}
 
 getrec()
 {
@@ -215,16 +202,22 @@ cell *fieldadr(n)
 
 int	errorflag	= 0;
 
-yyerror(s)
-        char *s;
-{
+yyerror(s) char *s; {
 	fprintf(stderr, "awk: %s near line %d\n", s, lineno);
 	errorflag = 2;
 }
 
-PUTS(s)
-        char *s;
-{
+error(f, s, a1, a2, a3, a4, a5, a6, a7) {
+	fprintf(stderr, "awk: ");
+	fprintf(stderr, s, a1, a2, a3, a4, a5, a6, a7);
+	fprintf(stderr, "\n");
+	if (NR && *NR > 0)
+		fprintf(stderr, " record number %g\n", *NR);
+	if (f)
+		exit(2);
+}
+
+PUTS(s) char *s; {
 	dprintf("%s\n", s, NULL, NULL);
 }
 
@@ -237,7 +230,7 @@ register char *s;
 	int point;
 	char *es;
 
-	if (s == NULL)
+	if (s == NULL) 
 		return (0);
 	d1 = d2 = point = 0;
 	while (*s == ' ' || *s == '\t' || *s == '\n')

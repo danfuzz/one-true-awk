@@ -4,12 +4,14 @@
 
 %{
 #include	"awk.h"
-#include	"awk.def.h"
-#define YY_NO_INPUT	/* defeat lex */
+#include	"awk.def"
+#undef	input	/* defeat lex */
 extern int	yylval;
 extern int	mustfld;
+extern int	ldbg;
 
 int	lineno	= 1;
+#define	RETURN(x)	{if (ldbg) ptoken(x); return(x); }
 #define	CADD	cbuf[clen++]=yytext[0]; if(clen>=CBUFLEN-1) {yyerror("string too long", cbuf); BEGIN A;}
 #define	CBUFLEN	150
 char	cbuf[CBUFLEN];
@@ -22,115 +24,114 @@ D	[0-9]
 WS	[ \t]
 
 %%
-        /* witchcraft */
-        /* switch (yybgin-yysvec-1) {
+	switch (yybgin-yysvec-1) {	/* witchcraft */
 	case 0:
 		BEGIN A;
 		break;
 	case sc:
 		BEGIN A;
-		return('}');
-	} */
+		RETURN('}');
+	}
 
 <A>^\n		lineno++;
 <A>^{WS}*#.*\n	lineno++;	/* strip comment lines */
 <A>{WS}		;
 <A,reg>"\\"\n	lineno++;
-<A>"||"		return(BOR);
-<A>BEGIN	return(XBEGIN);
-<A>END		return(XEND);
-<A>PROGEND	return(EOF);
-<A>"&&"		return(AND);
-<A>"!"		return(NOT);
-<A>"!="		{ yylval = NE; return(RELOP); }
-<A>"~"		{ yylval = MATCH; return(MATCHOP); }
-<A>"!~"		{ yylval = NOTMATCH; return(MATCHOP); }
-<A>"<"		{ yylval = LT; return(RELOP); }
-<A>"<="		{ yylval = LE; return(RELOP); }
-<A>"=="		{ yylval = EQ; return(RELOP); }
-<A>">="		{ yylval = GE; return(RELOP); }
-<A>">"		{ yylval = GT; return(RELOP); }
-<A>">>"		{ yylval = APPEND; return(RELOP); }
-<A>"++"		{ yylval = INCR; return(INCR); }
-<A>"--"		{ yylval = DECR; return(DECR); }
-<A>"+="		{ yylval = ADDEQ; return(ASGNOP); }
-<A>"-="		{ yylval = SUBEQ; return(ASGNOP); }
-<A>"*="		{ yylval = MULTEQ; return(ASGNOP); }
-<A>"/="		{ yylval = DIVEQ; return(ASGNOP); }
-<A>"%="		{ yylval = MODEQ; return(ASGNOP); }
-<A>"="		{ yylval = ASSIGN; return(ASGNOP); }
+<A>"||"		RETURN(BOR);
+<A>BEGIN	RETURN(XBEGIN);
+<A>END		RETURN(XEND);
+<A>PROGEND	RETURN(EOF);
+<A>"&&"		RETURN(AND);
+<A>"!"		RETURN(NOT);
+<A>"!="		{ yylval = NE; RETURN(RELOP); }
+<A>"~"		{ yylval = MATCH; RETURN(MATCHOP); }
+<A>"!~"		{ yylval = NOTMATCH; RETURN(MATCHOP); }
+<A>"<"		{ yylval = LT; RETURN(RELOP); }
+<A>"<="		{ yylval = LE; RETURN(RELOP); }
+<A>"=="		{ yylval = EQ; RETURN(RELOP); }
+<A>">="		{ yylval = GE; RETURN(RELOP); }
+<A>">"		{ yylval = GT; RETURN(RELOP); }
+<A>">>"		{ yylval = APPEND; RETURN(RELOP); }
+<A>"++"		{ yylval = INCR; RETURN(INCR); }
+<A>"--"		{ yylval = DECR; RETURN(DECR); }
+<A>"+="		{ yylval = ADDEQ; RETURN(ASGNOP); }
+<A>"-="		{ yylval = SUBEQ; RETURN(ASGNOP); }
+<A>"*="		{ yylval = MULTEQ; RETURN(ASGNOP); }
+<A>"/="		{ yylval = DIVEQ; RETURN(ASGNOP); }
+<A>"%="		{ yylval = MODEQ; RETURN(ASGNOP); }
+<A>"="		{ yylval = ASSIGN; RETURN(ASGNOP); }
 
 <A>"$"{D}+	{	if (atoi(yytext+1)==0) {
 				yylval = (hack)lookup("$record", symtab, 0);
-				return(STRING);
+				RETURN(STRING);
 			} else {
 				yylval = fieldadr(atoi(yytext+1));
-				return(FIELD);
+				RETURN(FIELD);
 			}
 		}
-<A>"$"{WS}*	{ return(INDIRECT); }
-<A>NF		{ mustfld=1; yylval = (hack)setsymtab(yytext, EMPTY, 0.0, NUM, symtab); return(VAR); }
+<A>"$"{WS}*	{ RETURN(INDIRECT); }
+<A>NF		{ mustfld=1; yylval = (hack)setsymtab(yytext, EMPTY, 0.0, NUM, symtab); RETURN(VAR); }
 <A>({D}+("."?){D}*|"."{D}+)((e|E)("+"|-)?{D}+)?	{
-		yylval = (hack)setsymtab(yytext, EMPTY, atof(yytext), CON|NUM, symtab); return(NUMBER); }
-<A>"}"{WS}*\n	{ BEGIN sc; lineno++; return(';'); }
-<A>"}"		{ BEGIN sc; return(';'); }
-<A>;\n		{ lineno++; return(';'); }
-<A>\n		{ lineno++; return(NL); }
-<A>while	return(WHILE);
-<A>for		return(FOR);
-<A>if		return(IF);
-<A>else		return(ELSE);
-<A>next		return(NEXT);
-<A>exit		return(EXIT);
-<A>break	return(BREAK);
-<A>continue	return(CONTINUE);
-<A>print	{ yylval = PRINT; return(PRINT); }
-<A>printf	{ yylval = PRINTF; return(PRINTF); }
-<A>sprintf	{ yylval = SPRINTF; return(SPRINTF); }
-<A>split	{ yylval = SPLIT; return(SPLIT); }
-<A>substr	return(SUBSTR);
-<A>index	return(INDEX);
-<A>in		return(IN);
-<A>getline	return(GETLINE);
-<A>length	{ yylval = FLENGTH; return(FNCN); }
-<A>log		{ yylval = FLOG; return(FNCN); }
-<A>int		{ yylval = FINT; return(FNCN); }
-<A>exp		{ yylval = FEXP; return(FNCN); }
-<A>sqrt		{ yylval = FSQRT; return(FNCN); }
-<A>{A}{B}*	{ yylval = (hack)setsymtab(yytext, tostring(""), 0.0, STR|NUM, symtab); return(VAR); }
+		yylval = (hack)setsymtab(yytext, EMPTY, atof(yytext), CON|NUM, symtab); RETURN(NUMBER); }
+<A>"}"{WS}*\n	{ BEGIN sc; lineno++; RETURN(';'); }
+<A>"}"		{ BEGIN sc; RETURN(';'); }
+<A>;\n		{ lineno++; RETURN(';'); }
+<A>\n		{ lineno++; RETURN(NL); }
+<A>while	RETURN(WHILE);
+<A>for		RETURN(FOR);
+<A>if		RETURN(IF);
+<A>else		RETURN(ELSE);
+<A>next		RETURN(NEXT);
+<A>exit		RETURN(EXIT);
+<A>break	RETURN(BREAK);
+<A>continue	RETURN(CONTINUE);
+<A>print	{ yylval = PRINT; RETURN(PRINT); }
+<A>printf	{ yylval = PRINTF; RETURN(PRINTF); }
+<A>sprintf	{ yylval = SPRINTF; RETURN(SPRINTF); }
+<A>split	{ yylval = SPLIT; RETURN(SPLIT); }
+<A>substr	RETURN(SUBSTR);
+<A>index	RETURN(INDEX);
+<A>in		RETURN(IN);
+<A>getline	RETURN(GETLINE);
+<A>length	{ yylval = FLENGTH; RETURN(FNCN); }
+<A>log		{ yylval = FLOG; RETURN(FNCN); }
+<A>int		{ yylval = FINT; RETURN(FNCN); }
+<A>exp		{ yylval = FEXP; RETURN(FNCN); }
+<A>sqrt		{ yylval = FSQRT; RETURN(FNCN); }
+<A>{A}{B}*	{ yylval = (hack)setsymtab(yytext, tostring(""), 0.0, STR|NUM, symtab); RETURN(VAR); }
 <A>\"		{ BEGIN str; clen=0; }
 
 <A>#		{ BEGIN comment; }
-<comment>\n	{ BEGIN A; lineno++; return(NL); }
+<comment>\n	{ BEGIN A; lineno++; RETURN(NL); }
 <comment>.	;
 
-<A>.		{ yylval = yytext[0]; return(yytext[0]); }
+<A>.		{ yylval = yytext[0]; RETURN(yytext[0]); }
 
 <reg>"["	{ BEGIN chc; clen=0; cflag=0; }
 <reg>"[^"	{ BEGIN chc; clen=0; cflag=1; }
 
-<reg>"?"	return(QUEST);
-<reg>"+"	return(PLUS);
-<reg>"*"	return(STAR);
-<reg>"|"	return(OR);
-<reg>"."	return(DOT);
-<reg>"("	return('(');
-<reg>")"	return(')');
-<reg>"^"	return('^');
-<reg>"$"	return('$');
-<reg>\\{D}{D}{D}	{ sscanf(yytext+1, "%o", &yylval); return(CHAR); }
+<reg>"?"	RETURN(QUEST);
+<reg>"+"	RETURN(PLUS);
+<reg>"*"	RETURN(STAR);
+<reg>"|"	RETURN(OR);
+<reg>"."	RETURN(DOT);
+<reg>"("	RETURN('(');
+<reg>")"	RETURN(')');
+<reg>"^"	RETURN('^');
+<reg>"$"	RETURN('$');
+<reg>\\{D}{D}{D}	{ sscanf(yytext+1, "%o", &yylval); RETURN(CHAR); }
 <reg>\\.	{	if (yytext[1]=='n') yylval = '\n';
 			else if (yytext[1] == 't') yylval = '\t';
 			else yylval = yytext[1];
-			return(CHAR);
+			RETURN(CHAR);
 		}
 <reg>"/"	{ BEGIN A; unput('/'); }
 <reg>\n		{ yyerror("newline in regular expression"); lineno++; BEGIN A; }
-<reg>.		{ yylval = yytext[0]; return(CHAR); }
+<reg>.		{ yylval = yytext[0]; RETURN(CHAR); }
 
 <str>\"		{ char *s; BEGIN A; cbuf[clen]=0; s = tostring(cbuf);
 		cbuf[clen] = ' '; cbuf[++clen] = 0;
-		yylval = (hack)setsymtab(cbuf, s, 0.0, CON|STR, symtab); return(STRING); }
+		yylval = (hack)setsymtab(cbuf, s, 0.0, CON|STR, symtab); RETURN(STRING); }
 <str>\n		{ yyerror("newline in string"); lineno++; BEGIN A; }
 <str>"\\\""	{ cbuf[clen++]='"'; }
 <str,chc>"\\"n	{ cbuf[clen++]='\n'; }
@@ -140,8 +141,8 @@ WS	[ \t]
 
 <chc>"\\""]"	{ cbuf[clen++]=']'; }
 <chc>"]"	{ BEGIN reg; cbuf[clen]=0; yylval = (hack)tostring(cbuf);
-		if (cflag==0) { return(CCL); }
-		else { return(NCCL); } }
+		if (cflag==0) { RETURN(CCL); }
+		else { RETURN(NCCL); } }
 <chc>\n		{ yyerror("newline in character class"); lineno++; BEGIN A; }
 <chc>.		{ CADD; }
 
@@ -152,7 +153,9 @@ input()
 	register c;
 	extern char *lexprog;
 
-	if (yyin == NULL)
+	if (yysptr > yysbuf)
+		c = U(*--yysptr);
+	else if (yyin == NULL)
 		c = *lexprog++;
 	else
 		c = getc(yyin);
@@ -166,4 +169,43 @@ input()
 startreg()
 {
 	BEGIN reg;
+}
+
+ptoken(n)
+{
+	extern struct tok {
+		char *tnm;
+		int yval;
+	} tok[];
+	extern char yytext[];
+	extern int yylval;
+
+	printf("lex:");
+	if (n < 128) {
+		printf(" %c\n",n);
+		return;
+	}
+	if (n <= 256 || n >= LASTTOKEN) {
+		printf("? %o\n",n);
+		return;
+	}
+	printf(" %s",tok[n-257].tnm);
+	switch (n) {
+
+	case RELOP:
+	case MATCHOP:
+	case ASGNOP:
+	case STRING:
+	case FIELD:
+	case VAR:
+	case NUMBER:
+	case FNCN:
+		printf(" (%s)", yytext);
+		break;
+
+	case CHAR:
+		printf(" (%o)", yylval);
+		break;
+	}
+	putchar('\n');
 }

@@ -1,44 +1,54 @@
-TOPSRC		= $(shell cd ../../..; pwd)
-include $(TOPSRC)/target.mk
+#	Makefile	4.3	86/05/15
+#
+CFLAGS=-O
+YFLAGS=-d
+FILES=awk.lx.o b.o main.o token.o tran.o lib.o run.o parse.o proctab.o freeze.o
+SOURCE=awk.def awk.g.y awk.lx.l b.c lib.c main.c parse.c \
+	proc.c freeze.c\
+	run.c token.c tran.c
 
-CFLAGS		+= -Werror -Os
-
-YACC            = bison -y
-YFLAGS          = -d
-LIBS            = -lm -lc
-FILES           = awk.lx.o b.o main.o tran.o lib.o run.o parse.o proctab.o freeze.o
-SOURCE          = awk.def.h awk.g.y awk.lx.l b.c lib.c main.c parse.c \
-                  proc.c freeze.c run.c tran.c
-
-awk:            $(FILES) awk.g.o
-		${CC} ${LDFLAGS} -o awk.elf $(FILES) awk.g.o ${LIBS}
-		${OBJDUMP} -S awk.elf > awk.dis
-		${SIZE} awk.elf
-		${ELF2AOUT} awk.elf $@ && rm awk.elf
+awk:	$(FILES) awk.g.o
+	cc $(CFLAGS) awk.g.o  $(FILES)  -lm -o awk
 
 y.tab.h:	awk.g.o
 
-awk.h:          y.tab.h
-		-cmp -s y.tab.h awk.h || cp y.tab.h awk.h
+awk.h:	y.tab.h
+	-cmp -s y.tab.h awk.h || cp y.tab.h awk.h
 
-$(FILES):	awk.h awk.def.h
+$(FILES):	awk.h awk.def
 
-token.h:	awk.h tokenscript
-		ex - < tokenscript
+token.c:	awk.h
+	ex - <tokenscript
 
-install:        awk
-		install awk ${DESTDIR}/bin/
+get:
+	for i in $(SOURCE) Makefile tokenscript README; do \
+		cp /usr/src/bin/awk/$$i .;
+	done
+
+install:
+	install -s awk ${DESTDIR}/bin
 
 profile:	awk.g.o $(FILES) mon.o
-		cc -p -i awk.g.o $(FILES) mon.o -lm
+	cc -p -i awk.g.o $(FILES) mon.o -lm
+
+find:
+	egrep -n "$(PAT)" *.[ylhc] awk.def
+
+list:
+	-pr $(SOURCE) Makefile tokenscript README EXPLAIN
 
 lint:
-		lint -spu b.c main.c tran.c run.c lib.c parse.c -lm |\
-			egrep -v '^(error|free|malloc)'
+	lint -spu b.c main.c token.c tran.c run.c lib.c parse.c -lm |\
+		egrep -v '^(error|free|malloc)'
 
-proctab.c:	proc.c token.h awk.h
-		cc -Wall -Werror -o proc proc.c
-		./proc > proctab.c
+proctab.c:	proc
+	proc >proctab.c
+
+proc:	awk.h proc.o token.o
+	cc -o proc proc.o token.o
 
 clean:
-		-rm -f *.o *.tmp awk.lx.c *.out *.elf *.dis y.tab.* awk.h proc proctab.c token.h awk
+	-rm -f *.o t.* *temp* *.out *junk* y.tab.* awk.h proc proctab.c awk yacc*
+
+diffs:
+	-for i in $(SOURCE); do echo $$i:; diff $$i /usr/src/cmd/awk | ind; done
