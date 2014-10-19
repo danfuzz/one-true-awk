@@ -8,6 +8,7 @@ char	*file;
 #define	RECSIZE	512
 char	record[RECSIZE];
 char	fields[RECSIZE];
+char	EMPTY[] = "";
 
 #define	MAXFLD	50
 int	donefld;	/* 1 = implies rec broken into fields */
