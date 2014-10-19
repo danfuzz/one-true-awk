@@ -37,7 +37,8 @@ THIS SOFTWARE.
 				/* NCHARS is 2**n */
 #define MAXLIN 22
 
-#define type(v)		(v)->nobj
+#define type(v)		(v)->nobj	/* badly overloaded here */
+#define info(v)		(v)->ntype	/* badly overloaded here */
 #define left(v)		(v)->narg[0]
 #define right(v)	(v)->narg[1]
 #define parent(v)	(v)->nnext
@@ -182,7 +183,7 @@ void penter(Node *p)	/* set up parent pointers and leaf indices */
 {
 	switch (type(p)) {
 	LEAF
-		left(p) = (Node *) poscnt;
+		info(p) = poscnt;
 		poscnt++;
 		break;
 	UNARY
@@ -338,8 +339,8 @@ void cfoll(fa *f, Node *v)	/* enter follow set of each leaf of vertex v into lfo
 
 	switch (type(v)) {
 	LEAF
-		f->re[(int) left(v)].ltype = type(v);
-		f->re[(int) left(v)].lval.np = right(v);
+		f->re[info(v)].ltype = type(v);
+		f->re[info(v)].lval.np = right(v);
 		while (f->accept >= maxsetvec) {	/* guessing here! */
 			maxsetvec *= 4;
 			setvec = (int *) realloc(setvec, maxsetvec * sizeof(int));
@@ -353,7 +354,7 @@ void cfoll(fa *f, Node *v)	/* enter follow set of each leaf of vertex v into lfo
 		follow(v);	/* computes setvec and setcnt */
 		if ((p = (int *) calloc(1, (setcnt+1)*sizeof(int))) == NULL)
 			overflo("out of space building follow set");
-		f->re[(int) left(v)].lfollow = p;
+		f->re[info(v)].lfollow = p;
 		*p = setcnt;
 		for (i = f->accept; i >= 0; i--)
 			if (setvec[i] == 1)
@@ -379,14 +380,13 @@ int first(Node *p)	/* collects initially active leaves of p into setvec */
 
 	switch (type(p)) {
 	LEAF
-		lp = (int) left(p);	/* look for high-water mark of subscripts */
+		lp = info(p);	/* look for high-water mark of subscripts */
 		while (setcnt >= maxsetvec || lp >= maxsetvec) {	/* guessing here! */
 			maxsetvec *= 4;
 			setvec = (int *) realloc(setvec, maxsetvec * sizeof(int));
 			tmpset = (int *) realloc(tmpset, maxsetvec * sizeof(int));
-			if (setvec == 0 || tmpset == 0) { abort();
+			if (setvec == 0 || tmpset == 0)
 				overflo("out of space in first()");
-}
 		}
 		if (setvec[lp] != 1) {
 			setvec[lp] = 1;
@@ -601,7 +601,7 @@ Node *primary(void)
 
 	switch (rtok) {
 	case CHAR:
-		np = op2(CHAR, NIL, (Node *) rlxval);
+		np = op2(CHAR, NIL, itonp(rlxval));
 		rtok = relex();
 		return (unary(np));
 	case ALL:
@@ -620,7 +620,7 @@ Node *primary(void)
 		return (unary(np));
 	case '^':
 		rtok = relex();
-		return (unary(op2(CHAR, NIL, (Node *) HAT)));
+		return (unary(op2(CHAR, NIL, itonp(HAT))));
 	case '$':
 		rtok = relex();
 		return (unary(op2(CHAR, NIL, NIL)));
@@ -753,9 +753,8 @@ int cgoto(fa *f, int s, int c)
 		maxsetvec *= 4;
 		setvec = (int *) realloc(setvec, maxsetvec * sizeof(int));
 		tmpset = (int *) realloc(tmpset, maxsetvec * sizeof(int));
-		if (setvec == 0 || tmpset == 0) { abort();
+		if (setvec == 0 || tmpset == 0)
 			overflo("out of space in cgoto()");
-}
 	}
 	for (i = 0; i <= f->accept; i++)
 		setvec[i] = 0;
@@ -764,7 +763,7 @@ int cgoto(fa *f, int s, int c)
 	p = f->posns[s];
 	for (i = 1; i <= *p; i++) {
 		if ((k = f->re[p[i]].ltype) != FINAL) {
-			if ((k == CHAR && c == f->re[p[i]].lval.i)
+			if ((k == CHAR && c == ptoi(f->re[p[i]].lval.np))
 			 || (k == DOT && c != 0 && c != HAT)
 			 || (k == ALL && c != 0)
 			 || (k == CCL && member(c, f->re[p[i]].lval.up))

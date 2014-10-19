@@ -261,11 +261,11 @@ void rehash(Array *tp)	/* rehash items in small table into big one */
 
 Cell *lookup(char *s, Array *tp)	/* look for s in tp */
 {
-	Cell *p, *prev = NULL;
+	Cell *p;
 	int h;
 
 	h = hash(s, tp->size);
-	for (p = tp->tab[h]; p != NULL; prev = p, p = p->cnext)
+	for (p = tp->tab[h]; p != NULL; p = p->cnext)
 		if (strcmp(s, p->nval) == 0)
 			return(p);	/* found it */
 	return(NULL);			/* not found */

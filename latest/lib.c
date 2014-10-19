@@ -486,6 +486,8 @@ void yyerror(char *s)
 	fprintf(stderr, " at source line %d", lineno);
 	if (curfname != NULL)
 		fprintf(stderr, " in function %s", curfname);
+	if (compile_time == 1 && cursource() != NULL)
+		fprintf(stderr, " source file %s", cursource());
 	fprintf(stderr, "\n");
 	errorflag = 2;
 	eprint();
@@ -540,9 +542,12 @@ void error(int f, char *s)
 		fprintf(stderr, "\n");
 	}
 	if (compile_time != 2 && curnode)
-		fprintf(stderr, " source line number %d\n", curnode->lineno);
+		fprintf(stderr, " source line number %d", curnode->lineno);
 	else if (compile_time != 2 && lineno)
-		fprintf(stderr, " source line number %d\n", lineno);
+		fprintf(stderr, " source line number %d", lineno);
+	if (compile_time == 1 && cursource() != NULL)
+		fprintf(stderr, " source file %s", cursource());
+	fprintf(stderr, "\n");
 	eprint();
 	if (f) {
 		if (dbg > 1)		/* core dump if serious debugging on */
@@ -601,7 +606,6 @@ void bclass(int c)
 
 double errcheck(double x, char *s)
 {
-	extern int errno;
 
 	if (errno == EDOM) {
 		errno = 0;
