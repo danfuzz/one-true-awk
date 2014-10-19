@@ -49,6 +49,8 @@ Origins / Sources Of The Code Contained Herein
   [Kernighan's page at Bell
   Labs](http://cm.bell-labs.com/cm/cs/awkbook/index.html).
 
+* 1997-08-21 &mdash; from the collection of Aharon Robbins.
+
 * 1998-02-11 &mdash; from
   [Debian Snapshot](http://snapshot.debian.org/package/original-awk/).
 
