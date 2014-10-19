@@ -49,3 +49,6 @@ Acknowledgments
 * Jlliagre, <http://stackoverflow.com/users/211665/jlliagre>,
   who provided some good suggestions via
   [StackOverflow](http://stackoverflow.com/questions/15687108/).
+
+* Aharon Robbins, who provided his collection of versions for integration
+  here.
