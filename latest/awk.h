@@ -39,10 +39,6 @@ typedef	unsigned char uschar;
 #endif
 
 extern	char	errbuf[];
-#define	ERROR	sprintf(errbuf,
-#define	FATAL	), error(1, errbuf)
-#define	WARNING	), error(0, errbuf)
-#define	SYNTAX	), yyerror(errbuf)
 
 extern int	compile_time;	/* 1 if compiling, 0 if running */
 extern int	safe;		/* 0 => unsafe, 1 => safe */

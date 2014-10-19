@@ -25,6 +25,22 @@ THIS SOFTWARE.
 This file lists all bug fixes, changes, etc., made since the AWK book
 was sent to the printers in August, 1987.
 
+Jun 2, 1999:
+	added function stdinit() to run to initialize files[] array,
+	in case stdin, etc., are not constants; some compilers care.
+
+May 10, 1999:
+	replaced the ERROR ... FATAL, etc., macros with functions
+	based on vprintf, to avoid problems caused by overrunning
+	fixed-size errbuf array.  thanks to ralph corderoy for the
+	impetus, and for pointing out a string termination bug in
+	qstring as well.
+
+Apr 21, 1999:
+	fixed bug that caused occasional core dumps with commandline
+	variable with value ending in \.  (thanks to nelson beebe for
+	the test case.)
+
 Apr 16, 1999:
 	with code kindly provided by Bruce Lilly, awk now parses 
 	/=/ and similar constructs more sensibly in more places.
