@@ -89,13 +89,15 @@ Origins / Sources Of The Code Contained Herein
   [FreeBSD Subversion](http://svn.freebsd.org/base/vendor/one-true-awk/).
 
 * 2003-07-31 &mdash; from
-  [FreeBSD Subversion](http://svn.freebsd.org/base/vendor/one-true-awk/).
+  [FreeBSD Subversion](http://svn.freebsd.org/base/vendor/one-true-awk/)
+  and the collection of Aharon Robbins.
 
 * 2004-02-07 &mdash; on the open web, found via web search for
   (something like) "awk source code".
 
 * 2004-12-22 &mdash; from
-  [Debian Snapshot](http://snapshot.debian.org/package/original-awk/).
+  [Debian Snapshot](http://snapshot.debian.org/package/original-awk/)
+  and the collection of Aharon Robbins.
 
 * 2005-04-24 &mdash; retrieved directly from
   the [AWK Annoyances page](http://www.samiam.org/awk/annoyances.html),
