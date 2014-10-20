@@ -50,5 +50,5 @@ Acknowledgments
   who provided some good suggestions via
   [StackOverflow](http://stackoverflow.com/questions/15687108/).
 
-* Arnold Robbins, <http://www.skeeve.com/>
+* Arnold Robbins, <http://www.skeeve.com/>,
   who provided his collection of versions for integration here.
