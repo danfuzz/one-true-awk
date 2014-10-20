@@ -45,49 +45,49 @@ Origins / Sources Of The Code Contained Herein
 * 1992-08-01 &mdash; 4.4BSD Alpha
   via [The Unix Archive](http://minnie.tuhs.org/TUHS/archive_sites.html).
 
-* 1993-07-23 &mdash; from the collection of Aharon Robbins.
+* 1993-07-23 &mdash; from the collection of Arnold Robbins.
 
 * 1996-06-29 &mdash; retrieved November 5, 1996 from
   [Kernighan's page at Bell
   Labs](http://cm.bell-labs.com/cm/cs/awkbook/index.html).
 
-* 1997-08-21 &mdash; from the collection of Aharon Robbins.
+* 1997-08-21 &mdash; from the collection of Arnold Robbins.
 
 * 1998-02-11 &mdash; from
   [Debian Snapshot](http://snapshot.debian.org/package/original-awk/).
 
-* 1998-10-19 &mdash; from the collection of Aharon Robbins.
+* 1998-10-19 &mdash; from the collection of Arnold Robbins.
 
-* 1999-03-05 &mdash; from the collection of Aharon Robbins.
+* 1999-03-05 &mdash; from the collection of Arnold Robbins.
 
-* 1999-04-16 &mdash; from the collection of Aharon Robbins.
+* 1999-04-16 &mdash; from the collection of Arnold Robbins.
 
-* 1999-06-02 &mdash; from the collection of Aharon Robbins.
+* 1999-06-02 &mdash; from the collection of Arnold Robbins.
 
 * 2000-05-25 &mdash; from
   [Debian Snapshot](http://snapshot.debian.org/package/original-awk/)
-  and the collection of Aharon Robbins.
+  and the collection of Arnold Robbins.
 
-* 2000-10-30 &mdash; from the collection of Aharon Robbins.
+* 2000-10-30 &mdash; from the collection of Arnold Robbins.
 
 * 2000-11-15 &mdash; from
   [FreeBSD Subversion](http://svn.freebsd.org/base/vendor/one-true-awk/)
-  and the collection of Aharon Robbins.
+  and the collection of Arnold Robbins.
 
 * 2002-01-01 &mdash; from
   [FreeBSD Subversion](http://svn.freebsd.org/base/vendor/one-true-awk/).
   This version has a `version` string dating it to 2002-01-01, though there
   is a comment in `FIXES` that indicates modification as of 2002-02-10.
 
-* 2002-01-01b &mdash; from the collection of Aharon Robbins. This is very
+* 2002-01-01b &mdash; from the collection of Arnold Robbins. This is very
   similar to `2002-01-01`, with the main difference being the more consistent
   use of the type `uschar` in this one.
 
 * 2002-02-10 &mdash; from
   [Debian Snapshot](http://snapshot.debian.org/package/original-awk/)
-  and the collection of Aharon Robbins.
+  and the collection of Arnold Robbins.
 
-* 2002-06-28 &mdash; from the collection of Aharon Robbins.
+* 2002-06-28 &mdash; from the collection of Arnold Robbins.
 
 * 2002-11-29 &mdash; from
   [FreeBSD Subversion](http://svn.freebsd.org/base/vendor/one-true-awk/).
@@ -97,21 +97,21 @@ Origins / Sources Of The Code Contained Herein
 
 * 2003-03-14 &mdash; from
   [FreeBSD Subversion](http://svn.freebsd.org/base/vendor/one-true-awk/)
-  and the collection of Aharon Robbins.
+  and the collection of Arnold Robbins.
 
 * 2003-07-29 &mdash; from
   [FreeBSD Subversion](http://svn.freebsd.org/base/vendor/one-true-awk/).
 
 * 2003-07-31 &mdash; from
   [FreeBSD Subversion](http://svn.freebsd.org/base/vendor/one-true-awk/)
-  and the collection of Aharon Robbins.
+  and the collection of Arnold Robbins.
 
 * 2004-02-07 &mdash; on the open web, found via web search for
   (something like) "awk source code".
 
 * 2004-12-22 &mdash; from
   [Debian Snapshot](http://snapshot.debian.org/package/original-awk/)
-  and the collection of Aharon Robbins.
+  and the collection of Arnold Robbins.
 
 * 2005-04-24 &mdash; retrieved directly from
   the [AWK Annoyances page](http://www.samiam.org/awk/annoyances.html),
@@ -140,7 +140,7 @@ Origins / Sources Of The Code Contained Herein
 
 * 2011-05-01 &mdash; from
   [FreeBSD Subversion](http://svn.freebsd.org/base/vendor/one-true-awk/)
-  and the collection of Aharon Robbins.
+  and the collection of Arnold Robbins.
 
 * 2011-05-06 &mdash; archive of
   [Kernighan's page at
