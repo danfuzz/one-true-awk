@@ -1,0 +1,291 @@
+31-Dec-87 18:55:44-MST,8610;000000000001
+Return-Path: <beebe@cs.utah.edu>
+Received: from cs.utah.edu by SCIENCE.UTAH.EDU with TCP; Thu 31 Dec 87 18:55:35-MST
+Received: by cs.utah.edu (5.54/utah-2.0-cs)
+	id AA05672; Thu, 31 Dec 87 18:53:45 MST
+Date: Thu, 31 Dec 87 18:53:45 MST
+From: beebe@cs.utah.edu (Nelson Beebe)
+Message-Id: <8801010153.AA05672@cs.utah.edu>
+To: beebe@science.utah.edu, debar@science.utah.edu
+Subject: New awk report
+
+Path: utah-cs!ut-sally!husc6!uwvax!rutgers!super.upenn.edu!eecae!upba!qetzal!root
+From: root@qetzal.UUCP (Admin)
+Newsgroups: comp.unix.microport
+Subject: New Awk Changes for System V/AT 286
+Message-ID: <912@qetzal.UUCP>
+Date: 18 Dec 87 06:22:34 GMT
+Organization: Mentor Software Inc., Thornton, Co.
+Lines: 269
+Keywords: NAWK changes
+Approved: rcw@qetzal.UUCP
+
+[Submitted courtesy of John Rupley, reachable at arizona!rupley!local]
+
+(The following is for those who have purchased for ca $300 or
+otherwise have legal access to the ATT source code for the
+new awk.  If you use awk regularly for text or database
+manipulation, the new awk is really worth its price.  See the
+book, "The Awk Programming Language", by Aho, Kernighan and
+Weinberger (Addison-Wesley, 198[78]) for a description.)
+
+
+The new awk compiles and runs on an 80286 system (Microport 
+sys5/AT 2.2), but with some problems that are not found
+on a Vax:
+
+(1) The system hangs on "print" of numerical values larger than 
+31 bits.  Work-around is to use "printf".
+
+(2) Regular expressions containing a bracketed character group 
+(character class) dumped core.  Fix is to repair int and int * 
+declarations and casts and sizeofs.
+
+(3) There are various compilation problems, not related to code, 
+that have fixes or work-arounds.
+
+(4) Richard Stevens has reported a bug in and a fix of error() 
+in lib.c
+
+Details of (1) to (4) are given below.
+
+
+I would appreciate learning of a fix for (1).
+
+Anyone else have nawk problems that they have resolved?  I 
+suspect that there are some still submerged monsters that will
+surface when running on a 286 machine.
+
+The new awk is truly improved and appears to be worth the problem 
+of bringing it up.
+
+
+John Rupley
+ uucp: ..{ihnp4 | hao!noao}!arizona!rupley!local
+ internet: rupley!local@megaron.arizona.edu
+ telex: 9103508679(JARJAR)
+ (H) 30 Calle Belleza, Tucson AZ 85716 - (602) 325-4533
+ (O) Dept. Biochemistry, Univ. Arizona, Tucson AZ 85721 - (602) 621-3929
+
+
+**************************************************************************
+
+Sat Nov 21 16:01:23 MST 1987
+
+
+NEW AWK-- ON MICROPORT SYS5/AT (80286)
+
+
+(1) The system hangs on "print" of numerical values larger than 
+31 bits.
+
+BUG: The following hangs the system with $1=46341; ok with 
+$1=46340 (input mode does not matter-- same effect with 
+4.6341e4):
+	echo $1 | awk '{print $1; x =  $1*$1; print x}'
+
+WORK-AROUND: The following code is fine for large values, eg 
+$1=1e100 (although *very* large values hang the system):
+	echo $1 | awk '{print $1; x =  $1*$1; printf("%20.6e\n", x)}'
+
+COMMENTS: The system hangs when nawk attempts to "print" a 
+numerical result larger than 31 bits (2.147 * 10^9).  This was 
+found through testing under the awktest.a programs t.i.x and 
+T.misc.
+
+The hang is *only* with the function "print".  Large numbers 
+(greater than 10^100) can be handled with "printf".  Similarly, 
+no problem with computation ( *, exp(), ...), except again a 
+hang at very large results, much greater than 10^100.
+
+There is no problem with nawk on the vax, for which the limit is 
+127 bits in the output of the "print" function (at least in the 
+exercises used).
+
+The uport v2.2 distribution version of old awk seems to hang on 
+the above print statement also.
+
+
+
+
+(2) Regular expressions containing a bracketed character group 
+dumped core.
+
+BUG:
+	any /re/ of the type /..[..]../ dumps core.
+
+FIX (NOT GUARANTEED):
+	in awk.h, declare lval as int *
+	in b.c, change several casts and sizeofs, from int to 
+	int * or int * to int, as appropriate
+	(See the diff file below.)
+
+COMMENTS: The structure element re[].lval is used to store both 
+characters (as int) and pointers to arrays of characters. A vax 
+is happy with the structure declaration of lval as int. However, 
+with 16 bit int's, uport is not.
+
+The kludged code passes the awktest.a tests, but no guarantees-- 
+I did as little tracing of the logic as possible, to the extent 
+of not even listing the code for b.c, much less that for the 
+other routines.
+
+
+
+(3A) Compilation problem--
+
+BUG:
+	getsval() stands alone in a line of code 
+
+FIX:
+	insert dummy lvalue, in lib.c and run.c, at several 
+	places
+	(See the diff file below.)
+
+COMMENTS: PCC under uport coughs, apparently at a conditional 
+expression that lacks an assignment.  Specifically, getsval() is 
+#defined as a several-branched conditional, some branches of 
+which do not constitute a statement.
+
+
+
+(3B) Other remarks on compilation on a 286 machine--
+
+The version of yacc from uport gave an out of space error in the 
+nawk compilation.
+
+Yacc from sys5 source, compiled with the "HUGE" size option, 
+worked.
+
+Alternatively, one might get y.tab.[ch] and lex.yy.c by use of 
+yacc and lex on a vax, ie generate C code from awk.g.y and 
+awk.lx.l on a vax, then move it over and compile it on a uport 
+system.
+
+Small model compilation of nawk gave a working version, but its 
+data segment is too small for reasonable temporaries, etc, as 
+found by testing with the awktest.a programs and data files, 
+which are not particularly large.
+
+Large model compilation (-Ml) gave a version that passes the 
+awktest.a tests, after repair of the problems noted above, 
+excepting the two tests that hang the system.
+
+For the debug option (nawk -d ....) to work, various dprint 
+statements must have %o changed to %lo.
+
+
+(4) There is a bug in the print operations of error() of lib.c, 
+reported by Richard Stevens in comp.bugs.sys5.  His fix is 
+included in the diff file below.
+
+
+
+*********************diff output***************************
+
+(distribution		compared with   	modified)
+
+awk.h compared with ../nawk/awk.h
+203c203
+< 	int	lval;
+---
+> 	int	*lval;
+
+
+b.c compared with ../nawk/b.c
+115c115
+< 	if ((f->posns[0] = (int *) Calloc(1, *(f->re[0].lfollow)*sizeof(int))) == NULL)
+---
+> 	if ((f->posns[0] = (int *) Calloc(1, *(f->re[0].lfollow)*sizeof(int *))) == NULL)
+117c117
+< 	if ((f->posns[1] = (int *) Calloc(1, sizeof(int))) == NULL)
+---
+> 	if ((f->posns[1] = (int *) Calloc(1, sizeof(int *))) == NULL)
+137c137
+< 	if ((f->posns[2] = (int *) Calloc(1, (k+1)*sizeof(int))) == NULL)
+---
+> 	if ((f->posns[2] = (int *) Calloc(1, (k+1)*sizeof(int *))) == NULL)
+278c278
+< 		f->re[(int) left(v)].lval = (int) right(v);
+---
+> 		f->re[(int) left(v)].lval = (int *) right(v);
+283c283
+< 		if ((p = (int *) Calloc(1, (setcnt+1)*sizeof(int))) == NULL)
+---
+> 		if ((p = (int *) Calloc(1, (setcnt+1)*sizeof(int *))) == NULL)
+439c439
+< 			if ((f->posns[2] = (int *) Calloc(1, (k+1)*sizeof(int))) == NULL)
+---
+> 			if ((f->posns[2] = (int *) Calloc(1, (k+1)*sizeof(int *))) == NULL)
+491c491
+< 			if ((f->posns[2] = (int *) Calloc(1, (k+1)*sizeof(int))) == NULL)
+---
+> 			if ((f->posns[2] = (int *) Calloc(1, (k+1)*sizeof(int *))) == NULL)
+707c707
+< 			if (k == CHAR && c == f->re[p[i]].lval
+---
+> 			if (k == CHAR && c == (int ) f->re[p[i]].lval
+754c754
+< 	if ((p = (int *) Calloc(1, (setcnt+1)*sizeof(int))) == NULL)
+---
+> 	if ((p = (int *) Calloc(1, (setcnt+1)*sizeof(int *))) == NULL)
+
+
+
+lib.c compared with ../nawk/lib.c
+183a184
+> 	uchar *dummy;
+190c191
+< 		getsval(recloc);
+---
+> 		dummy = getsval(recloc);
+400a402,404
+> /* bug fix richard stevens */
+> 	register int c;
+> 	
+404a409,411
+> 
+> /* bug fix richard stevens */
+> /*
+405a413,417
+> */
+>  	while (c = *s++)
+>  		putc(c, stderr);
+> /* end of bug fix */
+> 
+
+
+
+makefile compared with ../nawk/makefile
+10c10,11
+< CFLAGS = -g 
+---
+> #CFLAGS = -g 
+> CFLAGS = -g -Ml
+
+
+
+run.c compared with ../nawk/run.c
+901a902
+> 	uchar *dummy;
+905,906c906,907
+< 	getsval(x);
+< 	getsval(y);
+---
+> 	dummy = getsval(x);
+> 	dummy = getsval(y);
+1346a1348
+> 	uchar *dummy;
+1349c1351
+< 	getsval(x);
+---
+> 	dummy = getsval(x);
+
+
+
+
+-- 
+//////////////////286 Moderator -- comp.unix.microport\\\\\\\\\\\\\\\\\
+Email to microport@uwspan for info on the newsgroup comp.unix.microport.
+otherwise mail to microport@uwspan with a Subject containing one of:
+386 286 Bug Source Merge or "Send Buglist" (rutgers!uwvax!uwspan!microport)

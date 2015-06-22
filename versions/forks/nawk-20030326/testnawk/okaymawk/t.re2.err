@@ -1,0 +1,2 @@
+mawk: t.re2: line 1: regular expression compile failed (missing operand)
+[a-z]()[0-9]

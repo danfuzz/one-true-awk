@@ -1,0 +1,47 @@
+head	1.2;
+access;
+symbols;
+locks
+	beebe:1.2; strict;
+comment	@# @;
+
+
+1.2
+date	2003.03.26.18.48.40;	author beebe;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2003.03.26.18.44.44;	author beebe;	state Exp;
+branches;
+next	;
+
+
+desc
+@Original version.
+@
+
+
+1.2
+log
+@Call srand(32767) to ensure a common initial seed on all runs.
+@
+text
+@function abs(x) { return (x < 0) ? -x : x }
+BEGIN {	n = 1000
+	srand(32767)		# ensure common initial seed
+	for (i = 1; i < n; i++) x[i] = rand()
+	for (i in x)
+		for (j in x)
+			if (abs(x[i]-x[j]) < .01) break
+      }
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 1
+@

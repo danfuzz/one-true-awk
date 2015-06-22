@@ -1,0 +1,34 @@
+T.expr: tests of miscellaneous expressions
+  1  { print ($1 == 1) ? "yes" : "no" }
+  2  $1 > 0
+  3  { print NF }
+  4  { print NF, $NF }
+  5  { i=1; print ($++$++i) }
+  6  { x = $1++++$2; print $1, x }
+  7  $1 !$2
+  8  { print ($1~/abc/ !$2) }
+  9  { print !$1 + $2 }
+ 10  { print ($1 == $2) }
+ 11  { print $1, +$1, -$1, - -$1 }
+foo1 foo2 differ: char 5, line 1
+test 11.3 failed
+foo1 foo2 differ: char 5, line 1
+test 11.4 failed
+ 12  { printf("a%*sb\n", $1, $2) }
+ 13  { printf("a%-*sb\n", $1, $2) }
+ 14  { printf("a%*.*sb\n", $1, $2, "hello") }
+ 15  { printf("a%-*.*sb\n", $1, $2, "hello") }
+ 16  { printf("%d %ld\n", $1, $1) }
+ 17  { printf("%x %lx\n", $1, $1) }
+ 18  { if ($1 ~ $2) print 1; else print 0 }
+foo1 foo2 differ: char 1, line 1
+test 18.8 failed
+ 19  { print $1 ~ $2 }
+foo1 foo2 differ: char 1, line 1
+test 19.8 failed
+ 20  { print $1 || $2 }
+ 21  { print $1 && $2 }
+ 22  { $1 = $2; $1 = $1; print $1 }
+ 23  { f = 1; $f++; print f, $f }
+ 24  { f[1]=1; f[2]=2; print $f[1], $f[1]++, $f[2], f[1], f[2] }
+114 tests

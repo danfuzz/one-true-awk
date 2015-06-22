@@ -1,0 +1,100 @@
+# Makefile for New AWK (nawk) for TOPS-20 PCC-20 (KCC-20 will not compile
+# ytab.c; needs rebuild with larger MAXNODE)
+# Only the main target, plus install and clean, work.
+# [12-Dec-87]
+
+DESTDIR = unix:
+CC = cc
+CP = copy
+MV = rename
+O = .rel
+RM = delete
+X = .exe
+
+YFLAGS = -d
+
+# Changes suffixes to remove .l and .y, so Yacc and Lex are not run
+.SUFFIXES:
+
+.SUFFIXES:	.exe .rel .c .h
+
+# -Darray=arrayx to get around conflict with MACRO assembler array
+# -Dpclose=fclose (TOPS-20 has no pipes, so pclose() will never be called)
+
+CFLAGS = -Darray=arrayx -Dpclose=fclose
+
+OFILES = b${O} main${O} parse${O} proctab${O} tran${O} lib${O} run${O} 
+
+#SOURCE = awk.h awkg.y awklx.l b.c main.c maketab.c parse.c lib.c run.c tran.c
+SOURCE = awk.h awkg.c awklx.c b.c main.c maketab.c parse.c lib.c run.c tran.c
+
+# These are missing in PCC-20
+EXTRA = atan${O} ldexp${O} exp${O}
+
+nawk${X}:	awkg${O} awklx${O} ${OFILES} ${ALLOC} awk.h ${EXTRA}
+	${CC} ${CFLAGS} pcc:bigc${O} awkg${O} awklx${O} ${OFILES} ${ALLOC} \
+		${EXTRA} -o nawk${X}
+
+${OFILES} awklx${O}:	awk.h prevytab.h 
+
+awkg${O}:	awk.h
+
+ytab.h:	awkg${O}
+
+prevytab.h:	ytab.h
+#	-cmp -s ytab.h prevytab.h || (cp ytab.h prevytab.h; echo change maketab)
+	${CP} ytab.h prevytab.h
+
+proctab.c:	maketab
+	maketab >proctab.c
+
+# Compile proctab into proctab and procta (so later LINK from CC will find it)
+proctab${O}:	proctab.c
+	${CP} proctab.c procta.c
+	${CC} ${CFLAGS} -c procta.c
+	${CP} procta${O} proctab${O}
+
+maketab:	prevytab.h maketab.c
+	${CP} maketab.c maketb.c
+	echo === Ignore missing lookup: it is not used ====
+	${CC} maketb.c -o maketb
+	${MV} maketb.* maketab.*
+
+prcan:	NEW ${SOURCE} makefile
+	@prcan $?
+	@touch prcan
+
+bundle:
+	@bundle NEW ${SOURCE} makefile awk.1 compat.awk
+
+backup:	${SOURCE} makefile NEW
+	push panther $? awk
+	touch backup
+
+bowell:	${SOURCE} makefile NEW
+	push bowell $? /usr/src/cmd/awk
+	touch bowell
+
+profile:
+	make 'CFLAGS=-p'
+
+lcomp:
+	make 'CC=lcomp' 'CFLAGS='
+
+lprint:
+	echo 1>&2 "piping into can"
+	@lprint -P "pr -l90 -w120" | can -fCW.8 -l90
+
+clean:
+	${RM} nawk${X}
+	${RM} *${O}.*
+	${RM} t.*.*
+	${RM} *temp*.*
+	${RM} *junk*.*
+#	${RM} ytab.*.*
+#	${RM} prevytab.h.*
+#	${RM} maketab.*
+#	${RM} proctab.c.*
+
+install:	nawk${X}
+	${CP} nawk${X} ${DESTDIR}

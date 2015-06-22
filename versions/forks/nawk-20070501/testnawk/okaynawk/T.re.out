@@ -1,0 +1,3 @@
+T.re: tests of regular expression code
+213 fails ^x\y$ !~ x\y
+	267 tests

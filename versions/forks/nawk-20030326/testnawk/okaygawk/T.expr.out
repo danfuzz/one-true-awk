@@ -1,0 +1,136 @@
+T.expr: tests of miscellaneous expressions
+  1  { print ($1 == 1) ? "yes" : "no" }
+test 1.1 failed
+test 1.2 failed
+test 1.3 failed
+test 1.4 failed
+test 1.5 failed
+test 1.6 failed
+test 1.7 failed
+test 1.8 failed
+  2  $1 > 0
+test 2.1 failed
+test 2.2 failed
+test 2.5 failed
+test 2.8 failed
+  3  { print NF }
+test 3.1 failed
+test 3.2 failed
+test 3.3 failed
+test 3.4 failed
+test 3.5 failed
+  4  { print NF, $NF }
+test 4.1 failed
+test 4.2 failed
+test 4.3 failed
+test 4.4 failed
+  5  { i=1; print ($++$++i) }
+test 5.1 failed
+test 5.2 failed
+test 5.3 failed
+  6  { x = $1++++$2; print $1, x }
+test 6.1 failed
+  7  $1 !$2
+test 7.1 failed
+test 7.2 failed
+test 7.3 failed
+test 7.4 failed
+  8  { print ($1~/abc/ !$2) }
+test 8.1 failed
+test 8.2 failed
+test 8.3 failed
+test 8.4 failed
+  9  { print !$1 + $2 }
+test 9.1 failed
+test 9.2 failed
+test 9.3 failed
+ 10  { print ($1 == $2) }
+test 10.1 failed
+test 10.2 failed
+test 10.3 failed
+test 10.4 failed
+test 10.5 failed
+test 10.6 failed
+test 10.7 failed
+test 10.8 failed
+test 10.9 failed
+test 10.10 failed
+test 10.11 failed
+test 10.12 failed
+test 10.13 failed
+test 10.14 failed
+ 11  { print $1, +$1, -$1, - -$1 }
+test 11.1 failed
+test 11.2 failed
+test 11.3 failed
+test 11.4 failed
+ 12  { printf("a%*sb\n", $1, $2) }
+test 12.1 failed
+test 12.2 failed
+test 12.3 failed
+ 13  { printf("a%-*sb\n", $1, $2) }
+test 13.1 failed
+test 13.2 failed
+test 13.3 failed
+ 14  { printf("a%*.*sb\n", $1, $2, "hello") }
+test 14.1 failed
+test 14.2 failed
+test 14.3 failed
+ 15  { printf("a%-*.*sb\n", $1, $2, "hello") }
+test 15.1 failed
+test 15.2 failed
+test 15.3 failed
+ 16  { printf("%d %ld\n", $1, $1) }
+test 16.1 failed
+test 16.2 failed
+test 16.3 failed
+ 17  { printf("%x %lx\n", $1, $1) }
+test 17.1 failed
+test 17.2 failed
+test 17.3 failed
+ 18  { if ($1 ~ $2) print 1; else print 0 }
+test 18.1 failed
+test 18.2 failed
+test 18.3 failed
+test 18.4 failed
+test 18.5 failed
+test 18.6 failed
+test 18.7 failed
+test 18.8 failed
+test 18.9 failed
+test 18.10 failed
+ 19  { print $1 ~ $2 }
+test 19.1 failed
+test 19.2 failed
+test 19.3 failed
+test 19.4 failed
+test 19.5 failed
+test 19.6 failed
+test 19.7 failed
+test 19.8 failed
+test 19.9 failed
+test 19.10 failed
+ 20  { print $1 || $2 }
+test 20.1 failed
+test 20.2 failed
+test 20.3 failed
+test 20.4 failed
+test 20.5 failed
+test 20.6 failed
+test 20.7 failed
+ 21  { print $1 && $2 }
+test 21.1 failed
+test 21.2 failed
+test 21.3 failed
+test 21.4 failed
+test 21.5 failed
+test 21.6 failed
+test 21.7 failed
+ 22  { $1 = $2; $1 = $1; print $1 }
+test 22.1 failed
+test 22.2 failed
+ 23  { f = 1; $f++; print f, $f }
+test 23.1 failed
+ 24  { f[1]=1; f[2]=2; print $f[1], $f[1]++, $f[2], f[1], f[2] }
+test 24.1 failed
+114 tests

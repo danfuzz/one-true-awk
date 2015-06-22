@@ -1,0 +1,3253 @@
+!<arch>
+t.0             514303359   9     1     100664  23        `
+{i = i+1; print i, NR}
+
+t.1.x           514303360   9     1     100664  32        `
+{i="count" $1 $2; print i , $0}
+t.2.x           514303360   9     1     100664  31        `
+{i=2; j=$3; $1=i;print i,j,$1}
+
+t.3             514303360   9     1     100664  23        `
+$1 == "5" || $1 == "4"
+
+t.3.x           514303360   9     1     100664  50        `
+{
+x = $1
+while (x > 1) {
+	print x
+	x = x / 10
+}
+}
+t.4             514303360   9     1     100664  21        `
+$1 ~ /5/ || $1 ~ /4/
+
+t.4.x           514303360   9     1     100664  18        `
+{i=$(1); print i}
+t.5.x           514303360   9     1     100664  28        `
+{$(1) = "xxx"; print $1,$0}
+t.6             514303360   9     1     100664  76        `
+/a|b|c/	{
+	i = $1
+	print
+	while (i >= 1) {
+		print "	", i
+		i = i / 10
+	}
+}
+t.6.x           514303360   9     1     100664  14        `
+{print NF,$0}
+t.6a            514303360   9     1     100664  64        `
+/a|b|c/	{
+	print
+	for (i = $1; i >= 1; )
+		print " ", i /= 10
+}
+t.6b            514303360   9     1     100664  65        `
+/a|b|c/	{
+	print
+	for (i = $1; (i /= 10)>= 1; )
+		print " ", i
+}
+
+t.8.x           514303360   9     1     100664  15        `
+{$2=$1; print}
+
+t.a             514303360   9     1     100664  130       `
+	{if (amount[$2] "" == "") item[num++] = $2;
+	 amount[$2] += $1
+	}
+END	{for (i=0; i<num; i++)
+		print item[i], amount[item[i]]
+	}
+t.aeiou         514303360   9     1     100664  58        `
+/^[^aeiouy]*[aeiou][^aeiouy][aeiouy][aeiouy]*[^aeiouy]*$/
+t.aeiouy        514303360   9     1     100664  81        `
+/^[^aeiouy]*a[^aeiouy]*e[^aeiouy]*i[^aeiouy]*o[^aeiouy]*u[^aeiouy]*y[^aeiouy]*$/
+
+t.arith         514303360   9     1     100664  76        `
+{ print $3, $3+$3, $3-$3, $3 * $3, $3/NR, $3 % NR, $3++, $3--, --$3, $3-- }
+t.array         514303360   9     1     100664  147       `
+	{ x[NR] = $0 }
+
+END {
+	i = 1
+	while (i <= NR) {
+		print x[i]
+		split (x[i], y)
+		usage = y[1]
+		name = y[2]
+		print "   ", name, usage
+		i++
+	}
+}
+
+t.array1        514303361   9     1     100664  123       `
+{for(i=1; i<=NF; i++) {
+	if (x[$i] == "")
+		y[n++] = $i
+	x[$i]++
+ }
+}
+END {
+	for (i=0; i<n; i++)
+		print (y[i], x[y[i]])
+}
+
+t.array2        514303361   9     1     100664  168       `
+$2 ~ /^[a-l]/	{ x["a"] = x["a"] + 1 }
+$2 ~ /^[m-z]/	{ x["m"] = x["m"] + 1 }
+$2 !~ /^[a-z]/	{ x["other"] = x["other"] + 1 }
+END { print NR, x["a"], x["m"], x["other"] }
+t.avg           514303361   9     1     100664  80        `
+{s = s + $1; c = c + 1}
+END {
+print "sum=", s, " count=", c
+print "avg=", s/c
+}
+t.b.x           514303361   9     1     100664  36        `
+{$6=":::" ; print $6; print NF, $0}
+t.be            514303361   9     1     100664  42        `
+BEGIN { print FILENAME }
+END { print NR }
+t.break         514303361   9     1     100664  91        `
+{
+for (i=1; i <= NF; i++)
+	if ($i ~ /^[a-z]+$/) {
+		print $i " is alphabetic"
+		break
+	}
+}
+
+t.break1        514303361   9     1     100664  135       `
+	{ x[NR] = $0 }
+END {
+	for (i = 1; i <= NR; i++) {
+		print i, x[i]
+		if (x[i] ~ /shen/)
+			break
+	}
+	print "got here"
+	print i, x[i]
+}
+
+t.break2        514303361   9     1     100664  133       `
+	{ x[NR] = $0 }
+END {
+	for (i=1; i <= NR; i++) {
+		print i, x[i]
+		if (x[i] ~ /shen/)
+			break
+	}
+	print "got here"
+	print i, x[i]
+}
+
+t.break3        514303361   9     1     100664  116       `
+{	for (i = 1; i <= NF; i++) {
+		for (j = 1; j <= NF; j++)
+			break;
+		print "inner", i, j
+	}
+	print "outer", i, j
+}
+t.bug1          514303361   9     1     100664  103       `
+# this program fails if awk is created without separate I&D
+# prints garbage if no $3
+{ print $1, $3 }
+
+t.cat           514303361   9     1     100664  114       `
+{print $2 " " $1}
+{print $1 " " "is", $2}
+{print $2 FS "is" FS $1}
+{print length($1 $2), length($1) + length($2)}
+t.cat1          514303361   9     1     100664  38        `
+{print x $0}	# should precede by zero
+t.cat2          514303361   9     1     100664  21        `
+{$1 = $1 "*"; print}
+
+t.cmp           514303361   9     1     100664  8         `
+$2 > $1
+t.coerce        514303361   9     1     100664  47        `
+END {	print i, NR
+	if (i < NR)
+		print i, NR
+}
+
+t.comment       514303361   9     1     100664  112       `
+# this is a comment line
+# so is this
+/#/	{ print "this one has a # in it: " $0	# comment
+	print "again:" $0
+	}
+t.comment1      514303361   9     1     100664  88        `
+#comment
+       #
+BEGIN { x = 1 }
+/abc/ { print $0 }
+#comment
+END { print NR }
+#comment
+t.contin        514303362   9     1     100664  130       `
+{
+for (i = 1; i <= NF; i++) {
+	if ($i ~ /^[0-9]+$/)
+		continue;
+	print $i, " is non-numeric"
+	next
+}
+print $0, "is all numeric"
+}
+t.count         514303362   9     1     100664  17        `
+END { print NR }
+
+t.cum           514303362   9     1     100664  38        `
+{i = i + $1; print i}
+END {
+print i
+}
+t.d.x           514303362   9     1     100664  43        `
+BEGIN {FS=":" ; OFS=":"}
+{print NF "	",$0}
+
+t.e             514303362   9     1     100664  23        `
+$1 < 10 || $2 ~ /bwk/ 
+
+t.else          514303362   9     1     100664  46        `
+{ if($1>1000) print "yes"
+  else print "no"
+}
+t.exit          514303362   9     1     100664  32        `
+{ print }
+$1 < 5000 { exit NR }
+t.f             514303362   9     1     100664  15        `
+{print $2, $1}
+
+t.f.x           514303362   9     1     100664  26        `
+$1>0 {print $1, sqrt($1)}
+t.f0            514303362   9     1     100664  20        `
+$1 ~ /x/ {print $0}
+t.f1            514303362   9     1     100664  16        `
+{$1 = 1; print}
+t.f2            514303362   9     1     100664  19        `
+{$1 = 1; print $0}
+
+t.f3            514303362   9     1     100664  17        `
+{$1 = NR; print}
+
+t.f4            514303362   9     1     100664  20        `
+{$1 = NR; print $0}
+t.for           514303362   9     1     100664  39        `
+{ for (i=1; i<=NF; i++)
+	print i, $i
+}
+
+t.for1          514303363   9     1     100664  68        `
+{
+	i = 1
+	for (;;) {
+		if (i > NF)
+			next
+		print i, $i
+		i++
+	}
+}
+t.for2          514303363   9     1     100664  61        `
+{
+	for (i=1;;i++) {
+		if (i > NF)
+			next
+		print i, $i
+	}
+}
+
+t.format4       514303363   9     1     100664  127       `
+BEGIN {
+text=sprintf ("%125s", "x")
+print length (text)
+print text
+xxx=substr (text,1,105)
+print length (xxx)
+print xxx
+exit
+}
+
+t.getline       514303363   9     1     100664  117       `
+{ x = $1
+  for (i = 1; i <= 3; i++)
+	if (getline)
+		x = x " " $1
+  print x
+  x = ""
+}
+END {
+  if (x != "") print x
+}
+
+t.i.x           514303363   9     1     100664  59        `
+$3 > 0 {i=i+log($3); print i,log($3)}
+END {print exp(i),i}
+
+t.if            514303363   9     1     100664  21        `
+{if($1 || $2) print}
+
+t.in            514303363   9     1     100664  122       `
+BEGIN {
+	x["apple"] = 1;
+	x["orange"] = 2;
+	x["lemon"] = 3;
+	for (i in x)
+		print i, x[i] | "sort"
+	close("sort")
+	exit
+}
+t.in1           514303363   9     1     100664  135       `
+	{ if (amount[$2] == "")
+		name[++n] = $2
+	  amount[$2] += $1
+	}
+END	{ for (i in name)
+		print i, name[i], amount[name[i]] | "sort"
+	}
+
+t.in2           514303363   9     1     100664  68        `
+	{ x[substr($2, 1, 1)] += $1 }
+END	{ for (i in x)
+		print i, x[i]
+}
+t.in3           514303363   9     1     100664  83        `
+	{ x[NR] = $0 }
+END {
+	for (i in x)
+		if (x[i] ~ /shen/)
+			break
+	print i, x[i]
+}
+
+t.incr          514303363   9     1     100664  52        `
+{ ++i; --j; k++; l-- }
+END { print NR, i, j, k, l }
+t.incr2         514303363   9     1     100664  93        `
+{ s = 0
+  for (i=1; i <= NF; )
+	if ($(i) ~ /^[0-9]+$/)
+		s += $(i++)
+	else
+		i++
+  print s
+}
+
+t.incr3         514303363   9     1     100664  58        `
+{ s = 0
+  for (i=1; i <= NF;  s += $(i++))
+	;
+  print s
+}
+t.index         514303363   9     1     100664  144       `
+{	n = length
+	d = 0
+	for (i = 1; i <= n; i++)
+		if ((k = index($0, substr($0, i))) != i)
+			d = 1
+	if (d)
+		print $0, "has duplicate letters"
+}
+t.j.x           514303364   9     1     100664  55        `
+{i=i+sqrt($1); print i,sqrt($1)}
+END {print sqrt(i),i}
+
+t.longstr       514303364   9     1     100664  137       `
+BEGIN{
+x = "111111111122222222233333333334444444444555555555566666666667777777777888888888899999999990000000000"
+printf "%s\n", x
+exit
+}
+
+t.makef         514303364   9     1     100664  30        `
+{$3 = 2*$1; print $1, $2, $3}
+t.match         514303364   9     1     100664  15        `
+$2 ~ /ava|bwk/
+
+t.max           514303364   9     1     100664  58        `
+length > max	{ max = length; x = $0}
+END { print max, x }
+t.mod           514303364   9     1     100664  12        `
+NR % 2 == 1
+t.monotone      514303364   9     1     100664  112       `
+/^a?b?c?d?e?f?g?h?i?j?k?l?m?n?o?p?q?r?s?t?u?v?w?x?y?z?$|^z?y?x?w?v?u?t?s?r?q?p?o?n?m?l?k?j?i?h?g?f?e?d?c?b?a?$/
+t.nameval       514303364   9     1     100664  132       `
+	{ if (amount[$2] == "")
+		name[++n] = $2
+	  amount[$2] += $1
+	}
+END	{ for (i = 1; i <= n; i++)
+		print name[i], amount[name[i]]
+	}
+t.next          514303364   9     1     100664  29        `
+$1 > 5000	{ next }
+{ print }
+
+t.not           514303364   9     1     100664  55        `
+$2 !~ /ava|bwk/
+!($1 < 2000)
+!($2 ~ /bwk/)
+!$2 ~ /bwk/
+
+t.null0         514303364   9     1     100664  397       `
+BEGIN { FS = ":" }
+{	if (a) print "a", a
+	if (b == 0) print "b", b
+	if ( c == "0") print "c", c
+	if (d == "") print "d", d
+	if (e == 1-1) print "e", e
+}
+$1 == 0	{print "$1 = 0"}
+$1 == "0"	{print "$1 = quoted 0"}
+$1 == ""	{print "$1 = null string"}
+$5 == 0	{print "$5 = 0"}
+$5 == "0"	{print "$5 = quoted 0"}
+$5 == ""	{print "$5 = null string"}
+$1 == $3 {print "$1 = $3"}
+$5 == $6 {print "$5 = $6"}
+
+t.ofmt          514303364   9     1     100664  34        `
+BEGIN	{OFMT="%.5g"}
+	{print $1+0}
+t.ofs           514303365   9     1     100664  60        `
+BEGIN	{ OFS = " %% "; ORS = "##" }
+	{ print $1, $2; print }
+t.pipe          514303365   9     1     100664  49        `
+BEGIN {print "read /usr/bwk/awk/t.pipe" | "cat"}
+
+t.pp            514303365   9     1     100664  8         `
+/a/,/b/
+t.pp1           514303365   9     1     100664  87        `
+/bwk/,/bwk/	{ print $2, $1 }
+/ava/,/ava/	{ print $2, $1 }
+/pjw/,/pjw/	{ print $2, $1 }
+
+t.pp2           514303365   9     1     100664  99        `
+/bwk/,/scj/	{ print "1: ", $0 }
+/bwk/, /bsb/	{ print "2: ", $0 }
+/mel/, /doug/	{ print "3: ", $0 }
+
+t.printf        514303365   9     1     100664  83        `
+{
+ printf "%%: %s ... %s \t", $2, $1
+x = sprintf("%8d %10.10s", $1, $2)
+ print x
+}
+
+t.quote         514303365   9     1     100664  21        `
+{print "\"" $1 "\""}
+
+t.re1           514303365   9     1     100664  98        `
+/[a-cg-j1-3]/	{ print $0 " matches /[a-cg-j1-3]/" }
+/[^aeiou]/	{ print $0 " matches /[^aeiou]/" }
+t.rec           514303365   9     1     100664  19        `
+{ print sqrt($1) }
+
+t.redir         514303365   9     1     100664  55        `
+$1%2==1	{print >"oddtemp"}
+$1%2==0	{print >"eventemp"}
+
+t.roff          514303366   9     1     100664  251       `
+NF > 0	{
+	for (i = 1; i <= NF; i++) {
+		n = length($i)
+		if (n + olen >= 60) {
+			print oline
+			olen = n
+			oline = $i
+		} else {
+			oline = oline " " $i
+			olen += n
+		}
+	}
+}
+
+NF == 0 {
+	print oline
+	olen = 0
+}
+
+END {
+	if (olen > 0)
+		print oline
+}
+
+t.sep           514303366   9     1     100664  90        `
+BEGIN	{ FS = "1"; print "field separator is", FS }
+NF>1	{ print $0 " has " NF " fields" }
+t.seqno         514303366   9     1     100664  15        `
+{print NR, $0}
+
+t.split         514303366   9     1     100664  64        `
+BEGIN	{ z = "stuff" }
+{ split ($0, x); print x[3], x[2], x[1] }
+t.split2        514303366   9     1     100664  36        `
+{ split ($0, x); print x[2], x[1] }
+t.split9        514303366   9     1     100664  145       `
+{
+	n = split ($0, x, FS)
+	if (n != NF)
+		print "botch at ", NR, n, NF
+	for (i=1; i<=n; i++)
+		if ($i != x[i])
+			print "diff at ", i, x[i], $i
+}
+
+t.split9a       514303366   9     1     100664  164       `
+BEGIN { FS = "a" }
+{
+	n = split ($0, x, FS)
+	if (n != NF)
+		print "botch at ", NR, n, NF
+	for (i=1; i<=n; i++)
+		if ($i != x[i])
+			print "diff at ", i, x[i], $i
+}
+t.stately       514303367   9     1     100664  159       `
+/^(al|ak|az|ar|ca|co|ct|de|fl|ga|hi|io|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|nb|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wa|wv|wi|-|wy)*$/
+
+t.strcmp        514303369   9     1     100664  42        `
+$2 >= "ava" && $2 <= "bwk" || $2 >= "pjw"
+t.strcmp1       514303369   9     1     100664  52        `
+$1 != 1 && $1 != 2 && $1 != 3 && $1 != 4 && $1 != 5
+t.substr        514303369   9     1     100664  90        `
+substr($2, 1, 1) ~ /[abc]/
+substr($2, length($2)) !~ /[a-z]/
+substr($2, length($2)) ~ /./
+t.time          514303369   9     1     100664  236       `
+BEGIN {
+	FS = "-"
+}
+/sh$/ {
+	n++
+	l = length($NF)
+	s += l
+	ck %= l
+	totck += ck
+	print
+}
+END {
+	if (n > 0) {
+		printf "%d %d %d %fn\n", totck, n, s, s/n >"glop"
+		printf "%d %d %d %fn\n", totck, n, s, s/n
+	}
+	else
+		print "n is zero"
+}
+t.vf            514303370   9     1     100664  44        `
+BEGIN { i = 1 }
+{print $(i+i)}
+{print $(1)}
+t.vf1           514303370   9     1     100664  66        `
+{	print
+	i = 1
+	while (i <= NF) {
+		print "	" $i
+		i = i + 1
+	}
+}
+t.vf3           514303370   9     1     100664  36        `
+BEGIN { i=1; j=2 }
+{$i = $j; print}
+t.x             514303370   9     1     100664  4         `
+/x/
+t.reg           514303370   9     1     100666  37        `
+/[^\[\]]/
+!/^\[/
+!/^[\[\]]/
+/[\[\]]/
+
+tt.01           487359389   9     1     100664  10        `
+{ print }
+tt.02           487359390   9     1     100664  21        `
+{ print NR, NF, $0 }
+
+tt.02a          487359390   9     1     100664  27        `
+{ $2 = length($2); print }
+
+tt.03           487359390   9     1     100664  36        `
+{ s += length($2) }
+END { print s }
+tt.03a          487359390   9     1     100664  28        `
+{ s += $3 }
+END { print s }
+tt.04           487359390   9     1     100664  47        `
+{ for (i = NF; i > 0; i--)
+	printf "%s ", $i
+}
+
+tt.05           487359390   9     1     100664  62        `
+{
+	s = ""
+	for (i = NF; i > 0; i--)
+		s = s " " $i
+	print s
+}
+tt.06           487359390   9     1     100664  68        `
+{
+	x[$1] += length
+}
+END {
+	for (i in x)
+		print i, x[i] | "sort"
+}
+tt.07           487359390   9     1     100664  12        `
+NF % 2 == 0
+tt.08           487359390   9     1     100664  16        `
+length % 2 == 0
+tt.09           487359390   9     1     100664  7         `
+! /^./
+
+tt.10           487359391   9     1     100664  5         `
+/.$/
+
+tt.11           487359391   9     1     100664  28        `
+{ print substr($0, 10,10) }
+tt.12           487359391   9     1     100664  37        `
+{ $3 = "xxx" $3 "xxx"; $4--; print }
+
+p.1             514303371   9     1     100666  10        `
+{ print }
+p.10            514303371   9     1     100666  9         `
+$1 == $4
+
+p.11            514303372   9     1     100666  7         `
+/Asia/
+
+p.12            514303372   9     1     100666  25        `
+$4 ~ /Asia/ { print $1 }
+
+p.13            514303372   9     1     100666  25        `
+$4 !~ /Asia/ {print $1 }
+
+p.14            514303372   9     1     100666  5         `
+/\$/
+
+p.15            514303372   9     1     100666  5         `
+/\\/
+
+p.16            514303372   9     1     100666  6         `
+/^.$/
+p.17            514303372   9     1     100666  17        `
+$2 !~ /^[0-9]+$/
+
+p.18            514303372   9     1     100666  28        `
+/(apple|cherry) (pie|tart)/
+p.19            514303372   9     1     100666  43        `
+BEGIN	{ digits = "^[0-9]+$" }
+$2 !~ digits
+
+p.2             514303372   9     1     100666  17        `
+{ print $1, $3 }
+
+p.20            514303372   9     1     100666  25        `
+$4 == "Asia" && $3 > 500
+
+p.21            514303373   9     1     100666  31        `
+$4 == "Asia" || $4 == "Africa"
+
+p.22            514303373   9     1     100666  23        `
+$4 ~ /^(Asia|Africa)$/
+
+p.23            514303373   9     1     100666  19        `
+/Canada/, /Brazil/
+
+p.24            514303373   9     1     100666  42        `
+FNR == 1, FNR == 5 { print FILENAME, $0 }
+p.25            514303373   9     1     100666  46        `
+{ printf "%10s %6.1f\n", $1, 1000 * $3 / $2 }
+p.26            514303373   9     1     100666  112       `
+/Asia/	{ pop = pop + $3; n = n + 1 }
+END	{ print "population of", n,\
+		"Asian countries in millions is", pop }
+p.26a           514303373   9     1     100666  101       `
+/Asia/	{ pop += $3; ++n }
+END	{ print "population of", n,\
+		"Asian countries in millions is", pop }
+
+p.27            514303373   9     1     100666  73        `
+maxpop < $3	{ maxpop = $3; country = $1 }
+END		{ print country, maxpop }
+
+p.28            514303373   9     1     100666  20        `
+{ print NR ":" $0 }
+p.29            514303373   9     1     100666  41        `
+	{ gsub(/USA/, "United States"); print }
+
+p.3             514303373   9     1     100666  32        `
+{ printf "%10s %6d\n", $1, $3 }
+p.30            514303373   9     1     100666  21        `
+{ print length, $0 }
+
+p.31            514303373   9     1     100666  70        `
+length($1) > max	{ max = length($1); name = $1 }
+END			{ print name }
+p.32            514303374   9     1     100666  33        `
+{ $1 = substr($1, 1, 3); print }
+
+p.33            514303374   9     1     100666  48        `
+	{ s = s " " substr($1, 1, 3) }
+END	{ print s }
+p.34            514303374   9     1     100666  22        `
+{ $2 /= 1000; print }
+p.35            514303374   9     1     100666  115       `
+BEGIN			{ FS = OFS = "\t" }
+$4 ~ /^North America$/	{ $4 = "NA" }
+$4 ~ /^South America$/	{ $4 = "SA" }
+			{ print }
+
+p.36            514303374   9     1     100666  78        `
+BEGIN	{ FS = OFS = "\t" }
+	{ $5 = 1000 * $3 / $2 ; print $1, $2, $3, $4, $5 }
+p.37            514303374   9     1     100666  15        `
+$1 "" == $2 ""
+
+p.38            514303374   9     1     100666  85        `
+{	if (maxpop < $3) {
+		maxpop = $3
+		country = $1
+	}
+}
+END	{ print country, maxpop }
+
+p.39            514303374   9     1     100666  49        `
+{	i = 1
+	while (i <= NF) {
+		print $i
+		i++
+	}
+}
+
+p.4             514303374   9     1     100666  17        `
+{ print NR, $0 }
+
+p.40            514303374   9     1     100666  41        `
+{	for (i = 1; i <= NF; i++)
+		print $i
+}
+
+p.41            514303374   9     1     100666  83        `
+NR >= 10	{ exit }
+END		{ if (NR < 10)
+			print FILENAME " has only " NR " lines" }
+
+p.42            514303374   9     1     100666  186       `
+/Asia/		{ pop["Asia"] += $3 }
+/Africa/	{ pop["Africa"] += $3 }
+END		{ print "Asian population in millions is", pop["Asia"]
+		  print "African population in millions is", pop["Africa"] }
+p.43            514303375   9     1     100666  95        `
+BEGIN	{ FS = "\t" }
+	{ area[$4] += $2 }
+END	{ for (name in area)
+		print name ":" area[name] }
+
+p.44            514303375   9     1     100666  100       `
+func fact(n) {
+	if (n <= 1)
+		return 1
+	else
+		return n * fact(n-1)
+}
+{ print $1 "! is " fact($1) }
+p.45            514303375   9     1     100666  53        `
+BEGIN	{ OFS = ":" ; ORS = "\n\n" }
+	{ print $1, $2 }
+
+p.46            514303375   9     1     100666  17        `
+	{ print $1 $2 }
+
+p.47            514303375   9     1     100666  61        `
+$3 > 100	{ print >"bigpop" }
+$3 <= 100	{ print >"smallpop" }
+
+p.48            514303375   9     1     100666  92        `
+BEGIN	{ FS = "\t" }
+	{ pop[$4] += $3 }
+END	{ for (c in pop)
+		print c ":" pop[c] | "sort" }
+p.48a           514303375   9     1     100666  81        `
+BEGIN {
+	for (i = 1; i < ARGC; i++)
+		printf "%s ", ARGV[i]
+	printf "\n"
+	exit
+}
+
+p.48b           514303375   9     1     100666  85        `
+BEGIN	{ k = 3; n = 10 }
+{	if (n <= 0) exit
+	if (rand() <= k/n) { print; k-- }
+	n--
+}
+
+p.49            514303375   9     1     100666  38        `
+$1 == "include" { system("cat " $2) }
+p.5             514303375   9     1     100666  141       `
+BEGIN	{ FS = "\t"
+	  printf "%10s %6s %5s %15s\n", "COUNTRY", "AREA", "POP", "CONTINENT" }
+	{ printf "%10s %6d %5d %15s\n", $1, $2, $3, $4 }
+
+p.50            514303375   9     1     100666  117       `
+BEGIN	{ FS = "\t" }
+	{ pop[$4 ":" $1] += $3 }
+END	{ for (cc in pop)
+		print cc ":" pop[cc] | "sort -t: +0 -1 +2nr" }
+
+p.51            514303375   9     1     100666  108       `
+BEGIN	{ FS = ":" }
+{	if ($1 != prev) {
+		print "\n" $1 ":"
+		prev = $1
+	}
+	printf "\t%-10s %6d\n", $2, $3
+}
+p.52            514303375   9     1     100666  325       `
+BEGIN	{ FS = ":" }
+{
+	if ($1 != prev) {
+		if (prev) {
+			printf "\t%-10s\t %6d\n", "total", subtotal
+			subtotal = 0
+		}
+		print "\n" $1 ":"
+		prev = $1
+	}
+	printf "\t%-10s %6d\n", $2, $3
+	wtotal += $3
+	subtotal += $3
+}
+END	{ printf "\t%-10s\t %6d\n", "total", subtotal
+	  printf "\n%-10s\t\t %6d\n", "World Total", wtotal }
+
+p.5a            514303376   9     1     100666  147       `
+BEGIN	{ FS = "\t"
+	  printf "%10s\t%6s\t%6s\t%15s\n", "COUNTRY", "AREA", "POP'N", "CONTINENT"}
+	{ printf "%10s\t%6d\t%6d\t%15s\n", $1, $2, $3, $4}
+
+p.6             514303376   9     1     100666  17        `
+END	{ print NR }
+
+p.7             514303376   9     1     100666  9         `
+$3 > 100
+
+p.8             514303376   9     1     100666  26        `
+$4 == "Asia" { print $1 }
+p.9             514303376   9     1     100666  10        `
+$1 >= "S"
+Compare         503941322   9     1     100775  200       `
+for i
+do
+	echo $i:
+	awk -f $i test.data >junk1 
+	../a.out -f $i test.data >junk2 
+	if cmp -s junk1 junk2
+	then echo $i: good
+	else echo $i:	BAD
+	fi
+	diff -b junk1 junk2 | sed -e 's/^/	/' -e 10q
+done
+Compare.1       503941322   9     1     100775  225       `
+newawk=../a.out
+for i
+do
+	echo $i:
+	awk -f $i test.countries >junk1 
+	$newawk -f $i test.countries >junk2 
+	if cmp -s junk1 junk2
+	then echo $i: good
+	else echo $i:	BAD
+	fi
+	diff -b junk1 junk2 | sed -e 's/^/	/' -e 10q
+done
+
+test.data       503941322   9     1     100664  1429      `
+/dev/rrp3:
+17379	mel
+16693	bwk
+16116	ken
+15713	srb
+11895	lem
+10409	scj
+10252	rhm
+ 9853	shen
+ 9748	a68
+ 9492	sif
+ 9190	pjw
+ 8912	nls
+ 8895	dmr
+ 8491	cda
+ 8372	bs
+ 8252	llc
+ 7450	mb
+ 7360	ava
+ 7273	jrv
+ 7080	bin
+ 7063	greg
+ 6567	dict
+ 6462	lck
+ 6291	rje
+ 6211	lwf
+ 5671	dave
+ 5373	jhc
+ 5220	agf
+ 5167	doug
+ 5007	valerie
+ 3963	jca
+ 3895	bbs
+ 3796	moh
+ 3481	xchar
+ 3200	tbl
+ 2845	s
+ 2774	tgs
+ 2641	met
+ 2566	jck
+ 2511	port
+ 2479	sue
+ 2127	root
+ 1989	bsb
+ 1989	jeg
+ 1933	eag
+ 1801	pdj
+ 1590	tpc
+ 1385	cvw
+ 1370	rwm
+ 1316	avg
+ 1205	eg
+ 1194	jam
+ 1153	dl
+ 1150	lgm
+ 1031	cmb
+ 1018	jwr
+  950	gdb
+  931	marc
+  898	usg
+  865	ggr
+  822	daemon
+  803	mihalis
+  700	honey
+  624	tad
+  559	acs
+  541	uucp
+  523	raf
+  495	adh
+  456	kec
+  414	craig
+  386	donmac
+  375	jj
+  348	ravi
+  344	drw
+  327	stars
+  288	mrg
+  272	jcb
+  263	ralph
+  253	tom
+  251	sjb
+  248	haight
+  224	sharon
+  222	chuck
+  213	dsj
+  201	bill
+  184	god
+  176	sys
+  166	meh
+  163	jon
+  144	dan
+  143	fox
+  123	dale
+  116	kab
+   95	buz
+   80	asc
+   79	jas
+   79	trt
+   64	wsb
+   62	dwh
+   56	ktf
+   54	lr
+   47	dlc
+   45	dls
+   45	jwf
+   44	mash
+   43	ars
+   43	vgl
+   37	jfo
+   32	rab
+   31	pd
+   29	jns
+   25	spm
+   22	rob
+   15	egb
+   10	hm
+   10	mhb
+    6	aed
+    6	cpb
+    5	evp
+    4	ber
+    4	men
+    4	mitch
+    3	ast
+    3	jfr
+    3	lax
+    3	nel
+    2	blue
+    2	jfk
+    2	njas
+    1	122sec
+    1	ddwar
+    1	gopi
+    1	jk
+    1	learn
+    1	low
+    1	nac
+    1	sidor
+
+test.countries  503941322   9     1     100666  249       `
+Russia	8650	262	Asia
+Canada	3852	24	North America
+China	3692	866	Asia
+USA	3615	219	North America
+Brazil	3286	116	South America
+Australia	2968	14	Australia
+India	1269	637	Asia
+Argentina	1072	26	South America
+Sudan	968	19	Africa
+Algeria	920	18	Africa
+
+t.1             514303377   9     1     100644  35        `
+BEGIN	{FS=":"}
+	{print $1, $2, $3}
+
+t.2             514303377   9     1     100666  38        `
+BEGIN	{OFS="==="}
+	{print $1, $2, $3}
+t.ors           514303377   9     1     100644  38        `
+BEGIN	{ORS="abc"}
+	{print $1, $2, $3}
+t.re7           514303377   9     1     100644  52        `
+/^([0-9]+\.?[0-9]*|\.[0-9]+)((e|E)(\+|-)?[0-9]+)?$/
+T.argv          514303377   9     1     100777  939       `
+echo T.argv: misc tests of argc and argv
+
+awk=${awk-../a.out}
+
+echo >foo1
+echo >foo2
+$awk '
+BEGIN {
+	for (i = 1; i < ARGC-1; i++)
+		printf "%s ", ARGV[i]
+	if (ARGC > 1)
+		printf "%s", ARGV[i]
+	printf "\n"
+	exit
+}' * >foo1
+echo * >foo2
+cmp foo1 foo2 || echo 'BAD: T.argv (echo1 *)'
+
+$awk '
+BEGIN {
+	for (i = 1; i < ARGC; i++) {
+		printf "%s", ARGV[i]
+		if (i < ARGC-1)
+			printf " "
+	}
+	printf "\n"
+	exit
+}' * >foo1
+echo * >foo2
+cmp foo1 foo2 || echo 'BAD: T.argv (echo2 *)'
+
+$awk '
+BEGIN {
+	print ARGC
+	ARGV[ARGC-1] = ""
+	for (i=0; i < ARGC; i++)
+		print ARGV[i]
+	exit
+}
+' a bc def gh >foo1
+echo "5
+$awk
+a
+bc
+def
+" >foo2
+diff foo1 foo2 || echo 'BAD: T.argv (argc *)'
+
+echo '1
+2
+3' >foo0
+echo 'foo1
+foo2
+foo3' >foo1
+$awk '{print L $0}' L=foo <foo0 >foo2
+diff foo1 foo2 || echo 'BAD: T.argv (L=foo <foo1)'
+
+echo '1
+2
+3' >foo0
+echo 'foo1
+foo2
+foo3' >foo1
+$awk '{print L $0}' L=foo foo0 >foo2
+diff foo1 foo2 || echo 'BAD: T.argv (L=foo foo1)'
+
+T.close         514303377   9     1     100777  279       `
+echo T.close: test close built-in
+
+awk=${awk-../a.out}
+
+rm -f foo
+$awk '{ print >>"foo"; close "foo" }' /etc/passwd
+diff /etc/passwd foo || echo 'BAD: T.close (1)'
+
+ls -l >foo
+tail -1 foo >foo1
+$awk '{ print >"foo2"; close "foo2" }' foo
+diff foo1 foo2 || echo 'BAD: T.close (2)'
+
+T.func          514303377   9     1     100777  2039      `
+echo T.func: test user-defined functions
+
+awk=${awk-../a.out}
+
+echo '10 2
+2 10
+10 10
+10 1e1
+1e1 9' | $awk '
+# tests whether function returns sensible type bits
+
+function assert(cond) { # assertion
+    if (cond) print 1; else print 0
+}
+
+function i(x) { return x }
+
+{ m=$1; n=i($2); assert(m>n) }
+' >foo1
+echo '1
+0
+0
+0
+1' >foo2
+diff foo1 foo2 || echo 'BAD: T.func (function return type)'
+
+echo 'data: data' >foo1
+$awk '
+func test1(array) { array["test"] = "data" }
+func test2(array) { return(array["test"]) }
+BEGIN { test1(foo); print "data: " test2(foo) }
+' >foo2
+diff foo1 foo2 || echo 'BAD: T.func (array type)'
+
+$awk '
+BEGIN	{ code() }
+END	{ codeout("x") }
+func code () { ; }
+func codeout (ex) { print ex }
+' /dev/null >foo1
+echo x >foo2
+diff foo1 foo2 || echo 'BAD: T.func (argument passing)'
+
+$awk '
+BEGIN { unireghf() }
+
+func unireghf(hfeed) {
+	hfeed[1]=0
+	rcell("foo",hfeed)
+	hfeed[1]=0
+	rcell("bar",hfeed)
+}
+
+func rcell(cellname,hfeed) {
+	print cellname
+}
+' >foo1
+echo "foo
+bar" >foo2
+diff foo1 foo2 || echo 'BAD: T.func (convert arg to array)'
+
+$awk '
+func f(n) {
+	if (n <= 1)
+		return 1
+	else
+		return n * f(n-1)
+}
+{ print f($1) }
+' <<! >foo2
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+!
+cat <<! >foo1
+1
+1
+2
+6
+24
+120
+720
+5040
+40320
+362880
+!
+diff foo1 foo2 || echo 'BAD: T.func (factorial)'
+
+$awk '
+func ack(m,n) {
+	k = k+1
+	if (m == 0) return n+1
+	if (n == 0) return ack(m-1, 1)
+	return ack(m-1, ack(m, n-1))
+}
+{ k = 0; print ack($1,$2), "(" k " calls)" }
+' <<! >foo2
+0 0
+1 1
+2 2
+3 3
+!
+cat <<! >foo1
+1 (1 calls)
+3 (4 calls)
+7 (27 calls)
+61 (2432 calls)
+!
+diff foo1 foo2 || echo 'BAD: T.func (ackermann)'
+
+$awk '
+END { print "end" }
+{ print fib($1) }
+func fib(n) {
+	if (n <= 1) return 1
+	else return add(fib(n-1), fib(n-2))
+}
+func add(m,n) { return m+n }
+BEGIN { print "begin" }
+' <<! >foo2
+1
+3
+5
+10
+!
+cat <<! >foo1
+begin
+1
+3
+8
+89
+end
+!
+diff foo1 foo2 || echo 'BAD: T.func (fib)'
+
+$awk '
+func foo() {
+	for (i = 1; i <= 2; i++)
+		return 3
+	print "should not see this"
+}
+BEGIN { foo(); exit }
+' >foo1
+grep 'should not' foo1 && echo 'BAD: T.func (return)'
+
+T.getline       514303377   9     1     100777  461       `
+echo T.getline: test getline function
+
+awk=${awk-../a.out}
+
+who >foo1
+cat foo1 | $awk '
+BEGIN {
+	while (getline)
+		print
+	exit
+}
+' >foo
+diff foo1 foo || echo 'BAD: T.getline (bare getline)'
+
+$awk '
+BEGIN {
+	while (getline <"/etc/passwd")
+		print
+	exit
+}
+' >foo
+diff /etc/passwd foo || echo 'BAD: T.getline (getline <file)'
+
+$awk '
+BEGIN {
+	while (getline <ARGV[1])
+		print
+	exit
+}
+' /etc/passwd >foo
+diff /etc/passwd foo || echo 'BAD: T.getline (getline <arg)'
+
+T.misc          514303377   9     1     100777  2218      `
+echo T.misc: miscellaneous buglets now watched for
+
+awk=${awk-../a.out}
+
+echo "
+This should not produce control characters (except \\n"
+$awk 'BEGIN {
+	npad = substr("alexander" "           ",1,15)
+	print npad
+	}' | vis
+
+echo "
+This should give an error about function arguments"
+$awk '
+function foo(x) { print "x is" x }
+BEGIN { foo(foo) }
+'
+
+echo "
+This should print bbb"
+$awk '
+BEGIN { up[1] = "a"
+	for (i in up) gsub("a", "A", x)
+	print x x "bbb"
+	exit
+      }
+'
+
+echo "
+This should not core dump when you push return"
+echo yes |
+$awk '
+BEGIN {
+	printf "push return" >"/dev/tty"
+	getline ans <"/dev/tty"
+} '
+
+echo "
+This shouldn't core dump"
+$awk 'BEGIN { unireghf() }
+func unireghf(hfeed) { hfeed[1] = 0 }'
+
+echo "
+This shouldn't core dump"
+echo x | $awk '/[/]/'
+
+echo "
+This should print <12345>"
+$awk '
+func f() { return 12345 }
+BEGIN { printf "<%s>\n", f() }
+'
+
+echo "
+The following should print 4 lines of output"
+echo 'abc
+def
+
+ghi
+jkl' >/tmp/foo
+$awk '
+BEGIN {	RS = ""
+	while (getline <"/tmp/foo")
+		print
+}'
+
+
+echo "
+The following should not produce a warning about changing a constant"
+$awk 'func f(x) { x = 2 }
+BEGIN { f(1) }'
+
+$awk 'BEGIN { print 9, a=10, 11; print a; exit }' >foo1
+echo '9 10 11
+10' >foo2
+diff foo1 foo2 || echo 'BAD: T.misc (embedded expression)'
+
+echo "abc defgh ijkl" | $awk '
+  { $1 = ""; line = $0; print line; print $0; $0 = line; print $0 }' >foo1
+echo " defgh ijkl
+ defgh ijkl
+ defgh ijkl" >foo2
+diff foo1 foo2 || echo 'BAD: T.misc (assignment to $0)'
+
+echo '
+The following should not give a core dump'
+$awk '
+func min(a, b)
+{
+	if (a < b)
+		return a
+	else
+		return b
+}
+BEGIN { exit }
+'
+
+echo "
+The following should not give a syntax error message:"
+$awk '
+func expand(chart) {
+	getline chart < "CHAR.ticks"
+}
+' /dev/null
+
+echo "
+The following should not give a core dump"
+$awk 'BEGIN { print 1e40 }'
+
+echo "
+The following syntax error should not dump core:"
+$awk '
+$NF==3	{first=1}
+$NF==2 && first==0 && (abs($1-o1)>120||abs($2-o2)>120)	{print $0}
+$NF==2	{o1=%1; o2=$2; first=0}
+'
+
+echo "
+The following syntax error should not dump core:"
+$awk '{ n = split($1, address, !); print address[1] }'
+
+echo "
+The following should cause a syntax error message"
+$awk 'BEGIN {"hello"}'
+t.set0          514303377   9     1     100666  114       `
+{$0 = $1; print; print NF, $0; print $2}
+{$(0) = $1; print; print NF, $0; print $2}
+{ i = 1; $(i) = $i+1; print }
+t.intest        514303378   9     1     100664  118       `
+{
+	line = substr($0, index($0, " "))
+	print line
+	n = split(line, x)
+	if ($1 in x)
+		print "yes"
+	else
+		print "no"
+}
+T.exprconv      514303378   9     1     100777  368       `
+echo T.exprconv:  check conversion of expr to number
+
+awk=${awk-../a.out}
+
+$awk '
+BEGIN {	x = (1 > 0); print x
+	x = (1 < 0); print x
+	x = (1 == 1); print x
+	print ("a" >= "b")
+	print ("b" >= "a")
+	print (0 == 0.0)
+	# x = ((1 == 1e0) && (1 == 10e-1) && (1 == .1e2)); print x
+	exit
+}' >foo1
+echo '1
+0
+1
+0
+1
+1' >foo2
+cmp foo1 foo2 || echo 'BAD: T.exprconv (1 > 0, etc.)'
+td.1            503941326   9     1     100444  66561     `
+root FnYk2ARoSqy5s 0 1 m0130,m322 / 
+daemon x 1 1 m0000,m000 / 
+sys sorry 2 2 m0130,m322 /usr/sys 
+bin sorry 3 4 m0130,m322 /bin 
+rhm Jxoi/5WRkeSf2 5 1 m0130,m322 /usr/guest 
+ken X.68wd1.ijayM 6 1 m0130,m322 /usr/guest 
+dmr C4u3dJWbg7RCk 7 1 mh1092,m069 /usr/guest/dmr 
+doug Ki71crWGxw/yM 8 1 m1660,m025 /usr/guest 
+bwk cI/xCTQIhLiIs 9 1 mh1548,m301 /usr/bwk 
+greg aP/aSvprvNzjs 10 1 m0130,m322 /usr/guest 
+tdk BpqFZxM1OM8fs 12 1 m0130,m322 /usr/tdk 
+ava 39pE5M497AxxA 15 1 m1357,m242 /usr/ava 
+scj y937pkRi0VkSQ 24 1 m5190,m292 /usr/guest 
+mel WdR3IjGmtatqE 26 1 m2019,m285,pounce,lesk /usr/guest 
+agf X3yQDkiqWmPJg 34 1 m1699,m245 /usr/guest 
+llc Z/l25S2gaFn7U 41 1 m1650,m324 /usr/guest 
+lem JuvkSQUElv7mE 43 1 m0220,m157,l /usr/guest 
+uucp sorry 48 1 mh2019,m285,nowitz /usr/spool/uucp 
+nuucp vR1/qGT0tTmKY 48 1 mh2019,m285,uucp /usr/spool/uucppublic /usr/lib/uucp/uucico
+duucp FvLWIgnf7/Yps 48 1 mh2019,m285,nowitz /usr/spool/uucp 
+spm NeULgAzcCIE7Q 49 1 m1988,m322 /usr/guest 
+mb 5qmRMH553bNrQ 83 1 m5163,m207 /usr/guest 
+sif YExH0DpvsP6w6 91 1 m5192,m044 /usr/guest 
+dot cThsU.QsIRNgw 99 1 m5579,m048 /usr/guest 
+rje ti0JsP1n6fIMc 109 1 m5429,m096,jane /usr/guest 
+vgl SUcT5i54Zr97M 112 1 m5579,m048 /usr/guest 
+jrv Gaov1FacwJWRk 114 1 m3887,m204 /usr/guest 
+nls 8lZyoosHv82sA 130 1 m4216,m050 /usr/guest 
+met C7iNv/YNUuK4Y 132 1 m6251,m322 /usr/guest 
+sue CWSau82zCx4TI 156 1 m2591,m148,2c576 /usr/guest 
+ravi rvJNlk5jwLXK6 167 1 m0000,m322 /usr/guest 
+pjw xNQy//GDa8FFg 170 1 m6534,m301 /usr/guest /bin/csh
+jhc FueJau/xGh7TI 171 1  /usr/guest 
+lck DRw4p0msMLxDk 172 1 m6532,m149 /usr/guest 
+moh fWVEfxwIox8tc 213 1 m7842,m212,home /usr/guest 
+cmb joVuRF4djg5C. 214 1 m1660,m025 /usr/guest 
+dave ABfXiO0cMc7r. 225 1 mh8451,m040 /usr/guest 
+mihalis mwZa8KXHRzkqE 230 1 m2019,m285 /usr/mihalis 
+tgs XRG6tBPcz0kq2 231 1 mh7461,m025 /usr/tgs /usr/cvw/bin/sh
+uucpa Tqj9p7MbSckWM 238 1 mh2019,m285,uucp /usr/spool/uucppublic /usr/lib/uucp/uucico
+bs fRwQb5d9OGKf6 251 1 m3887,m204 /usr/guest 
+wsb FAV9YYz8p9E7A 254 1 m2591,m148 /usr/guest 
+uucpb A3mRwDQ93/g6o 259 1 mh0000,m000 /usr/spool/uucppublic /usr/lib/uucp/uucico
+cvw QyAYytOfVlwU6 266 1 mh1548,m301 /usr/cvw /usr/cvw/bin/sh
+bsb 2ovW8RVTtCJnc 268 1 mh8092,m150 /usr/bsb 
+dsj UWawW3hN0sxAM 276 1 mh6784,m164 /usr/dsj 
+mrg s6Hg32FrhOATs 277 1 mh6784,m164 /usr/mrg 
+lwf FF27akAjJ5MOs 281 1 mh8085,mh102,lwf /usr/guest 
+kam ze/k68Ms3dthg 287 1 m5579,m048 /usr/guest 
+ejs /cyBUkbW.D7uU 290 1 m0000,m000 /usr/guest 
+ark z/IgEAQYIBpOw 292 1 mh6947,m215,ark /usr/ark 
+kfc 7W6ZdiDwb3kZc 303 1 m6581,m266 /usr/guest 
+rob xOkmkcOe3Nrgc 304 1 m0130,m322 /usr/guest 
+theo cscWu8sY7LXaM 307 1 m8417,m169 /usr/guest /bin/sh
+djr 1Jk/Y729gZOS6 309 1 M7701,M097 /usr/guest 
+wmc 9IjUIKaH9J3BQ 312 1 mh8444,m050,wmco /usr/guest 
+bart /jEdquTKW.ytM 313 1  /usr/guest /bin/sh
+sally B/fSPToWep5DQ 314 1  /usr/guest /bin/sh
+ehg kDDmV7EV6Rgb2 320 1 mh8732,m050,ehg /usr/ehg 
+dds m7QmYNMtgj89g 324 1  /usr/dds 
+libr sorry 330 1  /usr/mel/books 
+dbm 7Ae8dDNmT00bI 334 1 m8896,m091 /usr/guest 
+srm w7t1dxime7v6E 362 1  /usr/srm csh
+jkh e9fuiOFbFISOk 363 1  /usr/guest 
+aek IIioZy5hT7c4o 365 1  /usr/guest 
+tac wM4MxaujpUd5E 377 1 mh0000,m000 /usr/tac 
+jwg m0gyWvNpfv5mk 454 1 mh8632,m336 /usr/jwg 
+hania kUjpPUhNMmqs. 501 1  /usr/guest 
+jerq Dr3oM/S2pl2jY 502 1  /usr/jerq/wrap 
+kjs QVKFALdfgyCpw 503 1  /usr/tgs/kjs 
+jim DP6t0XVwlWOqw 632 1  /usr/guest 
+bwk1 seBQIwB6RQq9s 999 1 mh1548,m301 /usr/bwk 
+claire t6M0uDxCE7h7E 328 1 mh9323,m147 /usr/claire 
+egc xZX3RQm9R4w3. 297 1 m0000,m000 /usr/egc 
+root FnYk2ARoSqy5s 0 1 m0130,m322 / 
+daemon x 1 1 m0000,m000 / 
+sys sorry 2 2 m0130,m322 /usr/sys 
+bin sorry 3 4 m0130,m322 /bin 
+rhm Jxoi/5WRkeSf2 5 1 m0130,m322 /usr/guest 
+ken X.68wd1.ijayM 6 1 m0130,m322 /usr/guest 
+dmr C4u3dJWbg7RCk 7 1 mh1092,m069 /usr/guest/dmr 
+doug Ki71crWGxw/yM 8 1 m1660,m025 /usr/guest 
+bwk cI/xCTQIhLiIs 9 1 mh1548,m301 /usr/bwk 
+greg aP/aSvprvNzjs 10 1 m0130,m322 /usr/guest 
+tdk BpqFZxM1OM8fs 12 1 m0130,m322 /usr/tdk 
+ava 39pE5M497AxxA 15 1 m1357,m242 /usr/ava 
+scj y937pkRi0VkSQ 24 1 m5190,m292 /usr/guest 
+mel WdR3IjGmtatqE 26 1 m2019,m285,pounce,lesk /usr/guest 
+agf X3yQDkiqWmPJg 34 1 m1699,m245 /usr/guest 
+llc Z/l25S2gaFn7U 41 1 m1650,m324 /usr/guest 
+lem JuvkSQUElv7mE 43 1 m0220,m157,l /usr/guest 
+uucp sorry 48 1 mh2019,m285,nowitz /usr/spool/uucp 
+nuucp vR1/qGT0tTmKY 48 1 mh2019,m285,uucp /usr/spool/uucppublic /usr/lib/uucp/uucico
+duucp FvLWIgnf7/Yps 48 1 mh2019,m285,nowitz /usr/spool/uucp 
+spm NeULgAzcCIE7Q 49 1 m1988,m322 /usr/guest 
+mb 5qmRMH553bNrQ 83 1 m5163,m207 /usr/guest 
+sif YExH0DpvsP6w6 91 1 m5192,m044 /usr/guest 
+dot cThsU.QsIRNgw 99 1 m5579,m048 /usr/guest 
+rje ti0JsP1n6fIMc 109 1 m5429,m096,jane /usr/guest 
+vgl SUcT5i54Zr97M 112 1 m5579,m048 /usr/guest 
+jrv Gaov1FacwJWRk 114 1 m3887,m204 /usr/guest 
+nls 8lZyoosHv82sA 130 1 m4216,m050 /usr/guest 
+met C7iNv/YNUuK4Y 132 1 m6251,m322 /usr/guest 
+sue CWSau82zCx4TI 156 1 m2591,m148,2c576 /usr/guest 
+ravi rvJNlk5jwLXK6 167 1 m0000,m322 /usr/guest 
+pjw xNQy//GDa8FFg 170 1 m6534,m301 /usr/guest /bin/csh
+jhc FueJau/xGh7TI 171 1  /usr/guest 
+lck DRw4p0msMLxDk 172 1 m6532,m149 /usr/guest 
+moh fWVEfxwIox8tc 213 1 m7842,m212,home /usr/guest 
+cmb joVuRF4djg5C. 214 1 m1660,m025 /usr/guest 
+dave ABfXiO0cMc7r. 225 1 mh8451,m040 /usr/guest 
+mihalis mwZa8KXHRzkqE 230 1 m2019,m285 /usr/mihalis 
+tgs XRG6tBPcz0kq2 231 1 mh7461,m025 /usr/tgs /usr/cvw/bin/sh
+uucpa Tqj9p7MbSckWM 238 1 mh2019,m285,uucp /usr/spool/uucppublic /usr/lib/uucp/uucico
+bs fRwQb5d9OGKf6 251 1 m3887,m204 /usr/guest 
+wsb FAV9YYz8p9E7A 254 1 m2591,m148 /usr/guest 
+uucpb A3mRwDQ93/g6o 259 1 mh0000,m000 /usr/spool/uucppublic /usr/lib/uucp/uucico
+cvw QyAYytOfVlwU6 266 1 mh1548,m301 /usr/cvw /usr/cvw/bin/sh
+bsb 2ovW8RVTtCJnc 268 1 mh8092,m150 /usr/bsb 
+dsj UWawW3hN0sxAM 276 1 mh6784,m164 /usr/dsj 
+mrg s6Hg32FrhOATs 277 1 mh6784,m164 /usr/mrg 
+lwf FF27akAjJ5MOs 281 1 mh8085,mh102,lwf /usr/guest 
+kam ze/k68Ms3dthg 287 1 m5579,m048 /usr/guest 
+ejs /cyBUkbW.D7uU 290 1 m0000,m000 /usr/guest 
+ark z/IgEAQYIBpOw 292 1 mh6947,m215,ark /usr/ark 
+kfc 7W6ZdiDwb3kZc 303 1 m6581,m266 /usr/guest 
+rob xOkmkcOe3Nrgc 304 1 m0130,m322 /usr/guest 
+theo cscWu8sY7LXaM 307 1 m8417,m169 /usr/guest /bin/sh
+djr 1Jk/Y729gZOS6 309 1 M7701,M097 /usr/guest 
+wmc 9IjUIKaH9J3BQ 312 1 mh8444,m050,wmco /usr/guest 
+bart /jEdquTKW.ytM 313 1  /usr/guest /bin/sh
+sally B/fSPToWep5DQ 314 1  /usr/guest /bin/sh
+ehg kDDmV7EV6Rgb2 320 1 mh8732,m050,ehg /usr/ehg 
+dds m7QmYNMtgj89g 324 1  /usr/dds 
+libr sorry 330 1  /usr/mel/books 
+dbm 7Ae8dDNmT00bI 334 1 m8896,m091 /usr/guest 
+srm w7t1dxime7v6E 362 1  /usr/srm csh
+jkh e9fuiOFbFISOk 363 1  /usr/guest 
+aek IIioZy5hT7c4o 365 1  /usr/guest 
+tac wM4MxaujpUd5E 377 1 mh0000,m000 /usr/tac 
+jwg m0gyWvNpfv5mk 454 1 mh8632,m336 /usr/jwg 
+hania kUjpPUhNMmqs. 501 1  /usr/guest 
+jerq Dr3oM/S2pl2jY 502 1  /usr/jerq/wrap 
+kjs QVKFALdfgyCpw 503 1  /usr/tgs/kjs 
+jim DP6t0XVwlWOqw 632 1  /usr/guest 
+bwk1 seBQIwB6RQq9s 999 1 mh1548,m301 /usr/bwk 
+claire t6M0uDxCE7h7E 328 1 mh9323,m147 /usr/claire 
+egc xZX3RQm9R4w3. 297 1 m0000,m000 /usr/egc 
+root FnYk2ARoSqy5s 0 1 m0130,m322 / 
+daemon x 1 1 m0000,m000 / 
+sys sorry 2 2 m0130,m322 /usr/sys 
+bin sorry 3 4 m0130,m322 /bin 
+rhm Jxoi/5WRkeSf2 5 1 m0130,m322 /usr/guest 
+ken X.68wd1.ijayM 6 1 m0130,m322 /usr/guest 
+dmr C4u3dJWbg7RCk 7 1 mh1092,m069 /usr/guest/dmr 
+doug Ki71crWGxw/yM 8 1 m1660,m025 /usr/guest 
+bwk cI/xCTQIhLiIs 9 1 mh1548,m301 /usr/bwk 
+greg aP/aSvprvNzjs 10 1 m0130,m322 /usr/guest 
+tdk BpqFZxM1OM8fs 12 1 m0130,m322 /usr/tdk 
+ava 39pE5M497AxxA 15 1 m1357,m242 /usr/ava 
+scj y937pkRi0VkSQ 24 1 m5190,m292 /usr/guest 
+mel WdR3IjGmtatqE 26 1 m2019,m285,pounce,lesk /usr/guest 
+agf X3yQDkiqWmPJg 34 1 m1699,m245 /usr/guest 
+llc Z/l25S2gaFn7U 41 1 m1650,m324 /usr/guest 
+lem JuvkSQUElv7mE 43 1 m0220,m157,l /usr/guest 
+uucp sorry 48 1 mh2019,m285,nowitz /usr/spool/uucp 
+nuucp vR1/qGT0tTmKY 48 1 mh2019,m285,uucp /usr/spool/uucppublic /usr/lib/uucp/uucico
+duucp FvLWIgnf7/Yps 48 1 mh2019,m285,nowitz /usr/spool/uucp 
+spm NeULgAzcCIE7Q 49 1 m1988,m322 /usr/guest 
+mb 5qmRMH553bNrQ 83 1 m5163,m207 /usr/guest 
+sif YExH0DpvsP6w6 91 1 m5192,m044 /usr/guest 
+dot cThsU.QsIRNgw 99 1 m5579,m048 /usr/guest 
+rje ti0JsP1n6fIMc 109 1 m5429,m096,jane /usr/guest 
+vgl SUcT5i54Zr97M 112 1 m5579,m048 /usr/guest 
+jrv Gaov1FacwJWRk 114 1 m3887,m204 /usr/guest 
+nls 8lZyoosHv82sA 130 1 m4216,m050 /usr/guest 
+met C7iNv/YNUuK4Y 132 1 m6251,m322 /usr/guest 
+sue CWSau82zCx4TI 156 1 m2591,m148,2c576 /usr/guest 
+ravi rvJNlk5jwLXK6 167 1 m0000,m322 /usr/guest 
+pjw xNQy//GDa8FFg 170 1 m6534,m301 /usr/guest /bin/csh
+jhc FueJau/xGh7TI 171 1  /usr/guest 
+lck DRw4p0msMLxDk 172 1 m6532,m149 /usr/guest 
+moh fWVEfxwIox8tc 213 1 m7842,m212,home /usr/guest 
+cmb joVuRF4djg5C. 214 1 m1660,m025 /usr/guest 
+dave ABfXiO0cMc7r. 225 1 mh8451,m040 /usr/guest 
+mihalis mwZa8KXHRzkqE 230 1 m2019,m285 /usr/mihalis 
+tgs XRG6tBPcz0kq2 231 1 mh7461,m025 /usr/tgs /usr/cvw/bin/sh
+uucpa Tqj9p7MbSckWM 238 1 mh2019,m285,uucp /usr/spool/uucppublic /usr/lib/uucp/uucico
+bs fRwQb5d9OGKf6 251 1 m3887,m204 /usr/guest 
+wsb FAV9YYz8p9E7A 254 1 m2591,m148 /usr/guest 
+uucpb A3mRwDQ93/g6o 259 1 mh0000,m000 /usr/spool/uucppublic /usr/lib/uucp/uucico
+cvw QyAYytOfVlwU6 266 1 mh1548,m301 /usr/cvw /usr/cvw/bin/sh
+bsb 2ovW8RVTtCJnc 268 1 mh8092,m150 /usr/bsb 
+dsj UWawW3hN0sxAM 276 1 mh6784,m164 /usr/dsj 
+mrg s6Hg32FrhOATs 277 1 mh6784,m164 /usr/mrg 
+lwf FF27akAjJ5MOs 281 1 mh8085,mh102,lwf /usr/guest 
+kam ze/k68Ms3dthg 287 1 m5579,m048 /usr/guest 
+ejs /cyBUkbW.D7uU 290 1 m0000,m000 /usr/guest 
+ark z/IgEAQYIBpOw 292 1 mh6947,m215,ark /usr/ark 
+kfc 7W6ZdiDwb3kZc 303 1 m6581,m266 /usr/guest 
+rob xOkmkcOe3Nrgc 304 1 m0130,m322 /usr/guest 
+theo cscWu8sY7LXaM 307 1 m8417,m169 /usr/guest /bin/sh
+djr 1Jk/Y729gZOS6 309 1 M7701,M097 /usr/guest 
+wmc 9IjUIKaH9J3BQ 312 1 mh8444,m050,wmco /usr/guest 
+bart /jEdquTKW.ytM 313 1  /usr/guest /bin/sh
+sally B/fSPToWep5DQ 314 1  /usr/guest /bin/sh
+ehg kDDmV7EV6Rgb2 320 1 mh8732,m050,ehg /usr/ehg 
+dds m7QmYNMtgj89g 324 1  /usr/dds 
+libr sorry 330 1  /usr/mel/books 
+dbm 7Ae8dDNmT00bI 334 1 m8896,m091 /usr/guest 
+srm w7t1dxime7v6E 362 1  /usr/srm csh
+jkh e9fuiOFbFISOk 363 1  /usr/guest 
+aek IIioZy5hT7c4o 365 1  /usr/guest 
+tac wM4MxaujpUd5E 377 1 mh0000,m000 /usr/tac 
+jwg m0gyWvNpfv5mk 454 1 mh8632,m336 /usr/jwg 
+hania kUjpPUhNMmqs. 501 1  /usr/guest 
+jerq Dr3oM/S2pl2jY 502 1  /usr/jerq/wrap 
+kjs QVKFALdfgyCpw 503 1  /usr/tgs/kjs 
+jim DP6t0XVwlWOqw 632 1  /usr/guest 
+bwk1 seBQIwB6RQq9s 999 1 mh1548,m301 /usr/bwk 
+claire t6M0uDxCE7h7E 328 1 mh9323,m147 /usr/claire 
+egc xZX3RQm9R4w3. 297 1 m0000,m000 /usr/egc 
+root FnYk2ARoSqy5s 0 1 m0130,m322 / 
+daemon x 1 1 m0000,m000 / 
+sys sorry 2 2 m0130,m322 /usr/sys 
+bin sorry 3 4 m0130,m322 /bin 
+rhm Jxoi/5WRkeSf2 5 1 m0130,m322 /usr/guest 
+ken X.68wd1.ijayM 6 1 m0130,m322 /usr/guest 
+dmr C4u3dJWbg7RCk 7 1 mh1092,m069 /usr/guest/dmr 
+doug Ki71crWGxw/yM 8 1 m1660,m025 /usr/guest 
+bwk cI/xCTQIhLiIs 9 1 mh1548,m301 /usr/bwk 
+greg aP/aSvprvNzjs 10 1 m0130,m322 /usr/guest 
+tdk BpqFZxM1OM8fs 12 1 m0130,m322 /usr/tdk 
+ava 39pE5M497AxxA 15 1 m1357,m242 /usr/ava 
+scj y937pkRi0VkSQ 24 1 m5190,m292 /usr/guest 
+mel WdR3IjGmtatqE 26 1 m2019,m285,pounce,lesk /usr/guest 
+agf X3yQDkiqWmPJg 34 1 m1699,m245 /usr/guest 
+llc Z/l25S2gaFn7U 41 1 m1650,m324 /usr/guest 
+lem JuvkSQUElv7mE 43 1 m0220,m157,l /usr/guest 
+uucp sorry 48 1 mh2019,m285,nowitz /usr/spool/uucp 
+nuucp vR1/qGT0tTmKY 48 1 mh2019,m285,uucp /usr/spool/uucppublic /usr/lib/uucp/uucico
+duucp FvLWIgnf7/Yps 48 1 mh2019,m285,nowitz /usr/spool/uucp 
+spm NeULgAzcCIE7Q 49 1 m1988,m322 /usr/guest 
+mb 5qmRMH553bNrQ 83 1 m5163,m207 /usr/guest 
+sif YExH0DpvsP6w6 91 1 m5192,m044 /usr/guest 
+dot cThsU.QsIRNgw 99 1 m5579,m048 /usr/guest 
+rje ti0JsP1n6fIMc 109 1 m5429,m096,jane /usr/guest 
+vgl SUcT5i54Zr97M 112 1 m5579,m048 /usr/guest 
+jrv Gaov1FacwJWRk 114 1 m3887,m204 /usr/guest 
+nls 8lZyoosHv82sA 130 1 m4216,m050 /usr/guest 
+met C7iNv/YNUuK4Y 132 1 m6251,m322 /usr/guest 
+sue CWSau82zCx4TI 156 1 m2591,m148,2c576 /usr/guest 
+ravi rvJNlk5jwLXK6 167 1 m0000,m322 /usr/guest 
+pjw xNQy//GDa8FFg 170 1 m6534,m301 /usr/guest /bin/csh
+jhc FueJau/xGh7TI 171 1  /usr/guest 
+lck DRw4p0msMLxDk 172 1 m6532,m149 /usr/guest 
+moh fWVEfxwIox8tc 213 1 m7842,m212,home /usr/guest 
+cmb joVuRF4djg5C. 214 1 m1660,m025 /usr/guest 
+dave ABfXiO0cMc7r. 225 1 mh8451,m040 /usr/guest 
+mihalis mwZa8KXHRzkqE 230 1 m2019,m285 /usr/mihalis 
+tgs XRG6tBPcz0kq2 231 1 mh7461,m025 /usr/tgs /usr/cvw/bin/sh
+uucpa Tqj9p7MbSckWM 238 1 mh2019,m285,uucp /usr/spool/uucppublic /usr/lib/uucp/uucico
+bs fRwQb5d9OGKf6 251 1 m3887,m204 /usr/guest 
+wsb FAV9YYz8p9E7A 254 1 m2591,m148 /usr/guest 
+uucpb A3mRwDQ93/g6o 259 1 mh0000,m000 /usr/spool/uucppublic /usr/lib/uucp/uucico
+cvw QyAYytOfVlwU6 266 1 mh1548,m301 /usr/cvw /usr/cvw/bin/sh
+bsb 2ovW8RVTtCJnc 268 1 mh8092,m150 /usr/bsb 
+dsj UWawW3hN0sxAM 276 1 mh6784,m164 /usr/dsj 
+mrg s6Hg32FrhOATs 277 1 mh6784,m164 /usr/mrg 
+lwf FF27akAjJ5MOs 281 1 mh8085,mh102,lwf /usr/guest 
+kam ze/k68Ms3dthg 287 1 m5579,m048 /usr/guest 
+ejs /cyBUkbW.D7uU 290 1 m0000,m000 /usr/guest 
+ark z/IgEAQYIBpOw:292:1:mh6947,m215,ark:/usr/ark:
+kfc 7W6ZdiDwb3kZc:303:1:m6581,m266:/usr/guest:
+rob xOkmkcOe3Nrgc:304:1:m0130,m322:/usr/guest:
+theo cscWu8sY7LXaM:307:1:m8417,m169:/usr/guest:/bin/sh
+djr 1Jk/Y729gZOS6:309:1:M7701,M097:/usr/guest:
+wmc 9IjUIKaH9J3BQ:312:1:mh8444,m050,wmco:/usr/guest:
+bart /jEdquTKW.ytM:313:1::/usr/guest:/bin/sh
+sally B/fSPToWep5DQ:314:1::/usr/guest:/bin/sh
+ehg kDDmV7EV6Rgb2:320:1:mh8732,m050,ehg:/usr/ehg:
+dds m7QmYNMtgj89g:324:1::/usr/dds:
+libr sorry:330:1::/usr/mel/books:
+dbm 7Ae8dDNmT00bI:334:1:m8896,m091:/usr/guest:
+srm w7t1dxime7v6E:362:1::/usr/srm:csh
+jkh e9fuiOFbFISOk:363:1::/usr/guest:
+aek IIioZy5hT7c4o:365:1::/usr/guest:
+tac wM4MxaujpUd5E:377:1:mh0000,m000:/usr/tac:
+jwg m0gyWvNpfv5mk:454:1:mh8632,m336:/usr/jwg:
+hania kUjpPUhNMmqs.:501:1::/usr/guest:
+jerq Dr3oM/S2pl2jY:502:1::/usr/jerq/wrap:
+kjs QVKFALdfgyCpw:503:1::/usr/tgs/kjs:
+jim DP6t0XVwlWOqw:632:1::/usr/guest:
+bwk1 seBQIwB6RQq9s:999:1:mh1548,m301:/usr/bwk:
+claire t6M0uDxCE7h7E:328:1:mh9323,m147:/usr/claire:
+egc xZX3RQm9R4w3.:297:1:m0000,m000:/usr/egc:
+root FnYk2ARoSqy5s:0:1:m0130,m322:/:
+daemon x:1:1:m0000,m000:/:
+sys sorry:2:2:m0130,m322:/usr/sys:
+bin sorry:3:4:m0130,m322:/bin:
+rhm Jxoi/5WRkeSf2:5:1:m0130,m322:/usr/guest:
+ken X.68wd1.ijayM:6:1:m0130,m322:/usr/guest:
+dmr C4u3dJWbg7RCk:7:1:mh1092,m069:/usr/guest/dmr:
+doug Ki71crWGxw/yM:8:1:m1660,m025:/usr/guest:
+bwk cI/xCTQIhLiIs:9:1:mh1548,m301:/usr/bwk:
+greg aP/aSvprvNzjs:10:1:m0130,m322:/usr/guest:
+tdk BpqFZxM1OM8fs:12:1:m0130,m322:/usr/tdk:
+ava 39pE5M497AxxA:15:1:m1357,m242:/usr/ava:
+scj y937pkRi0VkSQ:24:1:m5190,m292:/usr/guest:
+mel WdR3IjGmtatqE:26:1:m2019,m285,pounce,lesk:/usr/guest:
+agf X3yQDkiqWmPJg:34:1:m1699,m245:/usr/guest:
+llc Z/l25S2gaFn7U:41:1:m1650,m324:/usr/guest:
+lem JuvkSQUElv7mE:43:1:m0220,m157,l:/usr/guest:
+uucp sorry:48:1:mh2019,m285,nowitz:/usr/spool/uucp:
+nuucp vR1/qGT0tTmKY:48:1:mh2019,m285,uucp:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+duucp FvLWIgnf7/Yps:48:1:mh2019,m285,nowitz:/usr/spool/uucp:
+spm NeULgAzcCIE7Q:49:1:m1988,m322:/usr/guest:
+mb 5qmRMH553bNrQ:83:1:m5163,m207:/usr/guest:
+sif YExH0DpvsP6w6:91:1:m5192,m044:/usr/guest:
+dot cThsU.QsIRNgw:99:1:m5579,m048:/usr/guest:
+rje ti0JsP1n6fIMc:109:1:m5429,m096,jane:/usr/guest:
+vgl SUcT5i54Zr97M:112:1:m5579,m048:/usr/guest:
+jrv Gaov1FacwJWRk:114:1:m3887,m204:/usr/guest:
+nls 8lZyoosHv82sA:130:1:m4216,m050:/usr/guest:
+met C7iNv/YNUuK4Y:132:1:m6251,m322:/usr/guest:
+sue CWSau82zCx4TI:156:1:m2591,m148,2c576:/usr/guest:
+ravi rvJNlk5jwLXK6:167:1:m0000,m322:/usr/guest:
+pjw xNQy//GDa8FFg:170:1:m6534,m301:/usr/guest:/bin/csh
+jhc FueJau/xGh7TI:171:1::/usr/guest:
+lck DRw4p0msMLxDk:172:1:m6532,m149:/usr/guest:
+moh fWVEfxwIox8tc:213:1:m7842,m212,home:/usr/guest:
+cmb joVuRF4djg5C.:214:1:m1660,m025:/usr/guest:
+dave ABfXiO0cMc7r.:225:1:mh8451,m040:/usr/guest:
+mihalis mwZa8KXHRzkqE:230:1:m2019,m285:/usr/mihalis:
+tgs XRG6tBPcz0kq2:231:1:mh7461,m025:/usr/tgs:/usr/cvw/bin/sh
+uucpa Tqj9p7MbSckWM:238:1:mh2019,m285,uucp:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+bs fRwQb5d9OGKf6:251:1:m3887,m204:/usr/guest:
+wsb FAV9YYz8p9E7A:254:1:m2591,m148:/usr/guest:
+uucpb A3mRwDQ93/g6o:259:1:mh0000,m000:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+cvw QyAYytOfVlwU6:266:1:mh1548,m301:/usr/cvw:/usr/cvw/bin/sh
+bsb 2ovW8RVTtCJnc:268:1:mh8092,m150:/usr/bsb:
+dsj UWawW3hN0sxAM:276:1:mh6784,m164:/usr/dsj:
+mrg s6Hg32FrhOATs:277:1:mh6784,m164:/usr/mrg:
+lwf FF27akAjJ5MOs:281:1:mh8085,mh102,lwf:/usr/guest:
+kam ze/k68Ms3dthg:287:1:m5579,m048:/usr/guest:
+ejs /cyBUkbW.D7uU:290:1:m0000,m000:/usr/guest:
+ark z/IgEAQYIBpOw:292:1:mh6947,m215,ark:/usr/ark:
+kfc 7W6ZdiDwb3kZc:303:1:m6581,m266:/usr/guest:
+rob xOkmkcOe3Nrgc:304:1:m0130,m322:/usr/guest:
+theo cscWu8sY7LXaM:307:1:m8417,m169:/usr/guest:/bin/sh
+djr 1Jk/Y729gZOS6:309:1:M7701,M097:/usr/guest:
+wmc 9IjUIKaH9J3BQ:312:1:mh8444,m050,wmco:/usr/guest:
+bart /jEdquTKW.ytM:313:1::/usr/guest:/bin/sh
+sally B/fSPToWep5DQ:314:1::/usr/guest:/bin/sh
+ehg kDDmV7EV6Rgb2:320:1:mh8732,m050,ehg:/usr/ehg:
+dds m7QmYNMtgj89g:324:1::/usr/dds:
+libr sorry:330:1::/usr/mel/books:
+dbm 7Ae8dDNmT00bI:334:1:m8896,m091:/usr/guest:
+srm w7t1dxime7v6E:362:1::/usr/srm:csh
+jkh e9fuiOFbFISOk:363:1::/usr/guest:
+aek IIioZy5hT7c4o:365:1::/usr/guest:
+tac wM4MxaujpUd5E:377:1:mh0000,m000:/usr/tac:
+jwg m0gyWvNpfv5mk:454:1:mh8632,m336:/usr/jwg:
+hania kUjpPUhNMmqs.:501:1::/usr/guest:
+jerq Dr3oM/S2pl2jY:502:1::/usr/jerq/wrap:
+kjs QVKFALdfgyCpw:503:1::/usr/tgs/kjs:
+jim DP6t0XVwlWOqw:632:1::/usr/guest:
+bwk1 seBQIwB6RQq9s:999:1:mh1548,m301:/usr/bwk:
+claire t6M0uDxCE7h7E:328:1:mh9323,m147:/usr/claire:
+egc xZX3RQm9R4w3.:297:1:m0000,m000:/usr/egc:
+root FnYk2ARoSqy5s:0:1:m0130,m322:/:
+daemon x:1:1:m0000,m000:/:
+sys sorry:2:2:m0130,m322:/usr/sys:
+bin sorry:3:4:m0130,m322:/bin:
+rhm Jxoi/5WRkeSf2:5:1:m0130,m322:/usr/guest:
+ken X.68wd1.ijayM:6:1:m0130,m322:/usr/guest:
+dmr C4u3dJWbg7RCk:7:1:mh1092,m069:/usr/guest/dmr:
+doug Ki71crWGxw/yM:8:1:m1660,m025:/usr/guest:
+bwk cI/xCTQIhLiIs:9:1:mh1548,m301:/usr/bwk:
+greg aP/aSvprvNzjs:10:1:m0130,m322:/usr/guest:
+tdk BpqFZxM1OM8fs:12:1:m0130,m322:/usr/tdk:
+ava 39pE5M497AxxA:15:1:m1357,m242:/usr/ava:
+scj y937pkRi0VkSQ:24:1:m5190,m292:/usr/guest:
+mel WdR3IjGmtatqE:26:1:m2019,m285,pounce,lesk:/usr/guest:
+agf X3yQDkiqWmPJg:34:1:m1699,m245:/usr/guest:
+llc Z/l25S2gaFn7U:41:1:m1650,m324:/usr/guest:
+lem JuvkSQUElv7mE:43:1:m0220,m157,l:/usr/guest:
+uucp sorry:48:1:mh2019,m285,nowitz:/usr/spool/uucp:
+nuucp vR1/qGT0tTmKY:48:1:mh2019,m285,uucp:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+duucp FvLWIgnf7/Yps:48:1:mh2019,m285,nowitz:/usr/spool/uucp:
+spm NeULgAzcCIE7Q:49:1:m1988,m322:/usr/guest:
+mb 5qmRMH553bNrQ:83:1:m5163,m207:/usr/guest:
+sif YExH0DpvsP6w6:91:1:m5192,m044:/usr/guest:
+dot cThsU.QsIRNgw:99:1:m5579,m048:/usr/guest:
+rje ti0JsP1n6fIMc:109:1:m5429,m096,jane:/usr/guest:
+vgl SUcT5i54Zr97M:112:1:m5579,m048:/usr/guest:
+jrv Gaov1FacwJWRk:114:1:m3887,m204:/usr/guest:
+nls 8lZyoosHv82sA:130:1:m4216,m050:/usr/guest:
+met C7iNv/YNUuK4Y:132:1:m6251,m322:/usr/guest:
+sue CWSau82zCx4TI:156:1:m2591,m148,2c576:/usr/guest:
+ravi rvJNlk5jwLXK6:167:1:m0000,m322:/usr/guest:
+pjw xNQy//GDa8FFg:170:1:m6534,m301:/usr/guest:/bin/csh
+jhc FueJau/xGh7TI:171:1::/usr/guest:
+lck DRw4p0msMLxDk:172:1:m6532,m149:/usr/guest:
+moh fWVEfxwIox8tc:213:1:m7842,m212,home:/usr/guest:
+cmb joVuRF4djg5C.:214:1:m1660,m025:/usr/guest:
+dave ABfXiO0cMc7r.:225:1:mh8451,m040:/usr/guest:
+mihalis mwZa8KXHRzkqE:230:1:m2019,m285:/usr/mihalis:
+tgs XRG6tBPcz0kq2:231:1:mh7461,m025:/usr/tgs:/usr/cvw/bin/sh
+uucpa Tqj9p7MbSckWM:238:1:mh2019,m285,uucp:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+bs fRwQb5d9OGKf6:251:1:m3887,m204:/usr/guest:
+wsb FAV9YYz8p9E7A:254:1:m2591,m148:/usr/guest:
+uucpb A3mRwDQ93/g6o:259:1:mh0000,m000:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+cvw QyAYytOfVlwU6:266:1:mh1548,m301:/usr/cvw:/usr/cvw/bin/sh
+bsb 2ovW8RVTtCJnc:268:1:mh8092,m150:/usr/bsb:
+dsj UWawW3hN0sxAM:276:1:mh6784,m164:/usr/dsj:
+mrg s6Hg32FrhOATs:277:1:mh6784,m164:/usr/mrg:
+lwf FF27akAjJ5MOs:281:1:mh8085,mh102,lwf:/usr/guest:
+kam ze/k68Ms3dthg:287:1:m5579,m048:/usr/guest:
+ejs /cyBUkbW.D7uU:290:1:m0000,m000:/usr/guest:
+ark z/IgEAQYIBpOw:292:1:mh6947,m215,ark:/usr/ark:
+kfc 7W6ZdiDwb3kZc:303:1:m6581,m266:/usr/guest:
+rob xOkmkcOe3Nrgc:304:1:m0130,m322:/usr/guest:
+theo cscWu8sY7LXaM:307:1:m8417,m169:/usr/guest:/bin/sh
+djr 1Jk/Y729gZOS6:309:1:M7701,M097:/usr/guest:
+wmc 9IjUIKaH9J3BQ:312:1:mh8444,m050,wmco:/usr/guest:
+bart /jEdquTKW.ytM:313:1::/usr/guest:/bin/sh
+sally B/fSPToWep5DQ:314:1::/usr/guest:/bin/sh
+ehg kDDmV7EV6Rgb2:320:1:mh8732,m050,ehg:/usr/ehg:
+dds m7QmYNMtgj89g:324:1::/usr/dds:
+libr sorry:330:1::/usr/mel/books:
+dbm 7Ae8dDNmT00bI:334:1:m8896,m091:/usr/guest:
+srm w7t1dxime7v6E:362:1::/usr/srm:csh
+jkh e9fuiOFbFISOk:363:1::/usr/guest:
+aek IIioZy5hT7c4o:365:1::/usr/guest:
+tac wM4MxaujpUd5E:377:1:mh0000,m000:/usr/tac:
+jwg m0gyWvNpfv5mk:454:1:mh8632,m336:/usr/jwg:
+hania kUjpPUhNMmqs.:501:1::/usr/guest:
+jerq Dr3oM/S2pl2jY:502:1::/usr/jerq/wrap:
+kjs QVKFALdfgyCpw:503:1::/usr/tgs/kjs:
+jim DP6t0XVwlWOqw:632:1::/usr/guest:
+bwk1 seBQIwB6RQq9s:999:1:mh1548,m301:/usr/bwk:
+claire t6M0uDxCE7h7E:328:1:mh9323,m147:/usr/claire:
+egc xZX3RQm9R4w3.:297:1:m0000,m000:/usr/egc:
+root FnYk2ARoSqy5s:0:1:m0130,m322:/:
+daemon x:1:1:m0000,m000:/:
+sys sorry:2:2:m0130,m322:/usr/sys:
+bin sorry:3:4:m0130,m322:/bin:
+rhm Jxoi/5WRkeSf2:5:1:m0130,m322:/usr/guest:
+ken X.68wd1.ijayM:6:1:m0130,m322:/usr/guest:
+dmr C4u3dJWbg7RCk:7:1:mh1092,m069:/usr/guest/dmr:
+doug Ki71crWGxw/yM:8:1:m1660,m025:/usr/guest:
+bwk cI/xCTQIhLiIs:9:1:mh1548,m301:/usr/bwk:
+greg aP/aSvprvNzjs:10:1:m0130,m322:/usr/guest:
+tdk BpqFZxM1OM8fs:12:1:m0130,m322:/usr/tdk:
+ava 39pE5M497AxxA:15:1:m1357,m242:/usr/ava:
+scj y937pkRi0VkSQ:24:1:m5190,m292:/usr/guest:
+mel WdR3IjGmtatqE:26:1:m2019,m285,pounce,lesk:/usr/guest:
+agf X3yQDkiqWmPJg:34:1:m1699,m245:/usr/guest:
+llc Z/l25S2gaFn7U:41:1:m1650,m324:/usr/guest:
+lem JuvkSQUElv7mE:43:1:m0220,m157,l:/usr/guest:
+uucp sorry:48:1:mh2019,m285,nowitz:/usr/spool/uucp:
+nuucp vR1/qGT0tTmKY:48:1:mh2019,m285,uucp:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+duucp FvLWIgnf7/Yps:48:1:mh2019,m285,nowitz:/usr/spool/uucp:
+spm NeULgAzcCIE7Q:49:1:m1988,m322:/usr/guest:
+mb 5qmRMH553bNrQ:83:1:m5163,m207:/usr/guest:
+sif YExH0DpvsP6w6:91:1:m5192,m044:/usr/guest:
+dot cThsU.QsIRNgw:99:1:m5579,m048:/usr/guest:
+rje ti0JsP1n6fIMc:109:1:m5429,m096,jane:/usr/guest:
+vgl SUcT5i54Zr97M:112:1:m5579,m048:/usr/guest:
+jrv Gaov1FacwJWRk:114:1:m3887,m204:/usr/guest:
+nls 8lZyoosHv82sA:130:1:m4216,m050:/usr/guest:
+met C7iNv/YNUuK4Y:132:1:m6251,m322:/usr/guest:
+sue CWSau82zCx4TI:156:1:m2591,m148,2c576:/usr/guest:
+ravi rvJNlk5jwLXK6:167:1:m0000,m322:/usr/guest:
+pjw xNQy//GDa8FFg:170:1:m6534,m301:/usr/guest:/bin/csh
+jhc FueJau/xGh7TI:171:1::/usr/guest:
+lck DRw4p0msMLxDk:172:1:m6532,m149:/usr/guest:
+moh fWVEfxwIox8tc:213:1:m7842,m212,home:/usr/guest:
+cmb joVuRF4djg5C.:214:1:m1660,m025:/usr/guest:
+dave ABfXiO0cMc7r.:225:1:mh8451,m040:/usr/guest:
+mihalis mwZa8KXHRzkqE:230:1:m2019,m285:/usr/mihalis:
+tgs XRG6tBPcz0kq2:231:1:mh7461,m025:/usr/tgs:/usr/cvw/bin/sh
+uucpa Tqj9p7MbSckWM:238:1:mh2019,m285,uucp:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+bs fRwQb5d9OGKf6:251:1:m3887,m204:/usr/guest:
+wsb FAV9YYz8p9E7A:254:1:m2591,m148:/usr/guest:
+uucpb A3mRwDQ93/g6o:259:1:mh0000,m000:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+cvw QyAYytOfVlwU6:266:1:mh1548,m301:/usr/cvw:/usr/cvw/bin/sh
+bsb 2ovW8RVTtCJnc:268:1:mh8092,m150:/usr/bsb:
+dsj UWawW3hN0sxAM:276:1:mh6784,m164:/usr/dsj:
+mrg s6Hg32FrhOATs:277:1:mh6784,m164:/usr/mrg:
+lwf FF27akAjJ5MOs:281:1:mh8085,mh102,lwf:/usr/guest:
+kam ze/k68Ms3dthg:287:1:m5579,m048:/usr/guest:
+ejs /cyBUkbW.D7uU:290:1:m0000,m000:/usr/guest:
+ark z/IgEAQYIBpOw:292:1:mh6947,m215,ark:/usr/ark:
+kfc 7W6ZdiDwb3kZc:303:1:m6581,m266:/usr/guest:
+rob xOkmkcOe3Nrgc:304:1:m0130,m322:/usr/guest:
+theo cscWu8sY7LXaM:307:1:m8417,m169:/usr/guest:/bin/sh
+djr 1Jk/Y729gZOS6:309:1:M7701,M097:/usr/guest:
+wmc 9IjUIKaH9J3BQ:312:1:mh8444,m050,wmco:/usr/guest:
+bart /jEdquTKW.ytM:313:1::/usr/guest:/bin/sh
+sally B/fSPToWep5DQ:314:1::/usr/guest:/bin/sh
+ehg kDDmV7EV6Rgb2:320:1:mh8732,m050,ehg:/usr/ehg:
+dds m7QmYNMtgj89g:324:1::/usr/dds:
+libr sorry:330:1::/usr/mel/books:
+dbm 7Ae8dDNmT00bI:334:1:m8896,m091:/usr/guest:
+srm w7t1dxime7v6E:362:1::/usr/srm:csh
+jkh e9fuiOFbFISOk:363:1::/usr/guest:
+aek IIioZy5hT7c4o:365:1::/usr/guest:
+tac wM4MxaujpUd5E:377:1:mh0000,m000:/usr/tac:
+jwg m0gyWvNpfv5mk:454:1:mh8632,m336:/usr/jwg:
+hania kUjpPUhNMmqs.:501:1::/usr/guest:
+jerq Dr3oM/S2pl2jY:502:1::/usr/jerq/wrap:
+kjs QVKFALdfgyCpw:503:1::/usr/tgs/kjs:
+jim DP6t0XVwlWOqw:632:1::/usr/guest:
+bwk1 seBQIwB6RQq9s:999:1:mh1548,m301:/usr/bwk:
+claire t6M0uDxCE7h7E:328:1:mh9323,m147:/usr/claire:
+egc xZX3RQm9R4w3.:297:1:m0000,m000:/usr/egc:
+root FnYk2ARoSqy5s:0:1:m0130,m322:/:
+daemon x:1:1:m0000,m000:/:
+sys sorry:2:2:m0130,m322:/usr/sys:
+bin sorry:3:4:m0130,m322:/bin:
+rhm Jxoi/5WRkeSf2:5:1:m0130,m322:/usr/guest:
+ken X.68wd1.ijayM:6:1:m0130,m322:/usr/guest:
+dmr C4u3dJWbg7RCk:7:1:mh1092,m069:/usr/guest/dmr:
+doug Ki71crWGxw/yM:8:1:m1660,m025:/usr/guest:
+bwk cI/xCTQIhLiIs:9:1:mh1548,m301:/usr/bwk:
+greg aP/aSvprvNzjs:10:1:m0130,m322:/usr/guest:
+tdk BpqFZxM1OM8fs:12:1:m0130,m322:/usr/tdk:
+ava 39pE5M497AxxA:15:1:m1357,m242:/usr/ava:
+scj y937pkRi0VkSQ:24:1:m5190,m292:/usr/guest:
+mel WdR3IjGmtatqE:26:1:m2019,m285,pounce,lesk:/usr/guest:
+agf X3yQDkiqWmPJg:34:1:m1699,m245:/usr/guest:
+llc Z/l25S2gaFn7U:41:1:m1650,m324:/usr/guest:
+lem JuvkSQUElv7mE:43:1:m0220,m157,l:/usr/guest:
+uucp sorry:48:1:mh2019,m285,nowitz:/usr/spool/uucp:
+nuucp vR1/qGT0tTmKY:48:1:mh2019,m285,uucp:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+duucp FvLWIgnf7/Yps:48:1:mh2019,m285,nowitz:/usr/spool/uucp:
+spm NeULgAzcCIE7Q:49:1:m1988,m322:/usr/guest:
+mb 5qmRMH553bNrQ:83:1:m5163,m207:/usr/guest:
+sif YExH0DpvsP6w6:91:1:m5192,m044:/usr/guest:
+dot cThsU.QsIRNgw:99:1:m5579,m048:/usr/guest:
+rje ti0JsP1n6fIMc:109:1:m5429,m096,jane:/usr/guest:
+vgl SUcT5i54Zr97M:112:1:m5579,m048:/usr/guest:
+jrv Gaov1FacwJWRk:114:1:m3887,m204:/usr/guest:
+nls 8lZyoosHv82sA:130:1:m4216,m050:/usr/guest:
+met C7iNv/YNUuK4Y:132:1:m6251,m322:/usr/guest:
+sue CWSau82zCx4TI:156:1:m2591,m148,2c576:/usr/guest:
+ravi rvJNlk5jwLXK6:167:1:m0000,m322:/usr/guest:
+pjw xNQy//GDa8FFg:170:1:m6534,m301:/usr/guest:/bin/csh
+jhc FueJau/xGh7TI:171:1::/usr/guest:
+lck DRw4p0msMLxDk:172:1:m6532,m149:/usr/guest:
+moh fWVEfxwIox8tc:213:1:m7842,m212,home:/usr/guest:
+cmb joVuRF4djg5C.:214:1:m1660,m025:/usr/guest:
+dave ABfXiO0cMc7r.:225:1:mh8451,m040:/usr/guest:
+mihalis mwZa8KXHRzkqE:230:1:m2019,m285:/usr/mihalis:
+tgs XRG6tBPcz0kq2:231:1:mh7461,m025:/usr/tgs:/usr/cvw/bin/sh
+uucpa Tqj9p7MbSckWM:238:1:mh2019,m285,uucp:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+bs fRwQb5d9OGKf6:251:1:m3887,m204:/usr/guest:
+wsb FAV9YYz8p9E7A:254:1:m2591,m148:/usr/guest:
+uucpb A3mRwDQ93/g6o:259:1:mh0000,m000:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+cvw QyAYytOfVlwU6:266:1:mh1548,m301:/usr/cvw:/usr/cvw/bin/sh
+bsb 2ovW8RVTtCJnc:268:1:mh8092,m150:/usr/bsb:
+dsj UWawW3hN0sxAM:276:1:mh6784,m164:/usr/dsj:
+mrg s6Hg32FrhOATs:277:1:mh6784,m164:/usr/mrg:
+lwf FF27akAjJ5MOs:281:1:mh8085,mh102,lwf:/usr/guest:
+kam ze/k68Ms3dthg:287:1:m5579,m048:/usr/guest:
+ejs /cyBUkbW.D7uU:290:1:m0000,m000:/usr/guest:
+ark z/IgEAQYIBpOw:292:1:mh6947,m215,ark:/usr/ark:
+kfc 7W6ZdiDwb3kZc:303:1:m6581,m266:/usr/guest:
+rob xOkmkcOe3Nrgc:304:1:m0130,m322:/usr/guest:
+theo cscWu8sY7LXaM:307:1:m8417,m169:/usr/guest:/bin/sh
+djr 1Jk/Y729gZOS6:309:1:M7701,M097:/usr/guest:
+wmc 9IjUIKaH9J3BQ:312:1:mh8444,m050,wmco:/usr/guest:
+bart /jEdquTKW.ytM:313:1::/usr/guest:/bin/sh
+sally B/fSPToWep5DQ:314:1::/usr/guest:/bin/sh
+ehg kDDmV7EV6Rgb2:320:1:mh8732,m050,ehg:/usr/ehg:
+dds m7QmYNMtgj89g:324:1::/usr/dds:
+libr sorry:330:1::/usr/mel/books:
+dbm 7Ae8dDNmT00bI:334:1:m8896,m091:/usr/guest:
+srm w7t1dxime7v6E:362:1::/usr/srm:csh
+jkh e9fuiOFbFISOk:363:1::/usr/guest:
+aek IIioZy5hT7c4o:365:1::/usr/guest:
+tac wM4MxaujpUd5E:377:1:mh0000,m000:/usr/tac:
+jwg m0gyWvNpfv5mk:454:1:mh8632,m336:/usr/jwg:
+hania kUjpPUhNMmqs.:501:1::/usr/guest:
+jerq Dr3oM/S2pl2jY:502:1::/usr/jerq/wrap:
+kjs QVKFALdfgyCpw:503:1::/usr/tgs/kjs:
+jim DP6t0XVwlWOqw:632:1::/usr/guest:
+bwk1 seBQIwB6RQq9s:999:1:mh1548,m301:/usr/bwk:
+claire t6M0uDxCE7h7E:328:1:mh9323,m147:/usr/claire:
+egc xZX3RQm9R4w3.:297:1:m0000,m000:/usr/egc:
+root FnYk2ARoSqy5s:0:1:m0130,m322:/:
+daemon x:1:1:m0000,m000:/:
+sys sorry:2:2:m0130,m322:/usr/sys:
+bin sorry:3:4:m0130,m322:/bin:
+rhm Jxoi/5WRkeSf2:5:1:m0130,m322:/usr/guest:
+ken X.68wd1.ijayM:6:1:m0130,m322:/usr/guest:
+dmr C4u3dJWbg7RCk:7:1:mh1092,m069:/usr/guest/dmr:
+doug Ki71crWGxw/yM:8:1:m1660,m025:/usr/guest:
+bwk cI/xCTQIhLiIs:9:1:mh1548,m301:/usr/bwk:
+greg aP/aSvprvNzjs:10:1:m0130,m322:/usr/guest:
+tdk BpqFZxM1OM8fs:12:1:m0130,m322:/usr/tdk:
+ava 39pE5M497AxxA:15:1:m1357,m242:/usr/ava:
+scj y937pkRi0VkSQ:24:1:m5190,m292:/usr/guest:
+mel WdR3IjGmtatqE:26:1:m2019,m285,pounce,lesk:/usr/guest:
+agf X3yQDkiqWmPJg:34:1:m1699,m245:/usr/guest:
+llc Z/l25S2gaFn7U:41:1:m1650,m324:/usr/guest:
+lem JuvkSQUElv7mE:43:1:m0220,m157,l:/usr/guest:
+uucp sorry:48:1:mh2019,m285,nowitz:/usr/spool/uucp:
+nuucp vR1/qGT0tTmKY:48:1:mh2019,m285,uucp:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+duucp FvLWIgnf7/Yps:48:1:mh2019,m285,nowitz:/usr/spool/uucp:
+spm NeULgAzcCIE7Q:49:1:m1988,m322:/usr/guest:
+mb 5qmRMH553bNrQ:83:1:m5163,m207:/usr/guest:
+sif YExH0DpvsP6w6:91:1:m5192,m044:/usr/guest:
+dot cThsU.QsIRNgw:99:1:m5579,m048:/usr/guest:
+rje ti0JsP1n6fIMc:109:1:m5429,m096,jane:/usr/guest:
+vgl SUcT5i54Zr97M:112:1:m5579,m048:/usr/guest:
+jrv Gaov1FacwJWRk:114:1:m3887,m204:/usr/guest:
+nls 8lZyoosHv82sA:130:1:m4216,m050:/usr/guest:
+met C7iNv/YNUuK4Y:132:1:m6251,m322:/usr/guest:
+sue CWSau82zCx4TI:156:1:m2591,m148,2c576:/usr/guest:
+ravi rvJNlk5jwLXK6:167:1:m0000,m322:/usr/guest:
+pjw xNQy//GDa8FFg:170:1:m6534,m301:/usr/guest:/bin/csh
+jhc FueJau/xGh7TI:171:1::/usr/guest:
+lck DRw4p0msMLxDk:172:1:m6532,m149:/usr/guest:
+moh fWVEfxwIox8tc:213:1:m7842,m212,home:/usr/guest:
+cmb joVuRF4djg5C.:214:1:m1660,m025:/usr/guest:
+dave ABfXiO0cMc7r.:225:1:mh8451,m040:/usr/guest:
+mihalis mwZa8KXHRzkqE:230:1:m2019,m285:/usr/mihalis:
+tgs XRG6tBPcz0kq2:231:1:mh7461,m025:/usr/tgs:/usr/cvw/bin/sh
+uucpa Tqj9p7MbSckWM:238:1:mh2019,m285,uucp:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+bs fRwQb5d9OGKf6:251:1:m3887,m204:/usr/guest:
+wsb FAV9YYz8p9E7A:254:1:m2591,m148:/usr/guest:
+uucpb A3mRwDQ93/g6o:259:1:mh0000,m000:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+cvw QyAYytOfVlwU6:266:1:mh1548,m301:/usr/cvw:/usr/cvw/bin/sh
+bsb 2ovW8RVTtCJnc:268:1:mh8092,m150:/usr/bsb:
+dsj UWawW3hN0sxAM:276:1:mh6784,m164:/usr/dsj:
+mrg s6Hg32FrhOATs:277:1:mh6784,m164:/usr/mrg:
+lwf FF27akAjJ5MOs:281:1:mh8085,mh102,lwf:/usr/guest:
+kam ze/k68Ms3dthg:287:1:m5579,m048:/usr/guest:
+ejs /cyBUkbW.D7uU:290:1:m0000,m000:/usr/guest:
+ark z/IgEAQYIBpOw:292:1:mh6947,m215,ark:/usr/ark:
+kfc 7W6ZdiDwb3kZc:303:1:m6581,m266:/usr/guest:
+rob xOkmkcOe3Nrgc:304:1:m0130,m322:/usr/guest:
+theo cscWu8sY7LXaM:307:1:m8417,m169:/usr/guest:/bin/sh
+djr 1Jk/Y729gZOS6:309:1:M7701,M097:/usr/guest:
+wmc 9IjUIKaH9J3BQ:312:1:mh8444,m050,wmco:/usr/guest:
+bart /jEdquTKW.ytM:313:1::/usr/guest:/bin/sh
+sally B/fSPToWep5DQ:314:1::/usr/guest:/bin/sh
+ehg kDDmV7EV6Rgb2:320:1:mh8732,m050,ehg:/usr/ehg:
+dds m7QmYNMtgj89g:324:1::/usr/dds:
+libr sorry:330:1::/usr/mel/books:
+dbm 7Ae8dDNmT00bI:334:1:m8896,m091:/usr/guest:
+srm w7t1dxime7v6E:362:1::/usr/srm:csh
+jkh e9fuiOFbFISOk:363:1::/usr/guest:
+aek IIioZy5hT7c4o:365:1::/usr/guest:
+tac wM4MxaujpUd5E:377:1:mh0000,m000:/usr/tac:
+jwg m0gyWvNpfv5mk:454:1:mh8632,m336:/usr/jwg:
+hania kUjpPUhNMmqs.:501:1::/usr/guest:
+jerq Dr3oM/S2pl2jY:502:1::/usr/jerq/wrap:
+kjs QVKFALdfgyCpw:503:1::/usr/tgs/kjs:
+jim DP6t0XVwlWOqw:632:1::/usr/guest:
+bwk1 seBQIwB6RQq9s:999:1:mh1548,m301:/usr/bwk:
+claire t6M0uDxCE7h7E:328:1:mh9323,m147:/usr/claire:
+egc xZX3RQm9R4w3.:297:1:m0000,m000:/usr/egc:
+root FnYk2ARoSqy5s:0:1:m0130,m322:/:
+daemon x:1:1:m0000,m000:/:
+sys sorry:2:2:m0130,m322:/usr/sys:
+bin sorry:3:4:m0130,m322:/bin:
+rhm Jxoi/5WRkeSf2:5:1:m0130,m322:/usr/guest:
+ken X.68wd1.ijayM:6:1:m0130,m322:/usr/guest:
+dmr C4u3dJWbg7RCk:7:1:mh1092,m069:/usr/guest/dmr:
+doug Ki71crWGxw/yM:8:1:m1660,m025:/usr/guest:
+bwk cI/xCTQIhLiIs:9:1:mh1548,m301:/usr/bwk:
+greg aP/aSvprvNzjs:10:1:m0130,m322:/usr/guest:
+tdk BpqFZxM1OM8fs:12:1:m0130,m322:/usr/tdk:
+ava 39pE5M497AxxA:15:1:m1357,m242:/usr/ava:
+scj y937pkRi0VkSQ:24:1:m5190,m292:/usr/guest:
+mel WdR3IjGmtatqE:26:1:m2019,m285,pounce,lesk:/usr/guest:
+agf X3yQDkiqWmPJg:34:1:m1699,m245:/usr/guest:
+llc Z/l25S2gaFn7U:41:1:m1650,m324:/usr/guest:
+lem JuvkSQUElv7mE:43:1:m0220,m157,l:/usr/guest:
+uucp sorry:48:1:mh2019,m285,nowitz:/usr/spool/uucp:
+nuucp vR1/qGT0tTmKY:48:1:mh2019,m285,uucp:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+duucp FvLWIgnf7/Yps:48:1:mh2019,m285,nowitz:/usr/spool/uucp:
+spm NeULgAzcCIE7Q:49:1:m1988,m322:/usr/guest:
+mb 5qmRMH553bNrQ:83:1:m5163,m207:/usr/guest:
+sif YExH0DpvsP6w6:91:1:m5192,m044:/usr/guest:
+dot cThsU.QsIRNgw:99:1:m5579,m048:/usr/guest:
+rje ti0JsP1n6fIMc:109:1:m5429,m096,jane:/usr/guest:
+vgl SUcT5i54Zr97M:112:1:m5579,m048:/usr/guest:
+jrv Gaov1FacwJWRk:114:1:m3887,m204:/usr/guest:
+nls 8lZyoosHv82sA:130:1:m4216,m050:/usr/guest:
+met C7iNv/YNUuK4Y:132:1:m6251,m322:/usr/guest:
+sue CWSau82zCx4TI:156:1:m2591,m148,2c576:/usr/guest:
+ravi rvJNlk5jwLXK6:167:1:m0000,m322:/usr/guest:
+pjw xNQy//GDa8FFg:170:1:m6534,m301:/usr/guest:/bin/csh
+jhcroot FnYk2ARoSqy5s 0 1 m0130,m322 / 
+daemon x 1 1 m0000,m000 / 
+sys sorry 2 2 m0130,m322 /usr/sys 
+bin sorry 3 4 m0130,m322 /bin 
+rhm Jxoi/5WRkeSf2 5 1 m0130,m322 /usr/guest 
+ken X.68wd1.ijayM 6 1 m0130,m322 /usr/guest 
+dmr C4u3dJWbg7RCk 7 1 mh1092,m069 /usr/guest/dmr 
+doug Ki71crWGxw/yM 8 1 m1660,m025 /usr/guest 
+bwk cI/xCTQIhLiIs 9 1 mh1548,m301 /usr/bwk 
+greg aP/aSvprvNzjs 10 1 m0130,m322 /usr/guest 
+tdk BpqFZxM1OM8fs 12 1 m0130,m322 /usr/tdk 
+ava 39pE5M497AxxA 15 1 m1357,m242 /usr/ava 
+scj y937pkRi0VkSQ 24 1 m5190,m292 /usr/guest 
+mel WdR3IjGmtatqE 26 1 m2019,m285,pounce,lesk /usr/guest 
+agf X3yQDkiqWmPJg 34 1 m1699,m245 /usr/guest 
+llc Z/l25S2gaFn7U 41 1 m1650,m324 /usr/guest 
+lem JuvkSQUElv7mE 43 1 m0220,m157,l /usr/guest 
+uucp sorry 48 1 mh2019,m285,nowitz /usr/spool/uucp 
+nuucp vR1/qGT0tTmKY 48 1 mh2019,m285,uucp /usr/spool/uucppublic /usr/lib/uucp/uucico
+duucp FvLWIgnf7/Yps 48 1 mh2019,m285,nowitz /usr/spool/uucp 
+spm NeULgAzcCIE7Q 49 1 m1988,m322 /usr/guest 
+mb 5qmRMH553bNrQ 83 1 m5163,m207 /usr/guest 
+sif YExH0DpvsP6w6 91 1 m5192,m044 /usr/guest 
+dot cThsU.QsIRNgw 99 1 m5579,m048 /usr/guest 
+rje ti0JsP1n6fIMc 109 1 m5429,m096,jane /usr/guest 
+vgl SUcT5i54Zr97M 112 1 m5579,m048 /usr/guest 
+jrv Gaov1FacwJWRk 114 1 m3887,m204 /usr/guest 
+nls 8lZyoosHv82sA 130 1 m4216,m050 /usr/guest 
+met C7iNv/YNUuK4Y 132 1 m6251,m322 /usr/guest 
+sue CWSau82zCx4TI 156 1 m2591,m148,2c576 /usr/guest 
+ravi rvJNlk5jwLXK6 167 1 m0000,m322 /usr/guest 
+pjw xNQy//GDa8FFg 170 1 m6534,m301 /usr/guest /bin/csh
+jhc FueJau/xGh7TI 171 1  /usr/guest 
+lck DRw4p0msMLxDk 172 1 m6532,m149 /usr/guest 
+moh fWVEfxwIox8tc 213 1 m7842,m212,home /usr/guest 
+cmb joVuRF4djg5C. 214 1 m1660,m025 /usr/guest 
+dave ABfXiO0cMc7r. 225 1 mh8451,m040 /usr/guest 
+mihalis mwZa8KXHRzkqE 230 1 m2019,m285 /usr/mihalis 
+tgs XRG6tBPcz0kq2 231 1 mh7461,m025 /usr/tgs /usr/cvw/bin/sh
+uucpa Tqj9p7MbSckWM 238 1 mh2019,m285,uucp /usr/spool/uucppublic /usr/lib/uucp/uucico
+bs fRwQb5d9OGKf6 251 1 m3887,m204 /usr/guest 
+wsb FAV9YYz8p9E7A 254 1 m2591,m148 /usr/guest 
+uucpb A3mRwDQ93/g6o 259 1 mh0000,m000 /usr/spool/uucppublic /usr/lib/uucp/uucico
+cvw QyAYytOfVlwU6 266 1 mh1548,m301 /usr/cvw /usr/cvw/bin/sh
+bsb 2ovW8RVTtCJnc 268 1 mh8092,m150 /usr/bsb 
+dsj UWawW3hN0sxAM 276 1 mh6784,m164 /usr/dsj 
+mrg s6Hg32FrhOATs 277 1 mh6784,m164 /usr/mrg 
+lwf FF27akAjJ5MOs 281 1 mh8085,mh102,lwf /usr/guest 
+kam ze/k68Ms3dthg 287 1 m5579,m048 /usr/guest 
+ejs /cyBUkbW.D7uU 290 1 m0000,m000 /usr/guest 
+ark z/IgEAQYIBpOw 292 1 mh6947,m215,ark /usr/ark 
+kfc 7W6ZdiDwb3kZc 303 1 m6581,m266 /usr/guest 
+rob xOkmkcOe3Nrgc 304 1 m0130,m322 /usr/guest 
+theo cscWu8sY7LXaM 307 1 m8417,m169 /usr/guest /bin/sh
+djr 1Jk/Y729gZOS6 309 1 M7701,M097 /usr/guest 
+wmc 9IjUIKaH9J3BQ 312 1 mh8444,m050,wmco /usr/guest 
+bart /jEdquTKW.ytM 313 1  /usr/guest /bin/sh
+sally B/fSPToWep5DQ 314 1  /usr/guest /bin/sh
+ehg kDDmV7EV6Rgb2 320 1 mh8732,m050,ehg /usr/ehg 
+dds m7QmYNMtgj89g 324 1  /usr/dds 
+libr sorry 330 1  /usr/mel/books 
+dbm 7Ae8dDNmT00bI 334 1 m8896,m091 /usr/guest 
+srm w7t1dxime7v6E 362 1  /usr/srm csh
+jkh e9fuiOFbFISOk 363 1  /usr/guest 
+aek IIioZy5hT7c4o 365 1  /usr/guest 
+tac wM4MxaujpUd5E 377 1 mh0000,m000 /usr/tac 
+jwg m0gyWvNpfv5mk 454 1 mh8632,m336 /usr/jwg 
+hania kUjpPUhNMmqs. 501 1  /usr/guest 
+jerq Dr3oM/S2pl2jY 502 1  /usr/jerq/wrap 
+kjs QVKFALdfgyCpw 503 1  /usr/tgs/kjs 
+jim DP6t0XVwlWOqw 632 1  /usr/guest 
+bwk1 seBQIwB6RQq9s 999 1 mh1548,m301 /usr/bwk 
+claire t6M0uDxCE7h7E 328 1 mh9323,m147 /usr/claire 
+egc xZX3RQm9R4w3. 297 1 m0000,m000 /usr/egc 
+root FnYk2ARoSqy5s 0 1 m0130,m322 / 
+daemon x 1 1 m0000,m000 / 
+sys sorry 2 2 m0130,m322 /usr/sys 
+bin sorry 3 4 m0130,m322 /bin 
+rhm Jxoi/5WRkeSf2 5 1 m0130,m322 /usr/guest 
+ken X.68wd1.ijayM 6 1 m0130,m322 /usr/guest 
+dmr C4u3dJWbg7RCk 7 1 mh1092,m069 /usr/guest/dmr 
+doug Ki71crWGxw/yM 8 1 m1660,m025 /usr/guest 
+bwk cI/xCTQIhLiIs 9 1 mh1548,m301 /usr/bwk 
+greg aP/aSvprvNzjs 10 1 m0130,m322 /usr/guest 
+tdk BpqFZxM1OM8fs 12 1 m0130,m322 /usr/tdk 
+ava 39pE5M497AxxA 15 1 m1357,m242 /usr/ava 
+scj y937pkRi0VkSQ 24 1 m5190,m292 /usr/guest 
+mel WdR3IjGmtatqE 26 1 m2019,m285,pounce,lesk /usr/guest 
+agf X3yQDkiqWmPJg 34 1 m1699,m245 /usr/guest 
+llc Z/l25S2gaFn7U 41 1 m1650,m324 /usr/guest 
+lem JuvkSQUElv7mE 43 1 m0220,m157,l /usr/guest 
+uucp sorry 48 1 mh2019,m285,nowitz /usr/spool/uucp 
+nuucp vR1/qGT0tTmKY 48 1 mh2019,m285,uucp /usr/spool/uucppublic /usr/lib/uucp/uucico
+duucp FvLWIgnf7/Yps 48 1 mh2019,m285,nowitz /usr/spool/uucp 
+spm NeULgAzcCIE7Q 49 1 m1988,m322 /usr/guest 
+mb 5qmRMH553bNrQ 83 1 m5163,m207 /usr/guest 
+sif YExH0DpvsP6w6 91 1 m5192,m044 /usr/guest 
+dot cThsU.QsIRNgw 99 1 m5579,m048 /usr/guest 
+rje ti0JsP1n6fIMc 109 1 m5429,m096,jane /usr/guest 
+vgl SUcT5i54Zr97M 112 1 m5579,m048 /usr/guest 
+jrv Gaov1FacwJWRk 114 1 m3887,m204 /usr/guest 
+nls 8lZyoosHv82sA 130 1 m4216,m050 /usr/guest 
+met C7iNv/YNUuK4Y 132 1 m6251,m322 /usr/guest 
+sue CWSau82zCx4TI 156 1 m2591,m148,2c576 /usr/guest 
+ravi rvJNlk5jwLXK6 167 1 m0000,m322 /usr/guest 
+pjw xNQy//GDa8FFg 170 1 m6534,m301 /usr/guest /bin/csh
+jhc FueJau/xGh7TI 171 1  /usr/guest 
+lck DRw4p0msMLxDk 172 1 m6532,m149 /usr/guest 
+moh fWVEfxwIox8tc 213 1 m7842,m212,home /usr/guest 
+cmb joVuRF4djg5C. 214 1 m1660,m025 /usr/guest 
+dave ABfXiO0cMc7r. 225 1 mh8451,m040 /usr/guest 
+mihalis mwZa8KXHRzkqE 230 1 m2019,m285 /usr/mihalis 
+tgs XRG6tBPcz0kq2 231 1 mh7461,m025 /usr/tgs /usr/cvw/bin/sh
+uucpa Tqj9p7MbSckWM 238 1 mh2019,m285,uucp /usr/spool/uucppublic /usr/lib/uucp/uucico
+bs fRwQb5d9OGKf6 251 1 m3887,m204 /usr/guest 
+wsb FAV9YYz8p9E7A 254 1 m2591,m148 /usr/guest 
+uucpb A3mRwDQ93/g6o 259 1 mh0000,m000 /usr/spool/uucppublic /usr/lib/uucp/uucico
+cvw QyAYytOfVlwU6 266 1 mh1548,m301 /usr/cvw /usr/cvw/bin/sh
+bsb 2ovW8RVTtCJnc 268 1 mh8092,m150 /usr/bsb 
+dsj UWawW3hN0sxAM 276 1 mh6784,m164 /usr/dsj 
+mrg s6Hg32FrhOATs 277 1 mh6784,m164 /usr/mrg 
+lwf FF27akAjJ5MOs 281 1 mh8085,mh102,lwf /usr/guest 
+kam ze/k68Ms3dthg 287 1 m5579,m048 /usr/guest 
+ejs /cyBUkbW.D7uU 290 1 m0000,m000 /usr/guest 
+ark z/IgEAQYIBpOw 292 1 mh6947,m215,ark /usr/ark 
+kfc 7W6ZdiDwb3kZc 303 1 m6581,m266 /usr/guest 
+rob xOkmkcOe3Nrgc 304 1 m0130,m322 /usr/guest 
+theo cscWu8sY7LXaM 307 1 m8417,m169 /usr/guest /bin/sh
+djr 1Jk/Y729gZOS6 309 1 M7701,M097 /usr/guest 
+wmc 9IjUIKaH9J3BQ 312 1 mh8444,m050,wmco /usr/guest 
+bart /jEdquTKW.ytM 313 1  /usr/guest /bin/sh
+sally B/fSPToWep5DQ 314 1  /usr/guest /bin/sh
+ehg kDDmV7EV6Rgb2 320 1 mh8732,m050,ehg /usr/ehg 
+dds m7QmYNMtgj89g 324 1  /usr/dds 
+libr sorry 330 1  /usr/mel/books 
+dbm 7Ae8dDNmT00bI 334 1 m8896,m091 /usr/guest 
+srm w7t1dxime7v6E 362 1  /usr/srm csh
+jkh e9fuiOFbFISOk 363 1  /usr/guest 
+aek IIioZy5hT7c4o 365 1  /usr/guest 
+tac wM4MxaujpUd5E 377 1 mh0000,m000 /usr/tac 
+jwg m0gyWvNpfv5mk 454 1 mh8632,m336 /usr/jwg 
+hania kUjpPUhNMmqs. 501 1  /usr/guest 
+jerq Dr3oM/S2pl2jY 502 1  /usr/jerq/wrap 
+kjs QVKFALdfgyCpw 503 1  /usr/tgs/kjs 
+jim DP6t0XVwlWOqw 632 1  /usr/guest 
+bwk1 seBQIwB6RQq9s 999 1 mh1548,m301 /usr/bwk 
+claire t6M0uDxCE7h7E 328 1 mh9323,m147 /usr/claire 
+egc xZX3RQm9R4w3. 297 1 m0000,m000 /usr/egc 
+root FnYk2ARoSqy5s 0 1 m0130,m322 / 
+daemon x 1 1 m0000,m000 / 
+sys sorry 2 2 m0130,m322 /usr/sys 
+bin sorry 3 4 m0130,m322 /bin 
+rhm Jxoi/5WRkeSf2 5 1 m0130,m322 /usr/guest 
+ken X.68wd1.ijayM 6 1 m0130,m322 /usr/guest 
+dmr C4u3dJWbg7RCk 7 1 mh1092,m069 /usr/guest/dmr 
+doug Ki71crWGxw/yM 8 1 m1660,m025 /usr/guest 
+bwk cI/xCTQIhLiIs 9 1 mh1548,m301 /usr/bwk 
+greg aP/aSvprvNzjs 10 1 m0130,m322 /usr/guest 
+tdk BpqFZxM1OM8fs 12 1 m0130,m322 /usr/tdk 
+ava 39pE5M497AxxA 15 1 m1357,m242 /usr/ava 
+scj y937pkRi0VkSQ 24 1 m5190,m292 /usr/guest 
+mel WdR3IjGmtatqE 26 1 m2019,m285,pounce,lesk /usr/guest 
+agf X3yQDkiqWmPJg 34 1 m1699,m245 /usr/guest 
+llc Z/l25S2gaFn7U 41 1 m1650,m324 /usr/guest 
+lem JuvkSQUElv7mE 43 1 m0220,m157,l /usr/guest 
+uucp sorry 48 1 mh2019,m285,nowitz /usr/spool/uucp 
+nuucp vR1/qGT0tTmKY 48 1 mh2019,m285,uucp /usr/spool/uucppublic /usr/lib/uucp/uucico
+duucp FvLWIgnf7/Yps 48 1 mh2019,m285,nowitz /usr/spool/uucp 
+spm NeULgAzcCIE7Q 49 1 m1988,m322 /usr/guest 
+mb 5qmRMH553bNrQ 83 1 m5163,m207 /usr/guest 
+sif YExH0DpvsP6w6 91 1 m5192,m044 /usr/guest 
+dot cThsU.QsIRNgw 99 1 m5579,m048 /usr/guest 
+rje ti0JsP1n6fIMc 109 1 m5429,m096,jane /usr/guest 
+vgl SUcT5i54Zr97M 112 1 m5579,m048 /usr/guest 
+jrv Gaov1FacwJWRk 114 1 m3887,m204 /usr/guest 
+nls 8lZyoosHv82sA 130 1 m4216,m050 /usr/guest 
+met C7iNv/YNUuK4Y 132 1 m6251,m322 /usr/guest 
+sue CWSau82zCx4TI 156 1 m2591,m148,2c576 /usr/guest 
+ravi rvJNlk5jwLXK6 167 1 m0000,m322 /usr/guest 
+pjw xNQy//GDa8FFg 170 1 m6534,m301 /usr/guest /bin/csh
+jhc FueJau/xGh7TI 171 1  /usr/guest 
+lck DRw4p0msMLxDk 172 1 m6532,m149 /usr/guest 
+moh fWVEfxwIox8tc 213 1 m7842,m212,home /usr/guest 
+cmb joVuRF4djg5C. 214 1 m1660,m025 /usr/guest 
+dave ABfXiO0cMc7r. 225 1 mh8451,m040 /usr/guest 
+mihalis mwZa8KXHRzkqE 230 1 m2019,m285 /usr/mihalis 
+tgs XRG6tBPcz0kq2 231 1 mh7461,m025 /usr/tgs /usr/cvw/bin/sh
+uucpa Tqj9p7MbSckWM 238 1 mh2019,m285,uucp /usr/spool/uucppublic /usr/lib/uucp/uucico
+bs fRwQb5d9OGKf6 251 1 m3887,m204 /usr/guest 
+wsb FAV9YYz8p9E7A 254 1 m2591,m148 /usr/guest 
+uucpb A3mRwDQ93/g6o 259 1 mh0000,m000 /usr/spool/uucppublic /usr/lib/uucp/uucico
+cvw QyAYytOfVlwU6 266 1 mh1548,m301 /usr/cvw /usr/cvw/bin/sh
+bsb 2ovW8RVTtCJnc 268 1 mh8092,m150 /usr/bsb 
+dsj UWawW3hN0sxAM 276 1 mh6784,m164 /usr/dsj 
+mrg s6Hg32FrhOATs 277 1 mh6784,m164 /usr/mrg 
+lwf FF27akAjJ5MOs 281 1 mh8085,mh102,lwf /usr/guest 
+kam ze/k68Ms3dthg 287 1 m5579,m048 /usr/guest 
+ejs /cyBUkbW.D7uU 290 1 m0000,m000 /usr/guest 
+ark z/IgEAQYIBpOw 292 1 mh6947,m215,ark /usr/ark 
+kfc 7W6ZdiDwb3kZc 303 1 m6581,m266 /usr/guest 
+rob xOkmkcOe3Nrgc 304 1 m0130,m322 /usr/guest 
+theo cscWu8sY7LXaM 307 1 m8417,m169 /usr/guest /bin/sh
+djr 1Jk/Y729gZOS6 309 1 M7701,M097 /usr/guest 
+wmc 9IjUIKaH9J3BQ 312 1 mh8444,m050,wmco /usr/guest 
+bart /jEdquTKW.ytM 313 1  /usr/guest /bin/sh
+sally B/fSPToWep5DQ 314 1  /usr/guest /bin/sh
+ehg kDDmV7EV6Rgb2 320 1 mh8732,m050,ehg /usr/ehg 
+dds m7QmYNMtgj89g 324 1  /usr/dds 
+libr sorry 330 1  /usr/mel/books 
+dbm 7Ae8dDNmT00bI 334 1 m8896,m091 /usr/guest 
+srm w7t1dxime7v6E 362 1  /usr/srm csh
+jkh e9fuiOFbFISOk 363 1  /usr/guest 
+aek IIioZy5hT7c4o 365 1  /usr/guest 
+tac wM4MxaujpUd5E 377 1 mh0000,m000 /usr/tac 
+jwg m0gyWvNpfv5mk 454 1 mh8632,m336 /usr/jwg 
+hania kUjpPUhNMmqs. 501 1  /usr/guest 
+jerq Dr3oM/S2pl2jY 502 1  /usr/jerq/wrap 
+kjs QVKFALdfgyCpw 503 1  /usr/tgs/kjs 
+jim DP6t0XVwlWOqw 632 1  /usr/guest 
+bwk1 seBQIwB6RQq9s 999 1 mh1548,m301 /usr/bwk 
+claire t6M0uDxCE7h7E 328 1 mh9323,m147 /usr/claire 
+egc xZX3RQm9R4w3. 297 1 m0000,m000 /usr/egc 
+root FnYk2ARoSqy5s 0 1 m0130,m322 / 
+daemon x 1 1 m0000,m000 / 
+sys sorry 2 2 m0130,m322 /usr/sys 
+bin sorry 3 4 m0130,m322 /bin 
+rhm Jxoi/5WRkeSf2 5 1 m0130,m322 /usr/guest 
+ken X.68wd1.ijayM 6 1 m0130,m322 /usr/guest 
+dmr C4u3dJWbg7RCk 7 1 mh1092,m069 /usr/guest/dmr 
+doug Ki71crWGxw/yM 8 1 m1660,m025 /usr/guest 
+bwk cI/xCTQIhLiIs 9 1 mh1548,m301 /usr/bwk 
+greg aP/aSvprvNzjs 10 1 m0130,m322 /usr/guest 
+tdk BpqFZxM1OM8fs 12 1 m0130,m322 /usr/tdk 
+ava 39pE5M497AxxA 15 1 m1357,m242 /usr/ava 
+scj y937pkRi0VkSQ 24 1 m5190,m292 /usr/guest 
+mel WdR3IjGmtatqE 26 1 m2019,m285,pounce,lesk /usr/guest 
+agf X3yQDkiqWmPJg 34 1 m1699,m245 /usr/guest 
+llc Z/l25S2gaFn7U 41 1 m1650,m324 /usr/guest 
+lem JuvkSQUElv7mE 43 1 m0220,m157,l /usr/guest 
+uucp sorry 48 1 mh2019,m285,nowitz /usr/spool/uucp 
+nuucp vR1/qGT0tTmKY 48 1 mh2019,m285,uucp /usr/spool/uucppublic /usr/lib/uucp/uucico
+duucp FvLWIgnf7/Yps 48 1 mh2019,m285,nowitz /usr/spool/uucp 
+spm NeULgAzcCIE7Q 49 1 m1988,m322 /usr/guest 
+mb 5qmRMH553bNrQ 83 1 m5163,m207 /usr/guest 
+sif YExH0DpvsP6w6 91 1 m5192,m044 /usr/guest 
+dot cThsU.QsIRNgw 99 1 m5579,m048 /usr/guest 
+rje ti0JsP1n6fIMc 109 1 m5429,m096,jane /usr/guest 
+vgl SUcT5i54Zr97M 112 1 m5579,m048 /usr/guest 
+jrv Gaov1FacwJWRk 114 1 m3887,m204 /usr/guest 
+nls 8lZyoosHv82sA 130 1 m4216,m050 /usr/guest 
+met C7iNv/YNUuK4Y 132 1 m6251,m322 /usr/guest 
+sue CWSau82zCx4TI 156 1 m2591,m148,2c576 /usr/guest 
+ravi rvJNlk5jwLXK6 167 1 m0000,m322 /usr/guest 
+pjw xNQy//GDa8FFg 170 1 m6534,m301 /usr/guest /bin/csh
+jhc FueJau/xGh7TI 171 1  /usr/guest 
+lck DRw4p0msMLxDk 172 1 m6532,m149 /usr/guest 
+moh fWVEfxwIox8tc 213 1 m7842,m212,home /usr/guest 
+cmb joVuRF4djg5C. 214 1 m1660,m025 /usr/guest 
+dave ABfXiO0cMc7r. 225 1 mh8451,m040 /usr/guest 
+mihalis mwZa8KXHRzkqE 230 1 m2019,m285 /usr/mihalis 
+tgs XRG6tBPcz0kq2 231 1 mh7461,m025 /usr/tgs /usr/cvw/bin/sh
+uucpa Tqj9p7MbSckWM 238 1 mh2019,m285,uucp /usr/spool/uucppublic /usr/lib/uucp/uucico
+bs fRwQb5d9OGKf6 251 1 m3887,m204 /usr/guest 
+wsb FAV9YYz8p9E7A 254 1 m2591,m148 /usr/guest 
+uucpb A3mRwDQ93/g6o 259 1 mh0000,m000 /usr/spool/uucppublic /usr/lib/uucp/uucico
+cvw QyAYytOfVlwU6 266 1 mh1548,m301 /usr/cvw /usr/cvw/bin/sh
+bsb 2ovW8RVTtCJnc 268 1 mh8092,m150 /usr/bsb 
+dsj UWawW3hN0sxAM 276 1 mh6784,m164 /usr/dsj 
+mrg s6Hg32FrhOATs 277 1 mh6784,m164 /usr/mrg 
+lwf FF27akAjJ5MOs 281 1 mh8085,mh102,lwf /usr/guest 
+kam ze/k68Ms3dthg 287 1 m5579,m048 /usr/guest 
+ejs /cyBUkbW.D7uU 290 1 m0000,m000 /usr/guest 
+ark z/IgEAQYIBpOw:292:1:mh6947,m215,ark:/usr/ark:
+kfc 7W6ZdiDwb3kZc:303:1:m6581,m266:/usr/guest:
+rob xOkmkcOe3Nrgc:304:1:m0130,m322:/usr/guest:
+theo cscWu8sY7LXaM:307:1:m8417,m169:/usr/guest:/bin/sh
+djr 1Jk/Y729gZOS6:309:1:M7701,M097:/usr/guest:
+wmc 9IjUIKaH9J3BQ:312:1:mh8444,m050,wmco:/usr/guest:
+bart /jEdquTKW.ytM:313:1::/usr/guest:/bin/sh
+sally B/fSPToWep5DQ:314:1::/usr/guest:/bin/sh
+ehg kDDmV7EV6Rgb2:320:1:mh8732,m050,ehg:/usr/ehg:
+dds m7QmYNMtgj89g:324:1::/usr/dds:
+libr sorry:330:1::/usr/mel/books:
+dbm 7Ae8dDNmT00bI:334:1:m8896,m091:/usr/guest:
+srm w7t1dxime7v6E:362:1::/usr/srm:csh
+jkh e9fuiOFbFISOk:363:1::/usr/guest:
+aek IIioZy5hT7c4o:365:1::/usr/guest:
+tac wM4MxaujpUd5E:377:1:mh0000,m000:/usr/tac:
+jwg m0gyWvNpfv5mk:454:1:mh8632,m336:/usr/jwg:
+hania kUjpPUhNMmqs.:501:1::/usr/guest:
+jerq Dr3oM/S2pl2jY:502:1::/usr/jerq/wrap:
+kjs QVKFALdfgyCpw:503:1::/usr/tgs/kjs:
+jim DP6t0XVwlWOqw:632:1::/usr/guest:
+bwk1 seBQIwB6RQq9s:999:1:mh1548,m301:/usr/bwk:
+claire t6M0uDxCE7h7E:328:1:mh9323,m147:/usr/claire:
+egc xZX3RQm9R4w3.:297:1:m0000,m000:/usr/egc:
+root FnYk2ARoSqy5s:0:1:m0130,m322:/:
+daemon x:1:1:m0000,m000:/:
+sys sorry:2:2:m0130,m322:/usr/sys:
+bin sorry:3:4:m0130,m322:/bin:
+rhm Jxoi/5WRkeSf2:5:1:m0130,m322:/usr/guest:
+ken X.68wd1.ijayM:6:1:m0130,m322:/usr/guest:
+dmr C4u3dJWbg7RCk:7:1:mh1092,m069:/usr/guest/dmr:
+doug Ki71crWGxw/yM:8:1:m1660,m025:/usr/guest:
+bwk cI/xCTQIhLiIs:9:1:mh1548,m301:/usr/bwk:
+greg aP/aSvprvNzjs:10:1:m0130,m322:/usr/guest:
+tdk BpqFZxM1OM8fs:12:1:m0130,m322:/usr/tdk:
+ava 39pE5M497AxxA:15:1:m1357,m242:/usr/ava:
+scj y937pkRi0VkSQ:24:1:m5190,m292:/usr/guest:
+mel WdR3IjGmtatqE:26:1:m2019,m285,pounce,lesk:/usr/guest:
+agf X3yQDkiqWmPJg:34:1:m1699,m245:/usr/guest:
+llc Z/l25S2gaFn7U:41:1:m1650,m324:/usr/guest:
+lem JuvkSQUElv7mE:43:1:m0220,m157,l:/usr/guest:
+uucp sorry:48:1:mh2019,m285,nowitz:/usr/spool/uucp:
+nuucp vR1/qGT0tTmKY:48:1:mh2019,m285,uucp:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+duucp FvLWIgnf7/Yps:48:1:mh2019,m285,nowitz:/usr/spool/uucp:
+spm NeULgAzcCIE7Q:49:1:m1988,m322:/usr/guest:
+mb 5qmRMH553bNrQ:83:1:m5163,m207:/usr/guest:
+sif YExH0DpvsP6w6:91:1:m5192,m044:/usr/guest:
+dot cThsU.QsIRNgw:99:1:m5579,m048:/usr/guest:
+rje ti0JsP1n6fIMc:109:1:m5429,m096,jane:/usr/guest:
+vgl SUcT5i54Zr97M:112:1:m5579,m048:/usr/guest:
+jrv Gaov1FacwJWRk:114:1:m3887,m204:/usr/guest:
+nls 8lZyoosHv82sA:130:1:m4216,m050:/usr/guest:
+met C7iNv/YNUuK4Y:132:1:m6251,m322:/usr/guest:
+sue CWSau82zCx4TI:156:1:m2591,m148,2c576:/usr/guest:
+ravi rvJNlk5jwLXK6:167:1:m0000,m322:/usr/guest:
+pjw xNQy//GDa8FFg:170:1:m6534,m301:/usr/guest:/bin/csh
+jhc FueJau/xGh7TI:171:1::/usr/guest:
+lck DRw4p0msMLxDk:172:1:m6532,m149:/usr/guest:
+moh fWVEfxwIox8tc:213:1:m7842,m212,home:/usr/guest:
+cmb joVuRF4djg5C.:214:1:m1660,m025:/usr/guest:
+dave ABfXiO0cMc7r.:225:1:mh8451,m040:/usr/guest:
+mihalis mwZa8KXHRzkqE:230:1:m2019,m285:/usr/mihalis:
+tgs XRG6tBPcz0kq2:231:1:mh7461,m025:/usr/tgs:/usr/cvw/bin/sh
+uucpa Tqj9p7MbSckWM:238:1:mh2019,m285,uucp:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+bs fRwQb5d9OGKf6:251:1:m3887,m204:/usr/guest:
+wsb FAV9YYz8p9E7A:254:1:m2591,m148:/usr/guest:
+uucpb A3mRwDQ93/g6o:259:1:mh0000,m000:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+cvw QyAYytOfVlwU6:266:1:mh1548,m301:/usr/cvw:/usr/cvw/bin/sh
+bsb 2ovW8RVTtCJnc:268:1:mh8092,m150:/usr/bsb:
+dsj UWawW3hN0sxAM:276:1:mh6784,m164:/usr/dsj:
+mrg s6Hg32FrhOATs:277:1:mh6784,m164:/usr/mrg:
+lwf FF27akAjJ5MOs:281:1:mh8085,mh102,lwf:/usr/guest:
+kam ze/k68Ms3dthg:287:1:m5579,m048:/usr/guest:
+ejs /cyBUkbW.D7uU:290:1:m0000,m000:/usr/guest:
+ark z/IgEAQYIBpOw:292:1:mh6947,m215,ark:/usr/ark:
+kfc 7W6ZdiDwb3kZc:303:1:m6581,m266:/usr/guest:
+rob xOkmkcOe3Nrgc:304:1:m0130,m322:/usr/guest:
+theo cscWu8sY7LXaM:307:1:m8417,m169:/usr/guest:/bin/sh
+djr 1Jk/Y729gZOS6:309:1:M7701,M097:/usr/guest:
+wmc 9IjUIKaH9J3BQ:312:1:mh8444,m050,wmco:/usr/guest:
+bart /jEdquTKW.ytM:313:1::/usr/guest:/bin/sh
+sally B/fSPToWep5DQ:314:1::/usr/guest:/bin/sh
+ehg kDDmV7EV6Rgb2:320:1:mh8732,m050,ehg:/usr/ehg:
+dds m7QmYNMtgj89g:324:1::/usr/dds:
+libr sorry:330:1::/usr/mel/books:
+dbm 7Ae8dDNmT00bI:334:1:m8896,m091:/usr/guest:
+srm w7t1dxime7v6E:362:1::/usr/srm:csh
+jkh e9fuiOFbFISOk:363:1::/usr/guest:
+aek IIioZy5hT7c4o:365:1::/usr/guest:
+tac wM4MxaujpUd5E:377:1:mh0000,m000:/usr/tac:
+jwg m0gyWvNpfv5mk:454:1:mh8632,m336:/usr/jwg:
+hania kUjpPUhNMmqs.:501:1::/usr/guest:
+jerq Dr3oM/S2pl2jY:502:1::/usr/jerq/wrap:
+kjs QVKFALdfgyCpw:503:1::/usr/tgs/kjs:
+jim DP6t0XVwlWOqw:632:1::/usr/guest:
+bwk1 seBQIwB6RQq9s:999:1:mh1548,m301:/usr/bwk:
+claire t6M0uDxCE7h7E:328:1:mh9323,m147:/usr/claire:
+egc xZX3RQm9R4w3.:297:1:m0000,m000:/usr/egc:
+root FnYk2ARoSqy5s:0:1:m0130,m322:/:
+daemon x:1:1:m0000,m000:/:
+sys sorry:2:2:m0130,m322:/usr/sys:
+bin sorry:3:4:m0130,m322:/bin:
+rhm Jxoi/5WRkeSf2:5:1:m0130,m322:/usr/guest:
+ken X.68wd1.ijayM:6:1:m0130,m322:/usr/guest:
+dmr C4u3dJWbg7RCk:7:1:mh1092,m069:/usr/guest/dmr:
+doug Ki71crWGxw/yM:8:1:m1660,m025:/usr/guest:
+bwk cI/xCTQIhLiIs:9:1:mh1548,m301:/usr/bwk:
+greg aP/aSvprvNzjs:10:1:m0130,m322:/usr/guest:
+tdk BpqFZxM1OM8fs:12:1:m0130,m322:/usr/tdk:
+ava 39pE5M497AxxA:15:1:m1357,m242:/usr/ava:
+scj y937pkRi0VkSQ:24:1:m5190,m292:/usr/guest:
+mel WdR3IjGmtatqE:26:1:m2019,m285,pounce,lesk:/usr/guest:
+agf X3yQDkiqWmPJg:34:1:m1699,m245:/usr/guest:
+llc Z/l25S2gaFn7U:41:1:m1650,m324:/usr/guest:
+lem JuvkSQUElv7mE:43:1:m0220,m157,l:/usr/guest:
+uucp sorry:48:1:mh2019,m285,nowitz:/usr/spool/uucp:
+nuucp vR1/qGT0tTmKY:48:1:mh2019,m285,uucp:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+duucp FvLWIgnf7/Yps:48:1:mh2019,m285,nowitz:/usr/spool/uucp:
+spm NeULgAzcCIE7Q:49:1:m1988,m322:/usr/guest:
+mb 5qmRMH553bNrQ:83:1:m5163,m207:/usr/guest:
+sif YExH0DpvsP6w6:91:1:m5192,m044:/usr/guest:
+dot cThsU.QsIRNgw:99:1:m5579,m048:/usr/guest:
+rje ti0JsP1n6fIMc:109:1:m5429,m096,jane:/usr/guest:
+vgl SUcT5i54Zr97M:112:1:m5579,m048:/usr/guest:
+jrv Gaov1FacwJWRk:114:1:m3887,m204:/usr/guest:
+nls 8lZyoosHv82sA:130:1:m4216,m050:/usr/guest:
+met C7iNv/YNUuK4Y:132:1:m6251,m322:/usr/guest:
+sue CWSau82zCx4TI:156:1:m2591,m148,2c576:/usr/guest:
+ravi rvJNlk5jwLXK6:167:1:m0000,m322:/usr/guest:
+pjw xNQy//GDa8FFg:170:1:m6534,m301:/usr/guest:/bin/csh
+jhc FueJau/xGh7TI:171:1::/usr/guest:
+lck DRw4p0msMLxDk:172:1:m6532,m149:/usr/guest:
+moh fWVEfxwIox8tc:213:1:m7842,m212,home:/usr/guest:
+cmb joVuRF4djg5C.:214:1:m1660,m025:/usr/guest:
+dave ABfXiO0cMc7r.:225:1:mh8451,m040:/usr/guest:
+mihalis mwZa8KXHRzkqE:230:1:m2019,m285:/usr/mihalis:
+tgs XRG6tBPcz0kq2:231:1:mh7461,m025:/usr/tgs:/usr/cvw/bin/sh
+uucpa Tqj9p7MbSckWM:238:1:mh2019,m285,uucp:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+bs fRwQb5d9OGKf6:251:1:m3887,m204:/usr/guest:
+wsb FAV9YYz8p9E7A:254:1:m2591,m148:/usr/guest:
+uucpb A3mRwDQ93/g6o:259:1:mh0000,m000:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+cvw QyAYytOfVlwU6:266:1:mh1548,m301:/usr/cvw:/usr/cvw/bin/sh
+bsb 2ovW8RVTtCJnc:268:1:mh8092,m150:/usr/bsb:
+dsj UWawW3hN0sxAM:276:1:mh6784,m164:/usr/dsj:
+mrg s6Hg32FrhOATs:277:1:mh6784,m164:/usr/mrg:
+lwf FF27akAjJ5MOs:281:1:mh8085,mh102,lwf:/usr/guest:
+kam ze/k68Ms3dthg:287:1:m5579,m048:/usr/guest:
+ejs /cyBUkbW.D7uU:290:1:m0000,m000:/usr/guest:
+ark z/IgEAQYIBpOw:292:1:mh6947,m215,ark:/usr/ark:
+kfc 7W6ZdiDwb3kZc:303:1:m6581,m266:/usr/guest:
+rob xOkmkcOe3Nrgc:304:1:m0130,m322:/usr/guest:
+theo cscWu8sY7LXaM:307:1:m8417,m169:/usr/guest:/bin/sh
+djr 1Jk/Y729gZOS6:309:1:M7701,M097:/usr/guest:
+wmc 9IjUIKaH9J3BQ:312:1:mh8444,m050,wmco:/usr/guest:
+bart /jEdquTKW.ytM:313:1::/usr/guest:/bin/sh
+sally B/fSPToWep5DQ:314:1::/usr/guest:/bin/sh
+ehg kDDmV7EV6Rgb2:320:1:mh8732,m050,ehg:/usr/ehg:
+dds m7QmYNMtgj89g:324:1::/usr/dds:
+libr sorry:330:1::/usr/mel/books:
+dbm 7Ae8dDNmT00bI:334:1:m8896,m091:/usr/guest:
+srm w7t1dxime7v6E:362:1::/usr/srm:csh
+jkh e9fuiOFbFISOk:363:1::/usr/guest:
+aek IIioZy5hT7c4o:365:1::/usr/guest:
+tac wM4MxaujpUd5E:377:1:mh0000,m000:/usr/tac:
+jwg m0gyWvNpfv5mk:454:1:mh8632,m336:/usr/jwg:
+hania kUjpPUhNMmqs.:501:1::/usr/guest:
+jerq Dr3oM/S2pl2jY:502:1::/usr/jerq/wrap:
+kjs QVKFALdfgyCpw:503:1::/usr/tgs/kjs:
+jim DP6t0XVwlWOqw:632:1::/usr/guest:
+bwk1 seBQIwB6RQq9s:999:1:mh1548,m301:/usr/bwk:
+claire t6M0uDxCE7h7E:328:1:mh9323,m147:/usr/claire:
+egc xZX3RQm9R4w3.:297:1:m0000,m000:/usr/egc:
+root FnYk2ARoSqy5s:0:1:m0130,m322:/:
+daemon x:1:1:m0000,m000:/:
+sys sorry:2:2:m0130,m322:/usr/sys:
+bin sorry:3:4:m0130,m322:/bin:
+rhm Jxoi/5WRkeSf2:5:1:m0130,m322:/usr/guest:
+ken X.68wd1.ijayM:6:1:m0130,m322:/usr/guest:
+dmr C4u3dJWbg7RCk:7:1:mh1092,m069:/usr/guest/dmr:
+doug Ki71crWGxw/yM:8:1:m1660,m025:/usr/guest:
+bwk cI/xCTQIhLiIs:9:1:mh1548,m301:/usr/bwk:
+greg aP/aSvprvNzjs:10:1:m0130,m322:/usr/guest:
+tdk BpqFZxM1OM8fs:12:1:m0130,m322:/usr/tdk:
+ava 39pE5M497AxxA:15:1:m1357,m242:/usr/ava:
+scj y937pkRi0VkSQ:24:1:m5190,m292:/usr/guest:
+mel WdR3IjGmtatqE:26:1:m2019,m285,pounce,lesk:/usr/guest:
+agf X3yQDkiqWmPJg:34:1:m1699,m245:/usr/guest:
+llc Z/l25S2gaFn7U:41:1:m1650,m324:/usr/guest:
+lem JuvkSQUElv7mE:43:1:m0220,m157,l:/usr/guest:
+uucp sorry:48:1:mh2019,m285,nowitz:/usr/spool/uucp:
+nuucp vR1/qGT0tTmKY:48:1:mh2019,m285,uucp:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+duucp FvLWIgnf7/Yps:48:1:mh2019,m285,nowitz:/usr/spool/uucp:
+spm NeULgAzcCIE7Q:49:1:m1988,m322:/usr/guest:
+mb 5qmRMH553bNrQ:83:1:m5163,m207:/usr/guest:
+sif YExH0DpvsP6w6:91:1:m5192,m044:/usr/guest:
+dot cThsU.QsIRNgw:99:1:m5579,m048:/usr/guest:
+rje ti0JsP1n6fIMc:109:1:m5429,m096,jane:/usr/guest:
+vgl SUcT5i54Zr97M:112:1:m5579,m048:/usr/guest:
+jrv Gaov1FacwJWRk:114:1:m3887,m204:/usr/guest:
+nls 8lZyoosHv82sA:130:1:m4216,m050:/usr/guest:
+met C7iNv/YNUuK4Y:132:1:m6251,m322:/usr/guest:
+sue CWSau82zCx4TI:156:1:m2591,m148,2c576:/usr/guest:
+ravi rvJNlk5jwLXK6:167:1:m0000,m322:/usr/guest:
+pjw xNQy//GDa8FFg:170:1:m6534,m301:/usr/guest:/bin/csh
+jhc FueJau/xGh7TI:171:1::/usr/guest:
+lck DRw4p0msMLxDk:172:1:m6532,m149:/usr/guest:
+moh fWVEfxwIox8tc:213:1:m7842,m212,home:/usr/guest:
+cmb joVuRF4djg5C.:214:1:m1660,m025:/usr/guest:
+dave ABfXiO0cMc7r.:225:1:mh8451,m040:/usr/guest:
+mihalis mwZa8KXHRzkqE:230:1:m2019,m285:/usr/mihalis:
+tgs XRG6tBPcz0kq2:231:1:mh7461,m025:/usr/tgs:/usr/cvw/bin/sh
+uucpa Tqj9p7MbSckWM:238:1:mh2019,m285,uucp:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+bs fRwQb5d9OGKf6:251:1:m3887,m204:/usr/guest:
+wsb FAV9YYz8p9E7A:254:1:m2591,m148:/usr/guest:
+uucpb A3mRwDQ93/g6o:259:1:mh0000,m000:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+cvw QyAYytOfVlwU6:266:1:mh1548,m301:/usr/cvw:/usr/cvw/bin/sh
+bsb 2ovW8RVTtCJnc:268:1:mh8092,m150:/usr/bsb:
+dsj UWawW3hN0sxAM:276:1:mh6784,m164:/usr/dsj:
+mrg s6Hg32FrhOATs:277:1:mh6784,m164:/usr/mrg:
+lwf FF27akAjJ5MOs:281:1:mh8085,mh102,lwf:/usr/guest:
+kam ze/k68Ms3dthg:287:1:m5579,m048:/usr/guest:
+ejs /cyBUkbW.D7uU:290:1:m0000,m000:/usr/guest:
+ark z/IgEAQYIBpOw:292:1:mh6947,m215,ark:/usr/ark:
+kfc 7W6ZdiDwb3kZc:303:1:m6581,m266:/usr/guest:
+rob xOkmkcOe3Nrgc:304:1:m0130,m322:/usr/guest:
+theo cscWu8sY7LXaM:307:1:m8417,m169:/usr/guest:/bin/sh
+djr 1Jk/Y729gZOS6:309:1:M7701,M097:/usr/guest:
+wmc 9IjUIKaH9J3BQ:312:1:mh8444,m050,wmco:/usr/guest:
+bart /jEdquTKW.ytM:313:1::/usr/guest:/bin/sh
+sally B/fSPToWep5DQ:314:1::/usr/guest:/bin/sh
+ehg kDDmV7EV6Rgb2:320:1:mh8732,m050,ehg:/usr/ehg:
+dds m7QmYNMtgj89g:324:1::/usr/dds:
+libr sorry:330:1::/usr/mel/books:
+dbm 7Ae8dDNmT00bI:334:1:m8896,m091:/usr/guest:
+srm w7t1dxime7v6E:362:1::/usr/srm:csh
+jkh e9fuiOFbFISOk:363:1::/usr/guest:
+aek IIioZy5hT7c4o:365:1::/usr/guest:
+tac wM4MxaujpUd5E:377:1:mh0000,m000:/usr/tac:
+jwg m0gyWvNpfv5mk:454:1:mh8632,m336:/usr/jwg:
+hania kUjpPUhNMmqs.:501:1::/usr/guest:
+jerq Dr3oM/S2pl2jY:502:1::/usr/jerq/wrap:
+kjs QVKFALdfgyCpw:503:1::/usr/tgs/kjs:
+jim DP6t0XVwlWOqw:632:1::/usr/guest:
+bwk1 seBQIwB6RQq9s:999:1:mh1548,m301:/usr/bwk:
+claire t6M0uDxCE7h7E:328:1:mh9323,m147:/usr/claire:
+egc xZX3RQm9R4w3.:297:1:m0000,m000:/usr/egc:
+root FnYk2ARoSqy5s:0:1:m0130,m322:/:
+daemon x:1:1:m0000,m000:/:
+sys sorry:2:2:m0130,m322:/usr/sys:
+bin sorry:3:4:m0130,m322:/bin:
+rhm Jxoi/5WRkeSf2:5:1:m0130,m322:/usr/guest:
+ken X.68wd1.ijayM:6:1:m0130,m322:/usr/guest:
+dmr C4u3dJWbg7RCk:7:1:mh1092,m069:/usr/guest/dmr:
+doug Ki71crWGxw/yM:8:1:m1660,m025:/usr/guest:
+bwk cI/xCTQIhLiIs:9:1:mh1548,m301:/usr/bwk:
+greg aP/aSvprvNzjs:10:1:m0130,m322:/usr/guest:
+tdk BpqFZxM1OM8fs:12:1:m0130,m322:/usr/tdk:
+ava 39pE5M497AxxA:15:1:m1357,m242:/usr/ava:
+scj y937pkRi0VkSQ:24:1:m5190,m292:/usr/guest:
+mel WdR3IjGmtatqE:26:1:m2019,m285,pounce,lesk:/usr/guest:
+agf X3yQDkiqWmPJg:34:1:m1699,m245:/usr/guest:
+llc Z/l25S2gaFn7U:41:1:m1650,m324:/usr/guest:
+lem JuvkSQUElv7mE:43:1:m0220,m157,l:/usr/guest:
+uucp sorry:48:1:mh2019,m285,nowitz:/usr/spool/uucp:
+nuucp vR1/qGT0tTmKY:48:1:mh2019,m285,uucp:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+duucp FvLWIgnf7/Yps:48:1:mh2019,m285,nowitz:/usr/spool/uucp:
+spm NeULgAzcCIE7Q:49:1:m1988,m322:/usr/guest:
+mb 5qmRMH553bNrQ:83:1:m5163,m207:/usr/guest:
+sif YExH0DpvsP6w6:91:1:m5192,m044:/usr/guest:
+dot cThsU.QsIRNgw:99:1:m5579,m048:/usr/guest:
+rje ti0JsP1n6fIMc:109:1:m5429,m096,jane:/usr/guest:
+vgl SUcT5i54Zr97M:112:1:m5579,m048:/usr/guest:
+jrv Gaov1FacwJWRk:114:1:m3887,m204:/usr/guest:
+nls 8lZyoosHv82sA:130:1:m4216,m050:/usr/guest:
+met C7iNv/YNUuK4Y:132:1:m6251,m322:/usr/guest:
+sue CWSau82zCx4TI:156:1:m2591,m148,2c576:/usr/guest:
+ravi rvJNlk5jwLXK6:167:1:m0000,m322:/usr/guest:
+pjw xNQy//GDa8FFg:170:1:m6534,m301:/usr/guest:/bin/csh
+jhc FueJau/xGh7TI:171:1::/usr/guest:
+lck DRw4p0msMLxDk:172:1:m6532,m149:/usr/guest:
+moh fWVEfxwIox8tc:213:1:m7842,m212,home:/usr/guest:
+cmb joVuRF4djg5C.:214:1:m1660,m025:/usr/guest:
+dave ABfXiO0cMc7r.:225:1:mh8451,m040:/usr/guest:
+mihalis mwZa8KXHRzkqE:230:1:m2019,m285:/usr/mihalis:
+tgs XRG6tBPcz0kq2:231:1:mh7461,m025:/usr/tgs:/usr/cvw/bin/sh
+uucpa Tqj9p7MbSckWM:238:1:mh2019,m285,uucp:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+bs fRwQb5d9OGKf6:251:1:m3887,m204:/usr/guest:
+wsb FAV9YYz8p9E7A:254:1:m2591,m148:/usr/guest:
+uucpb A3mRwDQ93/g6o:259:1:mh0000,m000:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+cvw QyAYytOfVlwU6:266:1:mh1548,m301:/usr/cvw:/usr/cvw/bin/sh
+bsb 2ovW8RVTtCJnc:268:1:mh8092,m150:/usr/bsb:
+dsj UWawW3hN0sxAM:276:1:mh6784,m164:/usr/dsj:
+mrg s6Hg32FrhOATs:277:1:mh6784,m164:/usr/mrg:
+lwf FF27akAjJ5MOs:281:1:mh8085,mh102,lwf:/usr/guest:
+kam ze/k68Ms3dthg:287:1:m5579,m048:/usr/guest:
+ejs /cyBUkbW.D7uU:290:1:m0000,m000:/usr/guest:
+ark z/IgEAQYIBpOw:292:1:mh6947,m215,ark:/usr/ark:
+kfc 7W6ZdiDwb3kZc:303:1:m6581,m266:/usr/guest:
+rob xOkmkcOe3Nrgc:304:1:m0130,m322:/usr/guest:
+theo cscWu8sY7LXaM:307:1:m8417,m169:/usr/guest:/bin/sh
+djr 1Jk/Y729gZOS6:309:1:M7701,M097:/usr/guest:
+wmc 9IjUIKaH9J3BQ:312:1:mh8444,m050,wmco:/usr/guest:
+bart /jEdquTKW.ytM:313:1::/usr/guest:/bin/sh
+sally B/fSPToWep5DQ:314:1::/usr/guest:/bin/sh
+ehg kDDmV7EV6Rgb2:320:1:mh8732,m050,ehg:/usr/ehg:
+dds m7QmYNMtgj89g:324:1::/usr/dds:
+libr sorry:330:1::/usr/mel/books:
+dbm 7Ae8dDNmT00bI:334:1:m8896,m091:/usr/guest:
+srm w7t1dxime7v6E:362:1::/usr/srm:csh
+jkh e9fuiOFbFISOk:363:1::/usr/guest:
+aek IIioZy5hT7c4o:365:1::/usr/guest:
+tac wM4MxaujpUd5E:377:1:mh0000,m000:/usr/tac:
+jwg m0gyWvNpfv5mk:454:1:mh8632,m336:/usr/jwg:
+hania kUjpPUhNMmqs.:501:1::/usr/guest:
+jerq Dr3oM/S2pl2jY:502:1::/usr/jerq/wrap:
+kjs QVKFALdfgyCpw:503:1::/usr/tgs/kjs:
+jim DP6t0XVwlWOqw:632:1::/usr/guest:
+bwk1 seBQIwB6RQq9s:999:1:mh1548,m301:/usr/bwk:
+claire t6M0uDxCE7h7E:328:1:mh9323,m147:/usr/claire:
+egc xZX3RQm9R4w3.:297:1:m0000,m000:/usr/egc:
+root FnYk2ARoSqy5s:0:1:m0130,m322:/:
+daemon x:1:1:m0000,m000:/:
+sys sorry:2:2:m0130,m322:/usr/sys:
+bin sorry:3:4:m0130,m322:/bin:
+rhm Jxoi/5WRkeSf2:5:1:m0130,m322:/usr/guest:
+ken X.68wd1.ijayM:6:1:m0130,m322:/usr/guest:
+dmr C4u3dJWbg7RCk:7:1:mh1092,m069:/usr/guest/dmr:
+doug Ki71crWGxw/yM:8:1:m1660,m025:/usr/guest:
+bwk cI/xCTQIhLiIs:9:1:mh1548,m301:/usr/bwk:
+greg aP/aSvprvNzjs:10:1:m0130,m322:/usr/guest:
+tdk BpqFZxM1OM8fs:12:1:m0130,m322:/usr/tdk:
+ava 39pE5M497AxxA:15:1:m1357,m242:/usr/ava:
+scj y937pkRi0VkSQ:24:1:m5190,m292:/usr/guest:
+mel WdR3IjGmtatqE:26:1:m2019,m285,pounce,lesk:/usr/guest:
+agf X3yQDkiqWmPJg:34:1:m1699,m245:/usr/guest:
+llc Z/l25S2gaFn7U:41:1:m1650,m324:/usr/guest:
+lem JuvkSQUElv7mE:43:1:m0220,m157,l:/usr/guest:
+uucp sorry:48:1:mh2019,m285,nowitz:/usr/spool/uucp:
+nuucp vR1/qGT0tTmKY:48:1:mh2019,m285,uucp:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+duucp FvLWIgnf7/Yps:48:1:mh2019,m285,nowitz:/usr/spool/uucp:
+spm NeULgAzcCIE7Q:49:1:m1988,m322:/usr/guest:
+mb 5qmRMH553bNrQ:83:1:m5163,m207:/usr/guest:
+sif YExH0DpvsP6w6:91:1:m5192,m044:/usr/guest:
+dot cThsU.QsIRNgw:99:1:m5579,m048:/usr/guest:
+rje ti0JsP1n6fIMc:109:1:m5429,m096,jane:/usr/guest:
+vgl SUcT5i54Zr97M:112:1:m5579,m048:/usr/guest:
+jrv Gaov1FacwJWRk:114:1:m3887,m204:/usr/guest:
+nls 8lZyoosHv82sA:130:1:m4216,m050:/usr/guest:
+met C7iNv/YNUuK4Y:132:1:m6251,m322:/usr/guest:
+sue CWSau82zCx4TI:156:1:m2591,m148,2c576:/usr/guest:
+ravi rvJNlk5jwLXK6:167:1:m0000,m322:/usr/guest:
+pjw xNQy//GDa8FFg:170:1:m6534,m301:/usr/guest:/bin/csh
+jhc FueJau/xGh7TI:171:1::/usr/guest:
+lck DRw4p0msMLxDk:172:1:m6532,m149:/usr/guest:
+moh fWVEfxwIox8tc:213:1:m7842,m212,home:/usr/guest:
+cmb joVuRF4djg5C.:214:1:m1660,m025:/usr/guest:
+dave ABfXiO0cMc7r.:225:1:mh8451,m040:/usr/guest:
+mihalis mwZa8KXHRzkqE:230:1:m2019,m285:/usr/mihalis:
+tgs XRG6tBPcz0kq2:231:1:mh7461,m025:/usr/tgs:/usr/cvw/bin/sh
+uucpa Tqj9p7MbSckWM:238:1:mh2019,m285,uucp:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+bs fRwQb5d9OGKf6:251:1:m3887,m204:/usr/guest:
+wsb FAV9YYz8p9E7A:254:1:m2591,m148:/usr/guest:
+uucpb A3mRwDQ93/g6o:259:1:mh0000,m000:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+cvw QyAYytOfVlwU6:266:1:mh1548,m301:/usr/cvw:/usr/cvw/bin/sh
+bsb 2ovW8RVTtCJnc:268:1:mh8092,m150:/usr/bsb:
+dsj UWawW3hN0sxAM:276:1:mh6784,m164:/usr/dsj:
+mrg s6Hg32FrhOATs:277:1:mh6784,m164:/usr/mrg:
+lwf FF27akAjJ5MOs:281:1:mh8085,mh102,lwf:/usr/guest:
+kam ze/k68Ms3dthg:287:1:m5579,m048:/usr/guest:
+ejs /cyBUkbW.D7uU:290:1:m0000,m000:/usr/guest:
+ark z/IgEAQYIBpOw:292:1:mh6947,m215,ark:/usr/ark:
+kfc 7W6ZdiDwb3kZc:303:1:m6581,m266:/usr/guest:
+rob xOkmkcOe3Nrgc:304:1:m0130,m322:/usr/guest:
+theo cscWu8sY7LXaM:307:1:m8417,m169:/usr/guest:/bin/sh
+djr 1Jk/Y729gZOS6:309:1:M7701,M097:/usr/guest:
+wmc 9IjUIKaH9J3BQ:312:1:mh8444,m050,wmco:/usr/guest:
+bart /jEdquTKW.ytM:313:1::/usr/guest:/bin/sh
+sally B/fSPToWep5DQ:314:1::/usr/guest:/bin/sh
+ehg kDDmV7EV6Rgb2:320:1:mh8732,m050,ehg:/usr/ehg:
+dds m7QmYNMtgj89g:324:1::/usr/dds:
+libr sorry:330:1::/usr/mel/books:
+dbm 7Ae8dDNmT00bI:334:1:m8896,m091:/usr/guest:
+srm w7t1dxime7v6E:362:1::/usr/srm:csh
+jkh e9fuiOFbFISOk:363:1::/usr/guest:
+aek IIioZy5hT7c4o:365:1::/usr/guest:
+tac wM4MxaujpUd5E:377:1:mh0000,m000:/usr/tac:
+jwg m0gyWvNpfv5mk:454:1:mh8632,m336:/usr/jwg:
+hania kUjpPUhNMmqs.:501:1::/usr/guest:
+jerq Dr3oM/S2pl2jY:502:1::/usr/jerq/wrap:
+kjs QVKFALdfgyCpw:503:1::/usr/tgs/kjs:
+jim DP6t0XVwlWOqw:632:1::/usr/guest:
+bwk1 seBQIwB6RQq9s:999:1:mh1548,m301:/usr/bwk:
+claire t6M0uDxCE7h7E:328:1:mh9323,m147:/usr/claire:
+egc xZX3RQm9R4w3.:297:1:m0000,m000:/usr/egc:
+root FnYk2ARoSqy5s:0:1:m0130,m322:/:
+daemon x:1:1:m0000,m000:/:
+sys sorry:2:2:m0130,m322:/usr/sys:
+bin sorry:3:4:m0130,m322:/bin:
+rhm Jxoi/5WRkeSf2:5:1:m0130,m322:/usr/guest:
+ken X.68wd1.ijayM:6:1:m0130,m322:/usr/guest:
+dmr C4u3dJWbg7RCk:7:1:mh1092,m069:/usr/guest/dmr:
+doug Ki71crWGxw/yM:8:1:m1660,m025:/usr/guest:
+bwk cI/xCTQIhLiIs:9:1:mh1548,m301:/usr/bwk:
+greg aP/aSvprvNzjs:10:1:m0130,m322:/usr/guest:
+tdk BpqFZxM1OM8fs:12:1:m0130,m322:/usr/tdk:
+ava 39pE5M497AxxA:15:1:m1357,m242:/usr/ava:
+scj y937pkRi0VkSQ:24:1:m5190,m292:/usr/guest:
+mel WdR3IjGmtatqE:26:1:m2019,m285,pounce,lesk:/usr/guest:
+agf X3yQDkiqWmPJg:34:1:m1699,m245:/usr/guest:
+llc Z/l25S2gaFn7U:41:1:m1650,m324:/usr/guest:
+lem JuvkSQUElv7mE:43:1:m0220,m157,l:/usr/guest:
+uucp sorry:48:1:mh2019,m285,nowitz:/usr/spool/uucp:
+nuucp vR1/qGT0tTmKY:48:1:mh2019,m285,uucp:/usr/spool/uucppublic:/usr/lib/uucp/uucico
+duucp FvLWIgnf7/Yps:48:1:mh2019,m285,nowitz:/usr/spool/uucp:
+spm NeULgAzcCIE7Q:49:1:m1988,m322:/usr/guest:
+mb 5qmRMH553bNrQ:83:1:m5163,m207:/usr/guest:
+sif YExH0DpvsP6w6:91:1:m5192,m044:/usr/guest:
+dot cThsU.QsIRNgw:99:1:m5579,m048:/usr/guest:
+rje ti0JsP1n6fIMc:109:1:m5429,m096,jane:/usr/guest:
+vgl SUcT5i54Zr97M:112:1:m5579,m048:/usr/guest:
+jrv Gaov1FacwJWRk:114:1:m3887,m204:/usr/guest:
+nls 8lZyoosHv82sA:130:1:m4216,m050:/usr/guest:
+met C7iNv/YNUuK4Y:132:1:m6251,m322:/usr/guest:
+sue CWSau82zCx4TI:156:1:m2591,m148,2c576:/usr/guest:
+ravi rvJNlk5jwLXK6:167:1:m0000,m322:/usr/guest:
+pjw xNQy//GDa8FFg:170:1:m6534,m301:/usr/guest:/bin/csh
+jhc
+
+try             503941326   9     1     100775  129       `
+td=td.1
+
+for i in $*
+do
+	echo $i:
+	ind <$i
+	time ../a.out -f $i $td >foo1
+	time /usr/bin/awk -f $i $td >foo2
+	cmp foo1 foo2
+done
+
+Try.tt          503941326   9     1     100775  129       `
+td=td.1
+
+for i in $*
+do
+	echo $i:
+	ind <$i
+	time ../a.out -f $i $td >foo1
+	time /usr/bin/awk -f $i $td >foo2
+	cmp foo1 foo2
+done
+
+t.concat        514303380   9     1     100666  26        `
+{ x = $1; print x (++i) }
+t.delete        514303380   9     1     100666  123       `
+{ split($0, x)
+  delete x[1]
+  k = 0
+  for (i in x)
+	k++
+  if (k != NF-1)
+	printf "miscount %d vs %d at %d\n", k, NF, NR
+}
+
+t.fun           514303380   9     1     100666  78        `
+func g() { return "{" f() "}" }
+func f() { return $1 }
+ { print "<" g() ">" }
+t.fun0          514303380   9     1     100666  49        `
+func f() { print "hello" }
+{ print "<" f() ">" }
+
+t.fun1          514303380   9     1     100666  41        `
+func f() { print "hello" }
+ { f(1,2,3) }
+
+t.fun2          514303381   9     1     100666  111       `
+func f(n) {
+	while (n < 10) {
+		print n
+		n = n + 1
+	}
+}
+func g(n) {
+	print "g", n
+}
+{ f($1); g($1); print n }
+
+t.fun3          514303381   9     1     100666  89        `
+func f(n) { while ((n /= 10) > 1)  print n }
+func g(n) { print "g", n }
+{ f($1); g($1) }
+
+t.fun4          514303381   9     1     100666  96        `
+func f(a, n) {
+	for (i=1; i <= n; i++)
+		print "	" a[i]
+}
+
+{	print
+	n = split($0, x)
+	f(x, n)
+}
+t.fun5          514303381   9     1     100666  99        `
+func f(a) {
+	return split($0, a)
+}
+{
+	print
+	n = f(x)
+	for (i = 1; i <= n; i++)
+		print "	" x[i]
+}
+
+t.gsub          514303381   9     1     100666  31        `
+{gsub(/[aeiou]/,"foo"); print}
+
+t.randk         514303381   9     1     100666  107       `
+{
+	k = 2
+	n = NF
+	i = 1
+	while ( i <= n ) {
+		if ( rand() < k/n ) {
+			print i
+			k--
+		}
+		n--
+		i++
+	}
+}
+
+t.stderr        514303381   9     1     100664  38        `
+/bad/ { print | "cat 1>&2" }
+	{print}
+t.sub           514303381   9     1     100666  127       `
+{sub(/[aeiou]/, "foo"); print}
+{sub("[aeiou]", "foo"); print}
+
+{gsub(/[aeiou]/, "foo"); print}
+{gsub("[aeiou]", "foo"); print}
+
+t.set0a         514303381   9     1     100666  41        `
+{$0 = $2; print; print NF, $0; print $1}
+
+t.reFS          514303381   9     1     100666  39        `
+BEGIN	{ FS = "\t+" }
+	{ print $1, $2 }
+
+countries       503941330   9     1     100666  247       `
+USSR	8650	262	Asia
+Canada	3852	24	North America
+China	3692	866	Asia
+USA	3615	219	North America
+Brazil	3286	116	South America
+Australia	2968	14	Australia
+India	1269	637	Asia
+Argentina	1072	26	South America
+Sudan	968	19	Africa
+Algeria	920	18	Africa
+
+T.system        514303382   9     1     100777  205       `
+echo T.system: test system built-in
+
+awk=${awk-../a.out}
+
+rm -f foo
+$awk 'BEGIN {
+	n = system("exit 3")
+	print n
+	exit n+1
+}
+' >foo
+echo $? >>foo
+echo "3
+4" >foo1
+diff foo foo1 || echo 'BAD: T.system (1)'
+
+tt.13           487359404   9     1     100666  81        `
+{ for (i = 1; i <= NF; i++)
+	x[i] = $i
+  for (i = 1; i <= NF; i++)
+	print x[i]
+}
+
+t.builtins      514306317   9     1     100664  87        `
+/^[0-9]/ { print $1,
+	length($1),
+	log($1),
+	sqrt($1),
+	int(sqrt($1)),
+	exp($1 % 10) }
+
+t.re2           514306376   9     1     100666  21        `
+/[a-z]()[0-9]/
+!/^$/
+
+t.set0b         514303382   9     1     100666  77        `
+{x=$1 = $0 = $2; print }
+{$0 = $2 = $1; print }
+{$(0) = $(2) = $(1); print }
+
+t.assert        514303382   9     1     100666  228       `
+# tests whether function returns sensible type bits
+
+function assert(cond) { # assertion
+    if (!cond) print "   >>> assert failed <<<"
+}
+
+function i(x) { return x }
+
+{ m = length($1); n = length($2); n = i(n); assert(m > n) }
+tt.10a          487481239   9     1     100666  26        `
+BEGIN { x = ".$" }
+$0 ~ x
+tt.13a          489609160   9     1     100666  96        `
+{ for (i = 1; i <= NF; i++)
+	x[i] = $i
+  for (i = 1; i <= NF; i++)
+	printf "%d %s\n", i, x[i]
+}
+t.gsub1         514303383   9     1     100666  23        `
+{gsub(/$/,"x"); print}
+
+t.sub1          514303383   9     1     100666  23        `
+{sub(/.$/,"x"); print}
+
+t.sub2          514303383   9     1     100666  22        `
+{sub(/$/,"&"); print}
+t.exit1         514303383   9     1     100666  259       `
+BEGIN {
+	print "this is before calling abort"
+	x=abort(1)
+	print "this is after calling abort"
+} 
+func abort(n) {
+	print "in abort - before exit", n
+	exit 2
+	print "in abort - after exit"
+}
+END {
+	print "into END"
+	x = abort(2)
+	print "should not see this"
+}
+
+T.builtin       514303383   9     1     100777  187       `
+echo T.builtin: test miscellaneous builtin functions
+
+awk=${awk-../a.out}
+
+$awk 'BEGIN { print index(123, substr(123, 2)) }' >foo1
+echo 2 >foo2
+diff foo1 foo2 || echo 'BAD: T.bultin (1)'
+
+T.redir         514303383   9     1     100777  532       `
+echo T.redir: test redirections
+
+awk=${awk-../a.out}
+
+$awk '{ print >"foo" }' /etc/passwd
+diff foo /etc/passwd || echo 'BAD: T.redir (print >"foo")'
+
+rm -f foo
+$awk '{ print >>"foo" }' /etc/passwd
+diff foo /etc/passwd || echo 'BAD: T.redir (print >>"foo")'
+
+rm -f foo
+$awk 'NR%2 == 1 { print >>"foo" }
+      NR%2 == 0 { print >"foo" }' /etc/passwd
+diff foo /etc/passwd || echo 'BAD: T.redir (print > and >>"foo")'
+
+rm -f foo
+$awk '{ print | "cat >foo" }' /etc/passwd
+diff foo /etc/passwd || echo 'BAD: T.redir (print | "cat >foo")'
+t.set1          514303383   9     1     100666  51        `
+function f(x) { x = 1; print x }
+{ f($0)
+  f($1) }
+
+t.set2          514303383   9     1     100666  41        `
+{ n = length($0) % 2
+  $n = $2
+  print
+}
+
+t.set3          514303383   9     1     100666  29        `
+{ i = 1; $i = $i/10; print }
+
+re.data         514307188   9     1     100664  634       `
+a	~	a
+		ba
+		bab
+	!~	""
+		x
+		xxxxx
+.	~	x
+		xxx
+	!~	""			
+.a	~	xa
+		xxa
+		xax
+	!~	a
+		ab
+		""
+$	~	x
+		""
+.$	~	x
+	!~	""
+a$	~	a
+		ba
+		bbba
+	!~	ab
+		x
+		""
+^	~	x
+		""
+		^
+^a$	~	a
+	!~	xa
+		ax
+		xax
+		""
+^a.$	~	ax
+		aa
+	!~	xa
+		aaa
+		axy
+		""
+^$	~	""
+	!~	x
+		^
+^.a	~	xa
+		xaa
+	!~	a
+		""
+^.*a	~	a
+		xa
+		xxxxxxa
+	!~	""
+^.+a	~	xa
+		xxxxxxa
+	!~	""
+		a
+		ax
+a*	~	""
+		a
+		aaaa
+		xa
+		xxxx
+aa*	~	a
+		aaa
+		xa
+	!~	xxxx
+		""
+\$	~	x$
+		$
+		$x
+	!~	""
+		x
+\.	~	.
+	!~	x
+		""
+xr+y	~	xry
+		xrry
+		xrrrrrry
+	!~	ry
+		xy
+xr?y	~	xy
+		xry
+	!~	xrry
+[0-9]	~	1
+		567
+		x0y
+	!~	abc
+		""
+x[0-9]+y	~	x0y
+		x23y
+		x12345y
+	!~	0y
+		xy
+x[0-9]?y	~	xy
+		x1y
+	!~	x23y
+re.test         514307044   9     1     100666  471       `
+BEGIN {
+	FS = "\t"
+	awk = "a.out"
+}
+NF == 0 {
+	next
+}
+$1 != "" {	# new test
+	re = $1
+}
+$2 != "" {	# either ~ or !~
+	op = $2
+	if (op == "~")
+		neg = "!"
+	else if (op == "!~")
+		neg = ""
+}
+$3 != "" {	# new test string
+	str = $3
+}
+$3 == "\"\"" {	# explicit empty line
+	$3 = ""
+}
+NF > 2 {	# generate a test
+	input = $3
+	test = sprintf("echo '%s' | %s '%s/%s/ {print \"%d fails %s %s %s\"}'",
+		input, awk, neg, re, NR, re, op, input)
+	print re, op, input ":"
+	system(test)
+}
+
+t.vf2           516335209   9     1     100666  27        `
+{ print $NF++; print $NF }
+
+t.pat           515211679   9     1     100666  52        `
+/a/ || /b/
+/a/ && /b/
+/a/ && NR > 10
+/a/ || NR > 10

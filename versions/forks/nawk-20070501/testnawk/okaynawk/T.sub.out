@@ -1,0 +1,4 @@
+T.sub: tests of sub and gsub code
+ sub 1 fails: bar should be drek in foo bar foo drek
+gsub 1 fails: bar should be glop---these.two.are.ok in foo bar foo glop---these.two.are.ok
+130 tests

@@ -1,0 +1,27 @@
+echo T.main: misc tests of arguments in main
+
+awk=${awk-../a.out}
+
+# test -d option
+echo hello | $awk -d '{print}' >foo1
+grep -s 'awk .* 200[0-9]' foo1 || echo 'bad: awk -d'
+
+echo 'a::b::c' >foo
+$awk -F:: '{print NF}' foo >foo1
+echo '3' >foo2
+diff foo1 foo2 || echo 'bad: awk -F::'
+
+echo 'a::b::c' >foo
+$awk -F :: '{print NF}' foo >foo1
+echo '3' >foo2
+diff foo1 foo2 || echo 'bad: awk -F ::'
+
+echo 'a	b	c' >foo
+$awk -F t '{print NF}' foo >foo1
+echo '3' >foo2
+diff foo1 foo2 || echo 'bad: awk -F (tab)'
+
+echo 'atabbtabc' >foo
+$awk -F tab '{print NF}' foo >foo1
+echo '3' >foo2
+diff foo1 foo2 || echo 'bad: awk -F tab'

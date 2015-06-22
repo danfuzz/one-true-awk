@@ -1,0 +1,9 @@
+AC_INIT(nawk,20030321,[Nelson H. F. Beebe <beebe@math.utah.edu>])
+PACKAGE_DATE="21-Mar-2003"
+
+AC_CONFIG_SRCDIR(awkgram.y)
+
+dnl Checks for compiler
+AC_PROG_CC
+
+AC_OUTPUT(Makefile)

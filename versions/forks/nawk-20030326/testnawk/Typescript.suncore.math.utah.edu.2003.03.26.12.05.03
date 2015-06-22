@@ -1,0 +1,327 @@
+Script started on Wed Mar 26 12:05:03 2003
+]0;suncore  ~/src/bwkawk/nawk-20030326/testnawk]0;suncore  ~/src/bwkawk/nawk-20030326/testnawk[7m101 suncore::testnawk>[m time make AWK=/usr/local/bin/mawk OKAY=okaymawk check
+
+Testing awk = "/usr/local/bin/mawk"
+
+PASS:   1/281: chem.awk
+PASS:   2/281: funstack.awk
+PASS:   3/281: p.1
+PASS:   4/281: p.2
+PASS:   5/281: p.3
+PASS:   6/281: p.4
+PASS:   7/281: p.5
+PASS:   8/281: p.6
+PASS:   9/281: p.7
+PASS:  10/281: p.8
+PASS:  11/281: p.9
+PASS:  12/281: p.10
+PASS:  13/281: p.11
+PASS:  14/281: p.12
+PASS:  15/281: p.13
+PASS:  16/281: p.14
+PASS:  17/281: p.15
+PASS:  18/281: p.16
+PASS:  19/281: p.17
+PASS:  20/281: p.18
+PASS:  21/281: p.19
+PASS:  22/281: p.20
+PASS:  23/281: p.21
+PASS:  24/281: p.22
+PASS:  25/281: p.23
+PASS:  26/281: p.24
+PASS:  27/281: p.25
+PASS:  28/281: p.26
+PASS:  29/281: p.27
+PASS:  30/281: p.28
+PASS:  31/281: p.29
+PASS:  32/281: p.30
+PASS:  33/281: p.31
+PASS:  34/281: p.32
+PASS:  35/281: p.33
+PASS:  36/281: p.34
+PASS:  37/281: p.35
+PASS:  38/281: p.36
+PASS:  39/281: p.37
+PASS:  40/281: p.38
+PASS:  41/281: p.39
+PASS:  42/281: p.40
+PASS:  43/281: p.41
+PASS:  44/281: p.42
+PASS:  45/281: p.43
+PASS:  46/281: p.44
+PASS:  47/281: p.45
+PASS:  48/281: p.46
+PASS:  49/281: p.47
+PASS:  50/281: p.48
+PASS:  51/281: p.49
+PASS:  52/281: p.50
+PASS:  53/281: p.51
+PASS:  54/281: p.52
+PASS:  55/281: p.5a
+PASS:  56/281: t.0
+PASS:  57/281: t.0a
+PASS:  58/281: t.0b
+PASS:  59/281: t.0c
+PASS:  60/281: t.1
+PASS:  61/281: t.1.x
+PASS:  62/281: t.1a
+PASS:  63/281: t.1b
+PASS:  64/281: t.2
+PASS:  65/281: t.2.x
+PASS:  66/281: t.3
+PASS:  67/281: t.3.x
+PASS:  68/281: t.3.y
+PASS:  69/281: t.3a
+PASS:  70/281: t.3b
+PASS:  71/281: t.3c
+PASS:  72/281: t.3d
+PASS:  73/281: t.4
+PASS:  74/281: t.4.x
+PASS:  75/281: t.4.y
+PASS:  76/281: t.5.x
+PASS:  77/281: t.5.y
+PASS:  78/281: t.6
+PASS:  79/281: t.6.x
+PASS:  80/281: t.6a
+PASS:  81/281: t.6b
+PASS:  82/281: t.6c
+PASS:  83/281: t.8.x
+PASS:  84/281: t.8.y
+PASS:  85/281: t.NF
+PASS:  86/281: t.a
+PASS:  87/281: t.addops
+PASS:  88/281: t.aeiou
+PASS:  89/281: t.aeiouy
+PASS:  90/281: t.arith
+PASS:  91/281: t.array
+PASS:  92/281: t.array1
+PASS:  93/281: t.array2
+PASS:  94/281: t.assert
+PASS:  95/281: t.avg
+PASS:  96/281: t.b.x
+PASS:  97/281: t.be
+PASS:  98/281: t.beginexit
+PASS:  99/281: t.beginnext
+PASS: 100/281: t.break
+PASS: 101/281: t.break1
+PASS: 102/281: t.break2
+PASS: 103/281: t.break3
+PASS: 104/281: t.bug1
+PASS: 105/281: t.builtins
+PASS: 106/281: t.cat
+PASS: 107/281: t.cat1
+PASS: 108/281: t.cat2
+PASS: 109/281: t.cmp
+PASS: 110/281: t.coerce
+PASS: 111/281: t.coerce2
+PASS: 112/281: t.comment
+PASS: 113/281: t.comment1
+PASS: 114/281: t.concat
+PASS: 115/281: t.cond
+PASS: 116/281: t.contin
+PASS: 117/281: t.count
+PASS: 118/281: t.cum
+PASS: 119/281: t.d.x
+PASS: 120/281: t.delete
+PASS: 121/281: t.delete1
+PASS: 122/281: t.delete2
+PASS: 123/281: t.delete3
+PASS: 124/281: t.do
+PASS: 125/281: t.do1
+PASS: 126/281: t.e
+PASS: 127/281: t.else
+PASS: 128/281: t.exit
+PASS: 129/281: t.exit1
+PASS: 130/281: t.f
+PASS: 131/281: t.f.x
+PASS: 132/281: t.f0
+PASS: 133/281: t.f1
+PASS: 134/281: t.f2
+PASS: 135/281: t.f3
+PASS: 136/281: t.f4
+PASS: 137/281: t.for
+PASS: 138/281: t.for1
+PASS: 139/281: t.for2
+PASS: 140/281: t.for3
+PASS: 141/281: t.format4
+PASS: 142/281: t.fun
+PASS: 143/281: t.fun0
+PASS: 144/281: t.fun1
+PASS: 145/281: t.fun2
+PASS: 146/281: t.fun3
+PASS: 147/281: t.fun4
+PASS: 148/281: t.fun5
+PASS: 149/281: t.getline
+PASS: 150/281: t.getval
+PASS: 151/281: t.gsub
+PASS: 152/281: t.gsub1
+PASS: 153/281: t.gsub3
+PASS: 154/281: t.gsub4
+PASS: 155/281: t.i.x
+PASS: 156/281: t.if
+PASS: 157/281: t.in
+PASS: 158/281: t.in1
+PASS: 159/281: t.in2
+PASS: 160/281: t.in3
+PASS: 161/281: t.incr
+PASS: 162/281: t.incr2
+PASS: 163/281: t.incr3
+PASS: 164/281: t.index
+PASS: 165/281: t.intest
+PASS: 166/281: t.intest2
+PASS: 167/281: t.j.x
+PASS: 168/281: t.longstr
+PASS: 169/281: t.makef
+PASS: 170/281: t.match
+PASS: 171/281: t.match1
+PASS: 172/281: t.max
+PASS: 173/281: t.mod
+PASS: 174/281: t.monotone
+PASS: 175/281: t.nameval
+PASS: 176/281: t.next
+PASS: 177/281: t.not
+PASS: 178/281: t.null0
+PASS: 179/281: t.ofmt
+PASS: 180/281: t.ofs
+PASS: 181/281: t.ors
+PASS: 182/281: t.ors1
+PASS: 183/281: t.pat
+PASS: 184/281: t.pipe
+PASS: 185/281: t.pp
+PASS: 186/281: t.pp1
+PASS: 187/281: t.pp2
+PASS: 188/281: t.printf
+PASS: 189/281: t.printf2
+PASS: 190/281: t.quote
+PASS: 191/281: t.randk
+PASS: 192/281: t.re1
+PASS: 193/281: t.re1a
+PASS: 194/281: t.re2
+PASS: 195/281: t.re3
+PASS: 196/281: t.re4
+PASS: 197/281: t.re5
+PASS: 198/281: t.re7
+PASS: 199/281: t.reFS
+PASS: 200/281: t.rec
+PASS: 201/281: t.redir
+PASS: 202/281: t.reg
+PASS: 203/281: t.roff
+PASS: 204/281: t.sep
+PASS: 205/281: t.seqno
+PASS: 206/281: t.set0
+PASS: 207/281: t.set0a
+PASS: 208/281: t.set0b
+PASS: 209/281: t.set1
+PASS: 210/281: t.set2
+PASS: 211/281: t.set3
+PASS: 212/281: t.split
+PASS: 213/281: t.split2
+PASS: 214/281: t.split3
+PASS: 215/281: t.split4
+PASS: 216/281: t.split8
+PASS: 217/281: t.split9
+PASS: 218/281: t.split9a
+PASS: 219/281: t.stately
+PASS: 220/281: t.strcmp
+PASS: 221/281: t.strcmp1
+PASS: 222/281: t.strnum
+PASS: 223/281: t.sub
+PASS: 224/281: t.sub1
+PASS: 225/281: t.sub2
+PASS: 226/281: t.sub3
+PASS: 227/281: t.substr
+PASS: 228/281: t.substr1
+PASS: 229/281: t.time
+PASS: 230/281: t.vf
+PASS: 231/281: t.vf1
+PASS: 232/281: t.vf2
+PASS: 233/281: t.vf3
+PASS: 234/281: t.x
+PASS: 235/281: T.-f-f
+PASS: 236/281: T.argv
+PASS: 237/281: T.builtin
+PASS: 238/281: T.chem
+PASS: 239/281: T.close
+PASS: 240/281: T.clv
+PASS: 241/281: T.delete
+PASS: 242/281: T.errmsg
+
+FAIL: 243/281: T.expr
+
+PASS: 244/281: T.exprconv
+PASS: 245/281: T.flags
+PASS: 246/281: T.func
+PASS: 247/281: T.gawk
+PASS: 248/281: T.getline
+PASS: 249/281: T.latin1
+PASS: 250/281: T.leak
+PASS: 251/281: T.lilly
+PASS: 252/281: T.main
+PASS: 253/281: T.misc
+
+FAIL: 254/281: T.nextfile
+
+PASS: 255/281: T.overflow
+
+FAIL: 256/281: T.re
+
+PASS: 257/281: T.recache
+PASS: 258/281: T.redir
+PASS: 259/281: T.rsfs
+PASS: 260/281: T.split
+
+FAIL: 261/281: T.sub
+
+PASS: 262/281: T.system
+PASS: 263/281: tt.01
+PASS: 264/281: tt.02
+PASS: 265/281: tt.02a
+PASS: 266/281: tt.03
+PASS: 267/281: tt.03a
+PASS: 268/281: tt.04
+PASS: 269/281: tt.05
+PASS: 270/281: tt.06
+PASS: 271/281: tt.07
+PASS: 272/281: tt.08
+PASS: 273/281: tt.09
+PASS: 274/281: tt.10
+PASS: 275/281: tt.10a
+PASS: 276/281: tt.11
+PASS: 277/281: tt.12
+PASS: 278/281: tt.13
+PASS: 279/281: tt.13a
+PASS: 280/281: tt.14
+PASS: 281/281: tt.big
+
+
+FAILURE: 7 failures in 562 tests
+
+
+47.33u 66.65s 2:26.21 77.9%
+[7m102 suncore::testnawk>[m time make AWK=/usr/local/bin/mawk OKAY=okaymawk check[53D[Kls -l T.*[K[K[K*.out *.err
+-rw-rw-r--    1 beebe    staff        5176 Mar 26 12:06 T.expr.err
+-rw-rw-r--    1 beebe    staff        2885 Mar 26 12:06 T.expr.out
+-rw-rw-r--    1 beebe    staff    36976468 Mar 26 12:07 T.nextfile.out
+-rw-rw-r--    1 beebe    staff        6675 Mar 26 12:07 T.re.err
+-rw-rw-r--    1 beebe    staff          50 Mar 26 12:07 T.re.out
+-rw-rw-r--    1 beebe    staff        3250 Mar 26 12:07 T.sub.err
+-rw-rw-r--    1 beebe    staff          44 Mar 26 12:07 T.sub.out
+[7m103 suncore::testnawk>[m pwd
+/u/sy/beebe/src/bwkawk/nawk-20030326/testnawk
+[7m104 suncore::testnawk>[m pwdls -l *.out *.err[17Dtime make AWK=/usr/local/bin/mawk OKAY=okaymawk check
+[K[7m104 suncore::testnawk>[m v okaymawk/T.expr.*
+-r--r--r--    1 beebe    staff           0 Mar 16 08:33 okaymawk/T.expr.err
+-r--r--r--    1 beebe    staff        1032 Mar 16 08:33 okaymawk/T.expr.out
+[7m105 suncore::testnawk>[m v T.expr.err
+-rw-rw-r--    1 beebe    staff        5176 Mar 26 12:06 T.expr.err
+[7m106 suncore::testnawk>[m v /usr/local/LizardTech-DjVu/NetscapePlugin/djview
+ls: /usr/local/LizardTech-DjVu/NetscapePlugin/djview: No such file or directory
+You have new mail.
+[7m107 suncore::testnawk>[m w3time make AWK=/usr/local/bin/mawk OKAY=okaymawk check[55D[Kgreop [K[Kp lib[8D[K
+You have new mail.
+[7m107 suncore::testnawk>[m popd
+popd: Directory stack empty.
+[7m108 suncore::testnawk>[m exit
+exit
+
+script done on Thu Mar 27 06:01:59 2003

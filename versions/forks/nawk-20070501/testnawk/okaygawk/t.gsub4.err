@@ -1,0 +1,1 @@
+gawk: t.gsub4:3: (FILENAME=test.data FNR=140) fatal: Invalid range end: /[1root:EMpNB8Zp56:0:0:Super-User,,,,,,,:/:/bin/sh]/

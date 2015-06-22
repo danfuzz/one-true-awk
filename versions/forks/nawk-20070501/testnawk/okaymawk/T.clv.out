@@ -1,0 +1,7 @@
+T.clv: check command-line variables
+BAD: T.clv (7B: illegal varname)
+1c1
+< a\b\z
+---
+> a\\b\z
+BAD: T.clv (x=17)

@@ -1,0 +1,24 @@
+ This is the top of the entire VMS HELP system.
+1 colon-equal
+  Defines a symbolic name for a character string value.
+
+  Format:
+
+     symbol-name :=[=] string
+
+   symbol-name[offset,size] :=[=] replacement-string
+2 Parameters
+
+ symbol-name
+
+  Defines a 1- through 255-character string name for the symbol.   The
+  symbol  name  must begin with an alphabetic character (uppercase and
+  lowercase characters are equivalent), an  underscore,  or  a  dollar
+  sign.    After  the  first  character,  the  name  can  contain  any
+  alphanumeric characters from the DEC  Multinational  Character  Set,
+  underscores, or dollar signs.
+
+  If you specify a single equal sign (:=) in the assignment statement,
+  the  symbol name is placed in the local symbol table for the current
+  command level.
+

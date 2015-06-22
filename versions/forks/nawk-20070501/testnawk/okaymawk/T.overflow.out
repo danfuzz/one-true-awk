@@ -1,0 +1,2 @@
+T.overflow: test some overflow conditions
+BAD: T.overflow huge sprintfs

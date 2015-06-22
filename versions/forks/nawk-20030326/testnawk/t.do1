@@ -1,0 +1,5 @@
+{ i = NF
+  do { print $i }
+	while (i-- > 0)
+  print i
+}

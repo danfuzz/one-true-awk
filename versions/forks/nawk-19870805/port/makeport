@@ -1,0 +1,65 @@
+#/bin/csh
+# Create a portable version of awk in a subdirectory of the current 
+# directory.  There are two problems with the AT&T awk sources:
+#
+#	-- long external names that clash when case is ignored and only
+#	   first 6 significant
+#
+#	-- file names with double dots.
+#
+#	-- missing typecasts (char*) in calls to free()
+#
+# For VAX VMS, some manual changes are necessary.  In awklx.c, change
+# 	FILE *yyin = {stdin}, *yyout = {stdout};
+# to
+#	#if VMS
+#	FILE *yyin, *yyout;
+#	#else
+#	FILE *yyin = {stdin}, *yyout = {stdout};
+#	#endif
+# Insert in main.c in the global declarations
+#	extern  FILE *yyin;     /* lex input file */
+#	extern  FILE *yyout;    /* lex output file */
+# and insert in main.c just after main(){
+#	yyin = stdin;
+#	yyout = stdout;
+# The VMS C compiler has a bug that flags the initializations of yyin and
+# yyout as warnings, and sets them both to 0.
+# In lib.c, move the statement
+#	extern int brccount, brackcnt, parencnt;
+# from inside the procedure bracecheck() to the global declaration section.
+# In tran.c, move the statements
+#	extern Node *valtonode();
+#	extern Cell fldtab[];
+# from inside syminit() to the global declaration section.
+# [12-Dec-87]
+# set verify
+if !(-e port) mkdir port
+make awk.lx.c
+yacc -d awk.g.y
+/bin/mv y.tab.c awk.g.c
+foreach f (*)
+	if ("x.$f:e" == "x.o") continue
+	if ($f == $0) continue
+	if ("$f" == "port") continue
+	echo \[$f\]
+	sed \
+		-e 's/awk\.g\./awkg./g' \
+		-e 's/awk\.lx\./awklx./g' \
+		-e 's/bracecnt/brccount/g' \
+		-e 's/lex\.yy\./lexyy./g' \
+		-e 's/rlengthloc/rlnloc/g' \
+		-e 's/rstartloc/rstloc/g' \
+		-e 's/"stdio.h"/<stdio.h>/g' \
+		-e 's/symtabloc/symtblloc/g' \
+		-e 's/y\.tab\./ytab./g' \
+		-e 's/Free(a); a = NULL;/Free((char*)a); a = NULL;/'\
+		<$f >port/$f
+end
+mv port/awk.g.c port/awkg.c
+mv port/awk.g.y port/awkg.y
+mv port/awk.lx.c port/awklx.c
+mv port/awk.lx.l port/awklx.l
+mv port/prevy.tab.h port/prevytab.h
+mv port/y.tab.h port/ytab.h
+cp $0 port

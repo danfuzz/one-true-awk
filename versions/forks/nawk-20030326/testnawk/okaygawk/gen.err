@@ -1,0 +1,2 @@
+gawk: gen:1: awk '
+gawk: gen:1:     ^ invalid char ''' in expression

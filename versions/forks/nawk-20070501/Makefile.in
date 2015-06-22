@@ -1,0 +1,92 @@
+prefix		= @prefix@
+
+bindir		= $(prefix)/bin
+
+mandir		= $(prefix)/man/man1
+
+catdir		= $(prefix)/man/cat1
+
+CC		= @CC@
+
+CFLAGS		= @CFLAGS@
+
+CP		= scp -p
+
+LIBS		= @LIBS@
+
+LDFLAGS		= @LDFLAGS@
+
+LN		= ln
+
+NAWK		= nawk
+
+RM		= /bin/rm -f
+
+SHELL		= /bin/sh
+
+VERSION		= @PACKAGE_VERSION@
+VERSION_TEST	= @PACKAGE_VERSION@
+
+#=======================================================================
+
+all:
+	$(MAKE) -f makefile.org a.out CC="$(CC)" CFLAGS="$(CFLAGS)"
+
+### From nawk-20030315, there are now two separate test suites for testing nawk
+
+check:	check-gawk check-nawk
+
+### Subset of gawk test suite that should pass with nawk
+check-gawk:
+	-(cd testgawk; $(MAKE) check)
+
+### Brian Kernighan's complete test suite for nawk
+check-nawk:
+	-(cd testnawk; $(MAKE) check)
+
+clean:
+	(cd testgawk; $(MAKE) $@)
+	(cd testnawk; $(MAKE) $@)
+	-$(RM) *.i
+	-$(RM) *.o
+	-$(RM) *~
+	-$(RM) \#*
+	-$(RM) a.out
+	-$(RM) core
+
+clobber: distclean
+
+distclean:	mostlyclean
+	(cd testgawk; $(MAKE) $@)
+	(cd testnawk; $(MAKE) $@)
+	-$(RM) -rf ./autom4te.cache
+	-$(RM) config.cache config.log config.status
+	-$(RM) Makefile
+
+install:	install-exe install-man
+
+install-exe:	uninstall-exe
+	$(CP) a.out $(bindir)/$(NAWK)-$(VERSION)
+	$(LN) $(bindir)/$(NAWK)-$(VERSION) $(bindir)/$(NAWK)
+
+install-man:	uninstall-man
+	$(CP) awk.1 $(mandir)/$(NAWK).1
+
+maintainer-clean:	distclean
+	(cd testgawk; $(MAKE) $@)
+	(cd testnawk; $(MAKE) $@)
+	@echo "This command is intended for maintainers to use;"
+	@echo "it deletes files that may require special tools to rebuild."
+	-$(RM) configure
+
+mostlyclean:		clean
+	(cd testgawk; $(MAKE) $@)
+	(cd testnawk; $(MAKE) $@)
+
+uninstall:	uninstall-exe uninstall-man
+
+uninstall-exe:
+	-$(RM) $(bindir)/$(NAWK)-$(VERSION) $(bindir)/$(NAWK)
+
+uninstall-man:
+	-$(RM) $(catdir)/$(NAWK).1 $(mandir)/$(NAWK).1

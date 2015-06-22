@@ -1,0 +1,20 @@
+echo T.leak: test for one memory-leak case
+
+awk=${awk-../a.out}
+
+echo '
+function swap(i) {}
+BEGIN {	
+	for (tcnt = 0; tcnt < 3000000; tcnt++)
+		swap("" + 0)
+		# works:  "", "abc", "abc" "def", i, i+i, 1 i, "" 1
+		# fails:  1, 1+1, 1+i, i+1, 1E1, "" + 0
+} ' >foo
+
+$awk -f foo &
+
+ps -l | awk '/a.out/ {print $10}' >foo1
+sleep 3
+ps -l | awk '/a.out/ {print $10}' >foo2
+
+diff foo1 foo2 || echo 'BAD: T.leak 1'

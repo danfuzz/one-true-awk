@@ -1,0 +1,8 @@
+BAD: T.misc bad field self-assignment
+BAD: T.misc bad overflow
+BAD: T.misc fcn args
+BAD: T.misc undefined function
+BAD: T.misc foo bug
+error: BAD: T.misc nonterminated fails: No such file or directory for reading errors.
+Abort - core dumped
+BAD: T.misc bare quote fails

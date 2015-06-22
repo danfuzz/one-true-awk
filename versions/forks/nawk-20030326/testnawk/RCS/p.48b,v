@@ -1,0 +1,48 @@
+head	1.2;
+access;
+symbols;
+locks
+	beebe:1.2; strict;
+comment	@# @;
+
+
+1.2
+date	2003.03.26.18.48.40;	author beebe;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2003.03.26.18.44.44;	author beebe;	state Exp;
+branches;
+next	;
+
+
+desc
+@Original version.
+@
+
+
+1.2
+log
+@Call srand(32767) to ensure a common initial seed on all runs.
+@
+text
+@BEGIN	{ k = 3; n = 10 
+	srand(32767)		# ensure common initial seed
+	}
+{	if (n <= 0) exit
+	if (rand() <= k/n) { print; k-- }
+	n--
+}
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 3
+a3 1
+BEGIN	{ k = 3; n = 10 }
+@

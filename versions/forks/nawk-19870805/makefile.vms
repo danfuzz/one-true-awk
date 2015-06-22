@@ -1,0 +1,90 @@
+# Makefile for New AWK (nawk) for VAX VMS
+# Only the main target, plus install and clean, work.
+# [12-Dec-87]
+
+DESTDIR = unix:
+CC = cc
+CP = copy
+MV = rename
+O = .obj
+RM = delete
+X = .exe
+
+YFLAGS = -d
+
+# Changes suffixes to remove .l and .y, so Yacc and Lex are not run
+.SUFFIXES:
+
+.SUFFIXES:	.exe .rel .c .h
+
+CFLAGS = /debug /nooptimize /define=("popen=fopen","pclose=fclose")
+
+LIBS = plt:unixclib.olb/lib,sys$$library:vaxcrtl.olb/lib
+
+OFILES = b${O} main${O} parse${O} proctab${O} tran${O} lib${O} run${O} 
+OLIST =  b${O},main${O},parse${O},proctab${O},tran${O},lib${O},run${O} 
+
+#SOURCE = awk.h awkg.y awklx.l b.c main.c maketab.c parse.c lib.c run.c tran.c
+SOURCE = awk.h awkg.c awklx.c b.c main.c maketab.c parse.c lib.c run.c tran.c
+
+nawk${X}:	awkg${O} awklx${O} ${OFILES} awk.h
+	link /exec=nawk${X}  awkg${O}, awklx${O}, ${OLIST}, ${LIBS}
+
+${OFILES} awklx${O}:	awk.h prevytab.h 
+
+awkg${O}:	awk.h
+
+ytab.h:	awkg${O}
+
+prevytab.h:	ytab.h
+#	-cmp -s ytab.h prevytab.h || (cp ytab.h prevytab.h; echo change maketab)
+	${CP} ytab.h prevytab.h
+
+proctab.c:	maketab
+	maketab :== $$[]maketab.exe\n\
+	define/user sys$$output proctab.c\n\
+	maketab
+
+maketab:	prevytab.h maketab.c
+	${CC} maketab.c
+	link /exec=maketab${X} maketab${O},${LIBS}
+
+prcan:	NEW ${SOURCE} makefile
+	@prcan $?
+	@touch prcan
+
+bundle:
+	@bundle NEW ${SOURCE} makefile awk.1 compat.awk
+
+backup:	${SOURCE} makefile NEW
+	push panther $? awk
+	touch backup
+
+bowell:	${SOURCE} makefile NEW
+	push bowell $? /usr/src/cmd/awk
+	touch bowell
+
+profile:
+	make 'CFLAGS=-p'
+
+lcomp:
+	make 'CC=lcomp' 'CFLAGS='
+
+lprint:
+	echo 1>&2 "piping into can"
+	@lprint -P "pr -l90 -w120" | can -fCW.8 -l90
+
+clean:
+	${RM} nawk${X}
+	${RM} *${O}.*
+	${RM} t.*.*
+	${RM} *temp*.*
+	${RM} *${O}ut.* 
+	${RM} *junk*.*
+#	${RM} ytab.*.*
+#	${RM} prevytab.h.*
+#	${RM} maketab.*
+#	${RM} proctab.c.*
+
+install:	nawk${X}
+	${CP} nawk$(X) ${DESTDIR}

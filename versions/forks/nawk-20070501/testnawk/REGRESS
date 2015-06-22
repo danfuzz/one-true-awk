@@ -1,0 +1,15 @@
+if ls | awk 'END { exit NR > 100 }'
+then
+	echo extracting from test.a
+	ar x test.a
+	cc echo.c -o echo
+	./echo testing ./echo
+fi
+
+Compare.t t.*
+	echo `ls t.* | wc -l` tests; echo
+Compare.p p.? p.??*
+	echo `ls p.* | wc -l` tests; echo
+Compare.T
+	echo `grep '\$awk' T.* | wc -l` tests; echo
+Compare.tt tt.*

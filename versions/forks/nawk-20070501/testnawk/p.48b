@@ -1,0 +1,7 @@
+BEGIN	{ k = 3; n = 10 
+	srand(32767)		# ensure common initial seed
+	}
+{	if (n <= 0) exit
+	if (rand() <= k/n) { print; k-- }
+	n--
+}

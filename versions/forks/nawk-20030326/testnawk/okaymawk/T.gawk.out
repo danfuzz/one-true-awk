@@ -1,0 +1,11 @@
+T.gawk: tests adapted from gawk test suite
+BAD: T.gawk backgsub
+BAD: T.gawk backgsub2
+BAD: T.gawk backgsub3
+BAD: T.gawk backsub3
+BAD: T.gawk backsub
+BAD: T.gawk fsrs
+BAD: T.gawk substr
+funstack test takes 5-10 sec
+BAD: T.gawk funstack
+BAD: T.gawk convfmt

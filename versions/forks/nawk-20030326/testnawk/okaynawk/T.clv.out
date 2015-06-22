@@ -1,0 +1,7 @@
+T.clv: check command-line variables
+../a.out: can't open file 99_=foo
+1c1
+< a\b\z
+---
+> a\\b\z
+BAD: T.clv (x=17)

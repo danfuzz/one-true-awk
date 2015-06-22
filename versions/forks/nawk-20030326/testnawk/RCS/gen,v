@@ -1,0 +1,56 @@
+head	1.2;
+access;
+symbols;
+locks
+	beebe:1.2; strict;
+comment	@# @;
+
+
+1.2
+date	2003.03.26.18.48.40;	author beebe;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2003.03.26.18.44.44;	author beebe;	state Exp;
+branches;
+next	;
+
+
+desc
+@Original version.
+@
+
+
+1.2
+log
+@Call srand(32767) to ensure a common initial seed on all runs.
+@
+text
+@awk '
+BEGIN {
+	srand(32767)		# ensure common initial seed
+	if (ARGC > 0)
+		narg = ARGV[1]
+	else
+		narg = 10
+	for (i = 0; i < 1000; i++) {
+		nf = int(rand() * narg)
+		for (j = 0; j < nf;  j++)
+			printf("%g ", rand())
+		printf("\n")
+		for (j = 0; j < nf;  j++)
+			printf("%g:", rand())
+		printf("\n")
+	}
+} ' $*
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 1
+@

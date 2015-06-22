@@ -1,0 +1,4 @@
+/usr/local/bin/nawk: syntax error at source line 1 source file gen
+ context is
+	awk >>>  ' <<< 
+/usr/local/bin/nawk: bailing out at source line 18

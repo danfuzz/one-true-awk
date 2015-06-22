@@ -1,0 +1,1 @@
+{i++; print i, NR; if (i != NR) print 1/0}

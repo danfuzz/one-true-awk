@@ -1,0 +1,13 @@
+BAD: T.misc bad field self-assignment
+BAD: T.misc bad overflow
+BAD: T.misc fcn args
+BAD: T.misc undefined function
+BAD: T.misc foo bug
+error: BAD: T.misc nonterminated fails: No such file or directory for reading errors.
+BAD: T.misc syntax error . fails
+BAD: T.misc syntax error .. fails
+BAD: T.misc syntax error .E. fails
+BAD: T.misc syntax error .++. fails
+BAD: T.misc syntax error $ fails
+BAD: T.misc syntax error  fails
+BAD: T.misc bare quote fails

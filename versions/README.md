@@ -161,6 +161,10 @@ Origins / Sources Of The Code Contained Herein
   [Kernighan's page at
   Princeton](http://www.cs.princeton.edu/~bwk/btl.mirror/).
 
+* forks &mdash; versions that appear to be more significant "forks" of the
+  original awk code, but may be of interest nonetheless. These are *not*
+  included in the historical order.
+
 - - - - - - -
 
 *Note:* The file [order.txt](order.txt) in this directory is the ordering

@@ -1,0 +1,6 @@
+T.leak: test for one memory-leak case
+1c1
+< mutex_ex
+---
+> R
+BAD: T.leak 1

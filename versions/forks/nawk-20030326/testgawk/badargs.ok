@@ -1,0 +1,25 @@
+gawk: option requires an argument -- f
+Usage: gawk [POSIX or GNU style options] -f progfile [--] file ...
+	gawk [POSIX or GNU style options] [--] 'program' file ...
+POSIX options:		GNU long options:
+	-f progfile		--file=progfile
+	-F fs			--field-separator=fs
+	-v var=val		--assign=var=val
+	-m[fr] val
+	-W compat		--compat
+	-W copyleft		--copyleft
+	-W copyright		--copyright
+	-W gen-po		--gen-po
+	-W help			--help
+	-W lint			--lint
+	-W lint-old		--lint-old
+	-W posix		--posix
+	-W re-interval		--re-interval
+	-W source=program-text	--source=program-text
+	-W traditional		--traditional
+	-W usage		--usage
+	-W version		--version
+
+For Bug Reports, SEE THE GAWK MANUAL FOR INSTRUCTIONS,
+then send mail to: bug-gnu-utils@gnu.org,
+with a Cc: to arnold@gnu.org

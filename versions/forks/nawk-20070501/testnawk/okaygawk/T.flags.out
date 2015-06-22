@@ -1,0 +1,4 @@
+T.flags: test some commandline flags
+T.flags: bad no program
+T.flags: bad unknown option
+T.flags: bad null field separator

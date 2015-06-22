@@ -1,0 +1,17 @@
+awk '
+BEGIN {
+	srand(32767)		# ensure common initial seed
+	if (ARGC > 0)
+		narg = ARGV[1]
+	else
+		narg = 10
+	for (i = 0; i < 1000; i++) {
+		nf = int(rand() * narg)
+		for (j = 0; j < nf;  j++)
+			printf("%g ", rand())
+		printf("\n")
+		for (j = 0; j < nf;  j++)
+			printf("%g:", rand())
+		printf("\n")
+	}
+} ' $*

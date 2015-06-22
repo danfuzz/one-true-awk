@@ -1,0 +1,6 @@
+T.argv: misc tests of argc and argv
+2c2
+< mawk
+---
+> /usr/local/bin/mawk
+BAD: T.argv (argc *)

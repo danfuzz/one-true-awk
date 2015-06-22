@@ -1,0 +1,165 @@
+ This is the top of the entire VMS HELP system.
+1 colon-equal
+  Defines a symbolic name for a character string value.
+
+  Format:
+
+     symbol-name :=[=] string
+
+   symbol-name[offset,size] :=[=] replacement-string
+2 Parameters
+
+ symbol-name
+
+  Defines a 1- through 255-character string name for the symbol.   The
+  symbol  name  must begin with an alphabetic character (uppercase and
+  lowercase characters are equivalent), an  underscore,  or  a  dollar
+  sign.    After  the  first  character,  the  name  can  contain  any
+  alphanumeric characters from the DEC  Multinational  Character  Set,
+  underscores, or dollar signs.
+
+  If you specify a single equal sign (:=) in the assignment statement,
+  the  symbol name is placed in the local symbol table for the current
+  command level.
+
+  If you specify double equal signs (:==) in the assignment statement,
+  the symbol name is placed in the global symbol table.
+
+ string
+
+  Specifies a character string value to be equated to the symbol.  The
+  string can contain any alphanumeric or special characters.  DCL uses
+  a buffer that is  1024  bytes  long  to  hold  a  string  assignment
+  statement.   Therefore,  the  length of the symbol name, the string,
+  and any symbol substitution within the  string  cannot  exceed  1024
+  characters.
+
+  With the := string assignment statement, you do not need to  enclose
+  a   string   literal   in   quotation   marks.   String  values  are
+  automatically  converted  to  uppercase.   Also,  any  leading   and
+  trailing  spaces  and tabs are removed, and multiple spaces and tabs
+  between characters are compressed to a single space.
+
+  Note that, in general, it is easier to use the assignment  statement
+  (=)  to create symbols with string values.  The assignment statement
+  does not automatically convert letters to uppercase and remove extra
+  spaces.  Also, the assignment statement allows you to perform string
+  operations in expressions.
+
+  If you want to prohibit uppercase  conversion  and  retain  required
+  space and tab characters in a string, you must place quotation marks
+  around the string.  To use quotation marks in a string, enclose  the
+  entire  string  in quotation marks and use a double set of quotation
+  marks within the string.  For example:
+
+       $ TEST := "this     is a ""test"" string"
+       $ SHOW SYMBOL TEST
+         TEST = "this     is a "test" string"
+
+  In this example, the spaces, lowercase letters, and quotation  marks
+  are preserved in the symbol definition.
+
+  You can continue a symbol assignment on more than one line by  using
+  the hyphen as a continuation character.  For example:
+
+       $ LONG_STRING := THIS_IS_A_VERY_LONG-
+       _$ _SYMBOL_STRING
+
+  To assign a null string to a  symbol  using  the  string  assignment
+  statement, do not specify a string.  For example:
+
+       $ NULL := 
+
+  Specify the string as a string literal, or as a  symbol  or  lexical
+  function which evaluates to a string literal.  If you use symbols or
+  lexical functions, place apostrophes around them to  request  symbol
+  substitution.   See Chapter 6 of the VAX/VMS DCL Concepts Manual for
+  more information on symbol substitution.
+
+  You can also use the string assignment statement to define a foreign
+  command.   See  Section  5.11 of the VAX/VMS DCL Concepts Manual for
+  more information about foreign commands.
+
+ [offset,size]
+
+  Specifies that a portion of a symbol value is to be overlaid with  a
+  replacement  string.   This  form of the string assignment statement
+  evaluates the value assigned to a  symbol,  and  then  replaces  the
+  portion  of  the  value  (defined  by  the offset and size) with the
+  replacement string.  The square brackets are required notation,  and
+  no spaces are allowed between the symbol name and the left bracket.
+
+  The  offset  specifies  the  character  position  relative  to   the
+  beginning  of the symbol-name's string value at which replacement is
+  to begin.  Offset values start at 0.
+
+  If the offset is greater than the offset of the  last  character  in
+  the string you are modifying, spaces are inserted between the end of
+  the string and the offset where the  replacement  string  is  added.
+  The maximum offset value you can specify is 768.
+
+  The size specifies the number of characters to replace.  Size values
+  start at 1.
+
+  Specify the offset and size as  integer  expressions.   See  Section
+  5.7.2  of  the  VAX/VMS  DCL Concepts Manual for more information on
+  integer expressions.  The value of the size plus the offset must not
+  exceed 769.
+
+ replacement-string
+
+  Specifies the string that is used to  overlay  the  string  you  are
+  modifying.   If  the  replacement-string  is  shorter  than the size
+  argument, the replacement string is blank-filled on the right  until
+  it  equals  the specified size.  Then the replacement string is used
+  to  overlay  the  string  assigned  to  the  symbol-name.   If   the
+  replacement  string  is  longer  than  the  size  argument, then the
+  replacement string is truncated on the right to the specified size.
+
+  You can specify the replacement-string as a string literal, or as  a
+  symbol  or lexical function which evaluates to a string literal.  If
+  you use symbols or lexical functions, place apostrophes around  them
+  to  request  symbol  substitution.  See Chapter 6 of the VAX/VMS DCL
+  Concepts Manual for more information on symbol substitution.
+
+2 Examples
+
+  1.   $ TIME := SHOW TIME
+       $ TIME
+         15-APR-1984 11:55:44
+
+  The symbol TIME is equated to the command string SHOW TIME.  Because
+  the  symbol  name appears as the first word in a command string, the
+  command interpreter automatically substitutes  it  with  its  string
+  value and executes the command SHOW TIME.
+
+  2. $ STAT := $DBA1:[CRAMER]STAT
+       $ STAT
+
+  This example shows how to define STAT as  a  foreign  command.   The
+  symbol  STAT  is  equated to a string that begins with a dollar sign
+  followed by a file specification.  The command  interpreter  assumes
+  that the file specification is that of an executable image, that is,
+  a file with a file type of EXE.   Thus,  the  symbol  STAT  in  this
+  example becomes a synonym for the command:
+
+       $ RUN DBA1:[CRAMER]STAT.EXE
+
+  When you subsequently type STAT, the  command  interpreter  executes
+  the image.
+
+  3. $ A = "this is a big     space."
+       $ SHOW SYMBOL A
+         A = "this is a big     space."
+       $ B := 'A'
+       $ SHOW SYMBOL B
+         B = "THIS IS A BIG SPACE."
+
+  This example compares  the  assignment  and  the  string  assignment
+  statements.  The symbol A is defined using the assignment statement,
+  so lowercase letters and multiple spaces are retained.  The symbol B
+  is  defined  using  the  string assignment statement.  Note that the
+  apostrophes are required; otherwise, the symbol name  B  would  have
+  been  equated  to  the  literal  string A.  However, when symbol A's
+  value is  assigned  to  symbol  B,  the  letters  are  converted  to
+  uppercase and multiple spaces are compressed.

@@ -1,0 +1,58 @@
+T.beebe: tests from nelson beebe from gawk test suite
+make[1]: Entering directory `/a/suncore0/export/home/0073/sy/beebe/src/bwkawk/nawk-20030321/testnawk2/beebe'
+cmp ./anchgsub.ok _anchgsub && rm -f _anchgsub
+cmp ./arrayref.ok _arrayref && rm -f _arrayref
+cmp ./asgext.ok _asgext && rm -f _asgext
+cmp ./back89.ok _back89 && rm -f _back89
+cmp ./backgsub.ok _backgsub && rm -f _backgsub
+cmp ./childin.ok _childin && rm -f _childin
+cmp ./compare.ok _compare && rm -f _compare
+cmp ./delarprm.ok _delarprm && rm -f _delarprm
+cmp ./dynlj.ok _dynlj && rm -f _dynlj
+cmp ./eofsplit.ok _eofsplit && rm -f _eofsplit
+cmp ./fldchg.ok _fldchg && rm -f _fldchg
+cmp ./fldchgnf.ok _fldchgnf && rm -f _fldchgnf
+cmp ./fsrs.ok _fsrs && rm -f _fsrs
+cmp ./fstabplus.ok _fstabplus && rm -f _fstabplus
+cmp ./funstack.ok _funstack && rm -f _funstack
+cmp ./getline.ok _getline && rm -f _getline
+cmp ./getnr2tb.ok _getnr2tb && rm -f _getnr2tb
+cmp ./getnr2tm.ok _getnr2tm && rm -f _getnr2tm
+cmp ./gsubtest.ok _gsubtest && rm -f _gsubtest
+cmp ./intest.ok _intest && rm -f _intest
+cmp ./intprec.ok _intprec && rm -f _intprec
+cmp ./longwrds.ok _longwrds && rm -f _longwrds
+cmp ./math.ok _math && rm -f _math
+cmp ./out1.ok out1 && cmp ./out2.ok out2 && cmp ./out3.ok out3 && rm -f out1 out2 out3
+cmp ./mmap8k.in _mmap8k && rm -f _mmap8k
+Any output from "cmp" is bad news, although some differences
+in floating point values are probably benign -- in particular,
+some systems may omit a leading zero and the floating point
+precision may lead to slightly different output in a few cases.
+cmp ./negexp.ok _negexp && rm -f _negexp
+cmp ./nfldstr.ok _nfldstr && rm -f _nfldstr
+cmp ./nlfldsep.ok _nlfldsep && rm -f _nlfldsep
+cmp ./nlinstr.ok _nlinstr && rm -f _nlinstr
+cmp ./nors.ok _nors && rm -f _nors
+cmp ./numsubstr.ok _numsubstr && rm -f _numsubstr
+cmp ./ofmt.ok _ofmt && rm -f _ofmt
+cmp ./ofmtbig.ok _ofmtbig && rm -f _ofmtbig
+cmp ./ofmts.ok _ofmts && rm -f _ofmts
+cmp ./pcntplus.ok _pcntplus && rm -f _pcntplus
+cmp ./prdupval.ok _prdupval && rm -f _prdupval
+cmp ./prmreuse.ok _prmreuse && rm -f _prmreuse
+cmp ./prt1eval.ok _prt1eval && rm -f _prt1eval
+cmp ./reparse.ok _reparse && rm -f _reparse
+cmp ./rs.ok _rs && rm -f _rs
+cmp ./rswhite.ok _rswhite && rm -f _rswhite
+cmp ./splitargv.ok _splitargv && rm -f _splitargv
+cmp ./splitdef.ok _splitdef && rm -f _splitdef
+cmp ./splitvar.ok _splitvar && rm -f _splitvar
+cmp ./splitwht.ok _splitwht && rm -f _splitwht
+cmp ./sprintfc.ok _sprintfc && rm -f _sprintfc
+cmp ./substr.ok _substr && rm -f _substr
+cmp ./swaplns.ok _swaplns && rm -f _swaplns
+cmp ./tweakfld.ok _tweakfld && rm -f _tweakfld
+cmp ./zeroflag.ok _zeroflag && rm -f _zeroflag
+cmp ./getlnhd.ok _getlnhd && rm -f _getlnhd
+make[1]: Leaving directory `/a/suncore0/export/home/0073/sy/beebe/src/bwkawk/nawk-20030321/testnawk2/beebe'

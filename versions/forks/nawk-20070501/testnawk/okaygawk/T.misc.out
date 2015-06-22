@@ -1,0 +1,19 @@
+T.misc: miscellaneous buglets now watched for
+3c3
+< x
+---
+> 
+1c1
+< 2.29244e+09
+---
+> 2292437248
+BAD: T.misc split error
+BAD: T.misc hello error
+BAD: T.misc pile error
+BAD: T.misc atan2 error
+BAD: T.misc gsub banana error
+BAD: T.misc sub banana error
+BAD: T.misc lineno
+BAD: T.misc can't open
+BAD: T.misc continuation line number
+BAD: T.misc $f[1]++

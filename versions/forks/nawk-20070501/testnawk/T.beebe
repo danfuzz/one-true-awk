@@ -1,0 +1,7 @@
+echo T.beebe: tests from nelson beebe from gawk test suite
+# for which thanks.
+
+tar xf beebe.tar	# creates beebe
+cd beebe
+make all
+

@@ -1,0 +1,5 @@
+NEW contains a description of langauge changes
+over the recent past.
+
+awk.1 is a new man page.  Be warned that it uses
+macros somewhat different from the standard.

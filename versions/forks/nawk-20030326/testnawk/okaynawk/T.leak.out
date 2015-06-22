@@ -1,0 +1,6 @@
+T.leak: test for one memory-leak case
+2c2
+< R
+---
+> mm_pollh
+BAD: T.leak 1

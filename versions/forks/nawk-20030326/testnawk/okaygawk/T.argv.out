@@ -1,0 +1,6 @@
+T.argv: misc tests of argc and argv
+2c2
+< gawk
+---
+> /local/build/gawk-3.1.2.03/gawk
+BAD: T.argv (argc *)

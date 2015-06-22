@@ -1,0 +1,19 @@
+echo T.rsfs: miscellaneous FS and RS oddities
+
+awk=${awk-../a.out}
+
+rm -f core
+
+echo '1 abcdef
+1 ghijk
+lmnop
+1 qrst
+' >foo1
+
+echo 'abcdef1ghijk
+lmnop1qrst' | 
+$awk 'BEGIN { RS = "1" ; FS="%" }
+   { for (i = 1; i <= NF ; i++)
+         print i, $i
+}' >foo2
+cmp -s foo1 foo2 || echo 'BAD: T.rsfs non-null RS'
