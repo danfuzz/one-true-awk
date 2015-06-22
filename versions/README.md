@@ -47,6 +47,9 @@ Origins / Sources Of The Code Contained Herein
 
 * 1993-07-23 &mdash; from the collection of Arnold Robbins.
 
+* 1994-08-24 &mdash; possibly a release via Netlib, from the collection
+  of Arnold Robbins.
+
 * 1996-06-29 &mdash; retrieved November 5, 1996 from
   [Kernighan's page at Bell
   Labs](http://cm.bell-labs.com/cm/cs/awkbook/index.html).
