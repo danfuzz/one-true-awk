@@ -1,0 +1,120 @@
+BUGS:
+	ARGC and ARGV include a - for stdin when there are no args.
+
+WISH LIST:
+
+	%c
+	re parsing function of some kind
+	save compiled state
+	lazy field evaluation
+	type decls
+	scanf
+	access to run-time fcns
+	c output, link to c
+	char fcns, left side fcns (e.g., lsubstr)
+	coercion of expr to condition and vice versa
+	begin & end in patterns
+	limits on arrays, etc., ought to be dynamic instead of static.
+
+
+CHANGES SO FAR (Jul 85):
+
+added & in replacement of sub() and gsub();  use \& to quote it
+
+mutiple BEGIN's and END's concatenated
+
+replaced error reporting mechanism
+
+"function" is a synonym for "func"
+
+"delete array[elem]" removes elem from array
+
+Fixed bug in field handling for ~ 25% speed up.
+
+Augmented the getline function:
+	getline
+		sets $0, NR, NF, $1..., from next input record
+	getline x
+		sets x from next input record, sets NR,
+		but NOT $0, NF, etc.
+	getline < "foo"
+		sets $0 from file foo.  sets NF, $1...,
+		but NOT NR
+	getline x < "foo"
+		sets x from foo.  no effect on $0, NF, NR, etc.
+
+	Files are as for print; they are matched by name,
+	and remain open until explicitly closed.
+	Input pipes work;  syntax is
+		"whatever" | getline
+		"something" | getline x
+	(This adds a reduce/reduce conflict
+	to the grammar, so it may be a bad idea.)
+
+	getline returns 0 on EOF, -1 on error, >0 normally
+
+Added close function:
+	close("foo") calls fclose for right file or pclose for pipe
+
+Added sub(regexp, replacement, str) and gsub(...).
+	Substitutes replacement for leftmost occurrence
+	of regexpr in str, or in $0 if no str supplied.
+	Gsub substitutes for all.  Number of changes
+	is returned.
+
+Regular expressions can be dynamic.  Any constant string
+	or variable can be used as a regular expression
+	in sub(), gsub, or after ~ and !~.
+
+Field separators can be regular expressions, both in FS
+	and as the 3rd argument of split().
+
+Added "i in arr" condition, for if (...) and patterns.
+	i in arr  is true if arr[i] has been defined.
+	Note that this is different from asking if
+	arr[n] == i for some i!  We are searching for
+	a subscript, not a value.
+
+terminal i/o, eg stderr
+	at least for output, no change needed:
+	print | "cat -u 1>&2"
+	can only have one of these active at one time.
+
+ARGC and ARGV[] exist, essentially as in C.
+	ARGC is the number of arguments including the program name.
+	ARGV[0]..ARGV[ARGC-1] are the arguments
+	These can be modified in any way at any time.
+	If an ARGV[i] for i>0 is not null, it is assumed to be
+	the name of a file and is opened in the normal sequence.
+	New members of ARGV can be added dynamically beyond the
+	ones currently processed.
+	The argument '-' is added when input is stdin.
+
+
+added system(), rand(), srand(), sin, cos, atan2
+
+added variable FNR -- line number in current file
+	can test FNR == 1 to see if in new file
+
+Fixed so that \f, \b, \r, \ddd work in strings as in C
+
+Functions are in:
+	recursive
+	arguments are call by value for scalars, by ref for arrays
+	declaration is
+		func f(arg list) statement
+			arguments by name
+	arguments are local;  all others global
+	return [expr]
+
+Order rules relaxed:
+	BEGIN, END, func declarations can occur anywhere a pattern can.
+
+Added awkcheck when syntax error encountered,
+	for better identification of some errors.
+	Other error messages better.  Line number in source
+	and input line line both given for dynamic errors.
+	Some previously uncaught things now flagged
+	e.g.	print <= "foo"
+		print > foo (where foo is null)
+	detects calls of undefined functions, like foo(bar)
