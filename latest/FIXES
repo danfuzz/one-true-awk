@@ -330,7 +330,7 @@ Apr 12, 1992:
 	added explicit check for /dev/std(in,out,err) in redirection.
 	unlike gawk, no /dev/fd/n yet.
 
-	added fflush(file/pipe) builtin.  hard to test satisfactorily.
+	added (file/pipe) builtin.  hard to test satisfactorily.
 	not posix.
 
 Apr 24, 1992:
@@ -360,3 +360,19 @@ Jul 23, 1993:
 
 	FILENAME is now "" until the first thing that causes a file
 	to be opened.
+
+Feb 2, 1994:
+	changed error() to print line number as %d, not %g.
+
+Apr 22, 1994:
+	fixed yet another subtle self-assignment problem:
+	$1 = $2; $1 = $1 clobbered $1.
+
+	Regression tests now use private echo, to avoid quoting problems.
+
+May 11, 1994:
+	trivial fix to printf to limit string size in sub().
+
+Aug 24, 1994:
+	detect duplicate arguments in function definitions (mdm).
+

@@ -302,24 +302,27 @@ void funnyvar(Cell *vp, char *rw)
 
 uchar *setsval(Cell *vp, uchar *s)	/* set string val of a Cell */
 {
+	char *t;
+
 	if ((vp->tval & (NUM | STR)) == 0)
 		funnyvar(vp, "assign to");
 	if (vp->tval & FLD) {
 		donerec = 0;	/* mark $0 invalid */
 		if (vp-fldtab > *NF)
 			newfld(vp-fldtab);
-		dprintf( ("setting field %d to %s\n", vp-fldtab, s) );
+		dprintf( ("setting field %d to %s (%o)\n", vp-fldtab, s, s) );
 	} else if (vp->tval & REC) {
 		donefld = 0;	/* mark $1... invalid */
 		donerec = 1;
 	}
+	t = tostring(s);	/* in case it's self-assign */
 	vp->tval &= ~NUM;
 	vp->tval |= STR;
 	if (freeable(vp))
 		xfree(vp->sval);
 	vp->tval &= ~DONTFREE;
-	dprintf( ("setsval %o: %s = \"%s\", t=%o\n", vp, vp->nval, s, vp->tval) );
-	return(vp->sval = tostring(s));
+	dprintf( ("setsval %o: %s = \"%s (%o)\", t=%o\n", vp, vp->nval, t,t, vp->tval) );
+	return(vp->sval = t);
 }
 
 Awkfloat r_getfval(Cell *vp)	/* get float val of a Cell */
@@ -361,7 +364,7 @@ uchar *r_getsval(Cell *vp)	/* get string val of a Cell */
 		vp->tval &= ~DONTFREE;
 		vp->tval |= STR;
 	}
-	dprintf( ("getsval %o: %s = \"%s\", t=%o\n", vp, vp->nval, vp->sval, vp->tval) );
+	dprintf( ("getsval %o: %s = \"%s (%o)\", t=%o\n", vp, vp->nval, vp->sval, vp->sval, vp->tval) );
 	return(vp->sval);
 }
 

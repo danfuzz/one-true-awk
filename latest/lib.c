@@ -439,7 +439,7 @@ void error(int f, char *s)
 	fprintf(stderr, "%s", s);
 	fprintf(stderr, "\n");
 	if (compile_time != 2 && NR && *NR > 0) {
-		fprintf(stderr, " input record number %g", *FNR);
+		fprintf(stderr, " input record number %d", (int) (*FNR));
 		if (strcmp(*FILENAME, "-") != 0)
 			fprintf(stderr, ", file %s", *FILENAME);
 		fprintf(stderr, "\n");
@@ -534,17 +534,37 @@ isclvar(uchar *s)	/* is s of form var=something ? */
 
 #define	MAXEXPON	38	/* maximum exponent for fp number. should be IEEE */
 
-isnumber(uchar *s)	/* probably should be done by a library function */
+isnumber(uchar *s)	/* should be done by a library function */
 {
 	register int d1, d2;
 	int point;
 	uchar *es;
 
+/* /* THIS IS AN EXPERIMENT THAT'S NOT REALLY DONE. */
+/* /* strtod ought to provide a better test of what's */
+/* /* a valid number, but it doesn't work according to */
+/* /* the standard on any machine near me! */
+/* 
+/* #include <math.h>
+/* 	double r;
+/* 	uchar *ep;
+/* 	errno = 0;
+/* 	r = strtod(s, &ep);
+/* 	if (r == HUGE_VAL || errno == ERANGE)
+/* 		return 0;
+/* 	while (*ep == ' ' || *ep == '\t' || *ep == '\n')
+/* 		ep++;
+/* 	if (*ep == '\0')
+/* 		return 1;
+/* 	else
+/* 		return 0;
+ */
+
 	d1 = d2 = point = 0;
 	while (*s == ' ' || *s == '\t' || *s == '\n')
 		s++;
 	if (*s == '\0')
-		return(0);	/* empty stuff isn't number */
+		return(0);	/* empty stuff isn't a number */
 	if (*s == '+' || *s == '-')
 		s++;
 	if (!isdigit(*s) && *s != '.')

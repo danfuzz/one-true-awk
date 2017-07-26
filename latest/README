@@ -71,3 +71,6 @@ it by
 if your compiler does significant optimization.
 
 NOTE: This version uses ANSI C, as you should also.
+
+The version of malloc that comes with some systems (e.g., IRIX) is
+astonishly slow.  If awk seems slow, you might try fixing that.

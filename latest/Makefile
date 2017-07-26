@@ -22,9 +22,15 @@
 # THIS SOFTWARE.
 # ****************************************************************/
 
-YFLAGS = -d
+# my local:
+CFLAGS = -g -N -I/v/include/lcc -A
+CC = lcc
+
+# yours, more likely:
 CFLAGS = -g
 CC = cc
+
+YFLAGS = -d
 
 OFILES = b.o main.o parse.o proctab.o tran.o lib.o run.o 
 

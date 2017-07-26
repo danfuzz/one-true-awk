@@ -25,6 +25,8 @@ THIS SOFTWARE.
 %{
 #include <stdio.h>
 #include "awk.h"
+
+void checkdup(Node *list, Cell *item);
 yywrap(void) { return(1); }
 
 Node	*beginloc = 0;
@@ -408,7 +410,9 @@ var:
 varlist:
 	  /* nothing */		{ arglist = $$ = 0; }
 	| VAR			{ arglist = $$ = valtonode($1,CVAR); }
-	| varlist comma VAR	{ arglist = $$ = linkum($1,valtonode($3,CVAR)); }
+	| varlist comma VAR	{
+			checkdup($1, $3);
+			arglist = $$ = linkum($1,valtonode($3,CVAR)); }
 	;
 
 varname:
@@ -451,5 +455,16 @@ Node *notnull(Node *n)
 		return n;
 	default:
 		return op2(NE, n, nullnode);
+	}
+}
+
+void checkdup(Node *vl, Cell *cp)	/* check if name already in list */
+{
+	char *s = cp->nval;
+	for ( ; vl; vl = vl->nnext) {
+		if (strcmp(s, ((Cell *)(vl->narg[0]))->nval) == 0) {
+			ERROR "duplicate argument %s", s SYNTAX;
+			break;
+		}
 	}
 }

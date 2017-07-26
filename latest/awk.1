@@ -1,3 +1,4 @@
+awk
 .TH AWK 1
 .CT 1 files prog_other
 .SH NAME
@@ -11,6 +12,12 @@ awk \- pattern-directed scanning and processing language
 [
 .BI -v
 .I var=value
+]
+[
+.BI -mr n
+]
+[
+.BI -mf n
 ]
 [
 .I 'prog'
@@ -64,17 +71,23 @@ The
 option defines the input field separator to be the regular expression
 .IR fs.
 .PP
-An input line is normally made up of fields separated by white space.
-(This default can be changed by using the FS built-in variable or the
-.B -F
-.IR fs
-option.)
+An input line is normally made up of fields separated by white space,
+or by regular expression
+.BR FS .
 The fields are denoted
 .BR $1 ,
 .BR $2 ,
 \&..., while
 .B $0
 refers to the entire line.
+.PP
+To compensate for inadequate implementation of storage management,
+the 
+.B -mr
+option can be used to set the maximum size of the input record,
+and the
+.B -mf
+option to set the maximum number of fields.
 .PP
 A pattern-action statement has the form
 .IP
@@ -124,7 +137,7 @@ with the usual C escapes recognized within.
 Expressions take on string or numeric values as appropriate,
 and are built using the operators
 .B + - * / % ^
-(exponentiation), and concatenation (indicated by a blank).
+(exponentiation), and concatenation (indicated by white space).
 The operators
 .B
 ! ++ -- += -= *= /= %= ^= > >= < <= == != ?:
@@ -286,8 +299,8 @@ and returns its exit status
 The ``function''
 .B getline
 sets
-.B $0 to
-the next input record from the current input file;
+.B $0
+to the next input record from the current input file;
 .B getline
 .BI < file
 sets
@@ -353,7 +366,7 @@ A relational expression is one of the following:
 .PP
 where a relop is any of the six relational operators in C,
 and a matchop is either
-.B ~ 
+.B ~
 (matches)
 or
 .B !~
@@ -487,4 +500,3 @@ to force it to be treated as a string concatenate
 .br
 The scope rules for variables in functions are a botch;
 the syntax is worse.
-

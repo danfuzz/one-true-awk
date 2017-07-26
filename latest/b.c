@@ -783,7 +783,7 @@ void freefa(fa *f)	/* free a finite automaton */
 	for (i = 0; i <= f->accept; i++) {
 		xfree(f->re[i].lfollow);
 		if (f->re[i].ltype == CCL || f->re[i].ltype == NCCL)
-			xfree(f->re[i].lval);
+			xfree((f->re[i].lval));
 	}
 	xfree(f->restr);
 	xfree(f);

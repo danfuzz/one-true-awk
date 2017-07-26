@@ -1631,7 +1631,7 @@ Cell *sub(Node **a, int nnn)	/* substitute command */
 				*pb++ = *sptr++;
 		*pb = '\0';
 		if (pb >= buf + SUBSIZE)
-			ERROR "sub() result %30s too big", buf FATAL;
+			ERROR "sub() result %.30s too big", buf FATAL;
 		sptr = patbeg + patlen;
 		if ((patlen == 0 && *patbeg) || (patlen && *(sptr-1)))
 			while (*pb++ = *sptr++)
