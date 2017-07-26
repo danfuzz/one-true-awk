@@ -101,10 +101,11 @@ void initgetrec(void)
 	infile = stdin;		/* no filenames, so use stdin */
 }
 
+static int firsttime = 1;
+
 int getrec(char **pbuf, int *pbufsize, int isrecord)	/* get next input record */
 {			/* note: cares whether buf == record */
 	int c;
-	static int firsttime = 1;
 	char *buf = *pbuf;
 	int bufsize = *pbufsize;
 
@@ -378,7 +379,7 @@ void newfld(int n)	/* add field n after end of existing lastfld */
 Cell *fieldadr(int n)	/* get nth field */
 {
 	if (n < 0)
-		FATAL("trying to access field %d", n);
+		FATAL("trying to access out of range field %d", n);
 	if (n > nfields)	/* fields after NF are empty */
 		growfldtab(n);	/* but does not increase NF */
 	return(fldtab[n]);
@@ -387,10 +388,15 @@ Cell *fieldadr(int n)	/* get nth field */
 void growfldtab(int n)	/* make new fields up to at least $n */
 {
 	int nf = 2 * nfields;
+	size_t s;
 
 	if (n > nf)
 		nf = n;
-	fldtab = (Cell **) realloc(fldtab, (nf+1) * (sizeof (struct Cell *)));
+	s = (nf+1) * (sizeof (struct Cell *));  /* freebsd: how much do we need? */
+	if (s / sizeof(struct Cell *) - 1 == nf) /* didn't overflow */
+		fldtab = (Cell **) realloc(fldtab, s);
+	else					/* overflow sizeof int */
+		xfree(fldtab);	/* make it null */
 	if (fldtab == NULL)
 		FATAL("out of space creating %d fields", nf);
 	makefields(nfields+1, nf);

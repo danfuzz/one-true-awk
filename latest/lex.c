@@ -152,6 +152,7 @@ int gettok(char **pbuf, int *psz)	/* get next input token */
 		*bp = 0;
 		strtod(buf, &rem);	/* parse the number */
 		unputstr(rem);		/* put rest back for later */
+/* printf("unputstr [%s], buf [%s]\n", rem, buf); */
 		if (rem == buf) {	/* it wasn't a valid number at all */
 			buf[1] = 0;	/* so return one character as token */
 			retc = buf[0];	/* character is its own type */
@@ -187,8 +188,10 @@ int yylex(void)
 		reg = 0;
 		return regexpr();
 	}
+/* printf("top\n"); */
 	for (;;) {
 		c = gettok(&buf, &bufsize);
+/* printf("gettok [%s]\n", buf); */
 		if (c == 0)
 			return 0;
 		if (isalpha(c) || c == '_')

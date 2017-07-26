@@ -22,6 +22,8 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
 THIS SOFTWARE.
 ****************************************************************/
 
+#include <assert.h>
+
 typedef double	Awkfloat;
 
 /* unsigned char is more trouble than it's worth */
@@ -201,7 +203,7 @@ extern	int	pairstack[], paircnt;
 
 /* structures used by regular expression matching machinery, mostly b.c: */
 
-#define NCHARS	(256+1)		/* 256 handles 8-bit chars; 128 does 7-bit */
+#define NCHARS	(256+3)		/* 256 handles 8-bit chars; 128 does 7-bit */
 				/* watch out in match(), etc. */
 #define NSTATES	32
 
