@@ -17,6 +17,7 @@
 %left	AND
 %left	NOT
 %left	NUMBER VAR ARRAY FNCN SUBSTR LSUBSTR INDEX
+%left	GETLINE
 %nonassoc RELOP MATCHOP
 %left	OR
 %left	STRING  DOT CCL NCCL CHAR
@@ -38,20 +39,20 @@
 %%
 
 program:
-	  begin pa_stats end	{ if (errorflag==0) winner = stat3(PROGRAM, $1, $2, $3); }
+	  begin pa_stats end	{ if (errorflag==0) winner = (node *)stat3(PROGRAM, $1, $2, $3); }
 	| error			{ yyclearin; yyerror("bailing out"); }
 	;
 
 begin:
 	  XBEGIN '{' stat_list '}'	{ PUTS("XBEGIN list"); $$ = $3; }
 	| begin NL
-	| 	{ PUTS("empty XBEGIN"); $$ = nullstat; }
+	| 	{ PUTS("empty XBEGIN"); $$ = (hack)nullstat; }
 	;
 
 end:
 	  XEND '{' stat_list '}'	{ PUTS("XEND list"); $$ = $3; }
 	| end NL
-	|	{ PUTS("empty END"); $$ = nullstat; }
+	|	{ PUTS("empty END"); $$ = (hack)nullstat; }
 	;
 
 compound_conditional:
@@ -69,7 +70,7 @@ compound_pattern:
 	;
 
 conditional:
-	  expr	{ PUTS("expr"); $$ = op2(NE, $1, valtonode(lookup("0", symtab), CCON)); }
+	  expr	{ PUTS("expr"); $$ = op2(NE, $1, valtonode(lookup("$zero&null", symtab, 0), CCON)); }
 	| rel_expr		{ PUTS("relexpr"); }
 	| lex_expr		{ PUTS("lexexpr"); }
 	| compound_conditional	{ PUTS("compcond"); }
@@ -102,11 +103,12 @@ var:
 	;
 term:
 	  var
+	| GETLINE	{ PUTS("getline"); $$ = op1(GETLINE, 0); }
 	| FNCN		{ PUTS("func");
-			$$ = op2(FNCN, $1, valtonode(lookup("$record", symtab), CFLD));
+			$$ = op2(FNCN, $1, valtonode(lookup("$record", symtab, 0), CFLD));
 			}
 	| FNCN '(' ')'	{ PUTS("func()"); 
-			$$ = op2(FNCN, $1, valtonode(lookup("$record", symtab), CFLD));
+			$$ = op2(FNCN, $1, valtonode(lookup("$record", symtab, 0), CFLD));
 			}
 	| FNCN '(' expr ')'	{ PUTS("func(expr)"); $$ = op2(FNCN, $1, $3); }
 	| SPRINTF print_list	{ PUTS("sprintf"); $$ = op1($1, $2); }
@@ -156,13 +158,13 @@ pa_stat:
 
 pa_stats:
 	  pa_stats pa_stat st	{ PUTS("pa_stats pa_stat"); $$ = linkum($1, $2); }
-	|	{ PUTS("null pa_stat"); $$ = nullstat; }
+	|	{ PUTS("null pa_stat"); $$ = (hack)nullstat; }
 	| pa_stats pa_stat	{PUTS("pa_stats pa_stat"); $$ = linkum($1, $2); }
 	;
 
 pattern:
 	  regular_expr	{ PUTS("regex");
-		$$ = op2(MATCH, valtonode(lookup("$record", symtab), CFLD), makedfa($1));
+		$$ = op2(MATCH, valtonode(lookup("$record", symtab, 0), CFLD), makedfa($1));
 		}
 	| rel_expr	{ PUTS("relexpr"); }
 	| lex_expr	{ PUTS("lexexpr"); }
@@ -172,7 +174,7 @@ pattern:
 print_list:
 	  expr	{ PUTS("expr"); }
 	| pe_list	{ PUTS("pe_list"); }
-	|		{ PUTS("null print_list"); $$ = valtonode(lookup("$record", symtab), CFLD); }
+	|		{ PUTS("null print_list"); $$ = valtonode(lookup("$record", symtab, 0), CFLD); }
 	;
 
 pe_list:
@@ -230,7 +232,7 @@ simple_stat:
 	| PRINTF print_list	
 		{ PUTS("printf list"); $$ = stat3($1, $2, nullstat, nullstat); }
 	| expr	{ PUTS("expr"); $$ = exptostat($1); }
-	|		{ PUTS("null simple statement"); $$ = nullstat; }
+	|		{ PUTS("null simple statement"); $$ = (hack)nullstat; }
 	| error		{ yyclearin; yyerror("illegal statement"); }
 	;
 
@@ -241,16 +243,17 @@ statement:
 		{ PUTS("if-else stat"); $$ = stat3(IF, $1, $2, $4); }
 	| while statement	{ PUTS("while stat"); $$ = stat2(WHILE, $1, $2); }
 	| for			{ PUTS("for stat"); }
-	| NEXT st		{ PUTS("next"); $$ = genjump(NEXT); }
-	| EXIT st		{ PUTS("exit"); $$ = genjump(EXIT); }
-	| BREAK st		{ PUTS("break"); $$ = genjump(BREAK); }
-	| CONTINUE st		{ PUTS("continue"); $$ = genjump(CONTINUE); }
+	| NEXT st		{ PUTS("next"); $$ = stat1(NEXT, 0); }
+	| EXIT st		{ PUTS("exit"); $$ = stat1(EXIT, 0); }
+	| EXIT expr st		{ PUTS("exit"); $$ = stat1(EXIT, $2); }
+	| BREAK st		{ PUTS("break"); $$ = stat1(BREAK, 0); }
+	| CONTINUE st		{ PUTS("continue"); $$ = stat1(CONTINUE, 0); }
 	| '{' stat_list '}'	{ PUTS("{statlist}"); $$ = $2; }
 	;
 
 stat_list:
 	  stat_list statement	{ PUTS("stat_list stat"); $$ = linkum($1, $2); }
-	|			{ PUTS("null stat list"); $$ = nullstat; }
+	|			{ PUTS("null stat list"); $$ = (hack)nullstat; }
 	;
 
 while:
