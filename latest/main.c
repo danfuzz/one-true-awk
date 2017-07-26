@@ -1,12 +1,15 @@
-#include <stdio.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include "awk.def.h"
-#include "awk.h"
+#ifndef lint
+static char sccsid[] = "@(#)main.c	4.4 (Berkeley) 12/8/84";
+#endif
 
+#include "stdio.h"
+#include "ctype.h"
+#include "awk.def"
+#include "awk.h"
 #define TOLOWER(c)	(isupper(c) ? tolower(c) : c) /* ugh!!! */
 
 int	dbg	= 0;
+int	ldbg	= 0;
 int	svflg	= 0;
 int	rstflg	= 0;
 int	svargc;
@@ -18,11 +21,7 @@ extern	errorflag;	/* non-zero if any syntax errors; set by yyerror */
 int filefd, symnum, ansfd;
 char *filelist;
 extern int maxsym, errno;
-
-main(argc, argv)
-        int argc;
-        char *argv[];
-{
+main(argc, argv) int argc; char *argv[]; {
 	if (argc == 1)
 		error(FATAL, "Usage: awk [-f source | 'cmds'] [files]");
 	syminit();
@@ -54,6 +53,9 @@ main(argc, argv)
 			break;
 		} else if (strcmp("-d", argv[0])==0) {
 			dbg = 1;
+		}
+		else if (strcmp("-l", argv[0])==0) {
+			ldbg = 1;
 		}
 		else if(strcmp("-S", argv[0]) == 0) {
 			svflg = 1;

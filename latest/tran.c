@@ -1,7 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "awk.def.h"
+#ifndef lint
+static char sccsid[] = "@(#)tran.c	4.4 12/9/83";
+#endif
+
+#include "stdio.h"
+#include "awk.def"
 #include "awk.h"
 
 cell *symtab[MAXSYM];	/* symbol table pointers */
