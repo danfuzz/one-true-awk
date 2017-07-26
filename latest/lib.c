@@ -652,10 +652,10 @@ int isclvar(char *s)	/* is s of form var=something ? */
 {
 	char *os = s;
 
-	if (!isalpha(*s) && *s != '_')
+	if (!isalpha((uschar) *s) && *s != '_')
 		return 0;
 	for ( ; *s; s++)
-		if (!(isalnum(*s) || *s == '_'))
+		if (!(isalnum((uschar) *s) || *s == '_'))
 			break;
 	return *s == '=' && s > os && *(s+1) != '=';
 }

@@ -315,7 +315,8 @@ Cell *copycell(Cell *x)	/* make a copy of a cell in a temp */
 	y = gettemp();
 	y->csub = CCOPY;	/* prevents freeing until call is over */
 	y->nval = x->nval;	/* BUG? */
-	y->sval = x->sval ? tostring(x->sval) : NULL;
+	if (isstr(x))
+		y->sval = tostring(x->sval);
 	y->fval = x->fval;
 	y->tval = x->tval & ~(CON|FLD|REC|DONTFREE);	/* copy is not constant or field */
 							/* is DONTFREE right? */
@@ -729,8 +730,9 @@ Cell *substr(Node **a, int nnn)		/* substr(a[0], a[1], a[2]) */
 	if (k <= 1) {
 		tempfree(x);
 		tempfree(y);
-		if (a[2] != 0)
+		if (a[2] != 0) {
 			tempfree(z);
+		}
 		x = gettemp();
 		setsval(x, "");
 		return(x);
@@ -822,7 +824,7 @@ int format(char **pbuf, int *pbufsize, char *s, Node *a)	/* printf-like conversi
 		for (t = fmt; (*t++ = *s) != '\0'; s++) {
 			if (!adjbuf(&fmt, &fmtsz, MAXNUMSIZE+1+t-fmt, recsize, &t, 0))
 				FATAL("format item %.30s... ran format() out of memory", os);
-			if (isalpha(*s) && *s != 'l' && *s != 'h' && *s != 'L')
+			if (isalpha((uschar)*s) && *s != 'l' && *s != 'h' && *s != 'L')
 				break;	/* the ansi panoply */
 			if (*s == '*') {
 				x = execute(a);
@@ -1281,7 +1283,7 @@ Cell *split(Node **a, int nnn)	/* split(a[0], a[1], a[2]); a[3] is type */
 			sprintf(num, "%d", n);
 			buf[0] = *s;
 			buf[1] = 0;
-			if (isdigit(buf[0]))
+			if (isdigit((uschar)buf[0]))
 				setsymtab(num, buf, atof(buf), STR|NUM, (Array *) ap->sval);
 			else
 				setsymtab(num, buf, 0.0, STR, (Array *) ap->sval);
@@ -1306,8 +1308,9 @@ Cell *split(Node **a, int nnn)	/* split(a[0], a[1], a[2]); a[3] is type */
 	}
 	tempfree(ap);
 	tempfree(y);
-	if (a[2] != 0 && arg3type == STRING)
+	if (a[2] != 0 && arg3type == STRING) {
 		tempfree(x);
+	}
 	x = gettemp();
 	x->tval = NUM;
 	x->fval = n;
@@ -1495,11 +1498,11 @@ Cell *bltin(Node **a, int n)	/* builtin functions. a[0] is type, a[1] is arg lis
 		buf = tostring(getsval(x));
 		if (t == FTOUPPER) {
 			for (p = buf; *p; p++)
-				if (islower(*p))
+				if (islower((uschar) *p))
 					*p = toupper(*p);
 		} else {
 			for (p = buf; *p; p++)
-				if (isupper(*p))
+				if (isupper((uschar) *p))
 					*p = tolower(*p);
 		}
 		tempfree(x);

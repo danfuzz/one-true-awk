@@ -132,6 +132,7 @@ int gettok(char **pbuf, int *psz)	/* get next input token */
 				break;
 			}
 		}
+		*bp = 0;
 	} else {	/* it's a number */
 		char *rem;
 		/* read input until can't be a number */
