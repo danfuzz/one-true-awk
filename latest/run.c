@@ -1,5 +1,5 @@
 #ifndef lint
-static char sccsid[] = "@(#)run.c	4.5 12/4/84";
+static char sccsid[] = "@(#)run.c	4.4 8/11/83";
 #endif
 
 #include "awk.def"
@@ -12,7 +12,6 @@ static char sccsid[] = "@(#)run.c	4.5 12/4/84";
 struct
 {
 	FILE *fp;
-	int type;
 	char *fname;
 } files[FILENUM];
 FILE *popen();
@@ -29,14 +28,7 @@ obj	false	={ OBOOL, BFALSE, 0 };
 
 run()
 {
-	register int i;
-
 	execute(winner);
-
-	/* Wait for children to complete if output to a pipe. */
-	for (i=0; i<FILENUM; i++)
-		if (files[i].fp && files[i].type == '|')
-			pclose(files[i].fp);
 }
 
 obj execute(u) node *u;
@@ -874,7 +866,6 @@ redirprint(s, a, b) char *s; node *b;
 	if (files[i].fp == NULL)
 		error(FATAL, "can't open file %s", x.optr->sval);
 	files[i].fname = tostring(x.optr->sval);
-	files[i].type = a;
 doit:
 	fprintf(files[i].fp, "%s", s);
 #ifndef gcos

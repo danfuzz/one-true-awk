@@ -1,5 +1,5 @@
 #ifndef lint
-static char sccsid[] = "@(#)lib.c	4.4 9/17/84";
+static char sccsid[] = "@(#)lib.c	4.3 8/11/83";
 #endif
 
 #include "stdio.h"
@@ -211,7 +211,7 @@ error(f, s, a1, a2, a3, a4, a5, a6, a7) {
 	fprintf(stderr, "awk: ");
 	fprintf(stderr, s, a1, a2, a3, a4, a5, a6, a7);
 	fprintf(stderr, "\n");
-	if (NR && *NR > 0)
+	if (*NR > 0)
 		fprintf(stderr, " record number %g\n", *NR);
 	if (f)
 		exit(2);
