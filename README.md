@@ -32,7 +32,7 @@ Cheers!
 
 -dan<br>
 <danfuzz@milk.com><br>
-<http://milk.com/>
+<https://milk.com/>
 
 - - - - -
 
