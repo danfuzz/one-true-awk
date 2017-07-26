@@ -1,6 +1,15 @@
+/*-
+ * Copyright (c) 1991 The Regents of the University of California.
+ * All rights reserved.
+ *
+ * This module is believed to contain source code proprietary to AT&T.
+ * Use and redistribution is subject to the Berkeley Software License
+ * Agreement and your Software Agreement with AT&T (Western Electric).
+ */
+
 #ifndef lint
-static char sccsid[] = "@(#)tran.c	4.4 12/9/83";
-#endif
+static char sccsid[] = "@(#)tran.c	4.6 (Berkeley) 4/17/91";
+#endif /* not lint */
 
 #include "stdio.h"
 #include "awk.def"
@@ -197,9 +206,9 @@ register cell *vp;
 		if (!(vp->tval&FLD))
 			strfree(vp->sval);
 		if ((long)vp->fval==vp->fval)
-			sprintf(s, "%.20g", vp->fval);
+			(void)sprintf(s, "%.20g", vp->fval);
 		else
-			sprintf(s, *OFMT, vp->fval);
+			(void)sprintf(s, *OFMT, vp->fval);
 		vp->sval = tostring(s);
 		vp->tval &= ~FLD;
 		vp->tval |= STR;

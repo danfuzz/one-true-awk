@@ -1,4 +1,11 @@
-/*	awk.g.y	4.1	82/05/07	*/
+/*-
+ * Copyright (c) 1991 The Regents of the University of California.
+ * All rights reserved.
+ *
+ * This module is believed to contain source code proprietary to AT&T.
+ * Use and redistribution is subject to the Berkeley Software License
+ * Agreement and your Software Agreement with AT&T (Western Electric).
+ */
 
 %token	FIRSTTOKEN	/*must be first*/
 %token	FINAL FATAL
@@ -33,6 +40,10 @@
 %token	LASTTOKEN	/* has to be last */
 
 %{
+#ifndef lint
+static char sccsid[] = "@(#)awk.g.y	4.4 (Berkeley) 4/27/91";
+#endif /* not lint */
+
 #include "awk.def"
 #ifndef	DEBUG	
 #	define	PUTS(x)
@@ -235,7 +246,7 @@ simple_stat:
 		{ PUTS("printf list"); $$ = stat3($1, $2, nullstat, nullstat); }
 	| expr	{ PUTS("expr"); $$ = exptostat($1); }
 	|		{ PUTS("null simple statement"); $$ = (hack)nullstat; }
-	| error		{ yyclearin; yyerror("illegal statement"); }
+	| error		{ yyclearin; yyerror("illegal statement"); $$ = (hack)nullstat; }
 	;
 
 statement:

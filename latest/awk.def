@@ -1,4 +1,15 @@
-/*	awk.def	4.3	83/12/09	*/
+/*-
+ * Copyright (c) 1991 The Regents of the University of California.
+ * All rights reserved.
+ *
+ * This module is believed to contain source code proprietary to AT&T.
+ * Use and redistribution is subject to the Berkeley Software License
+ * Agreement and your Software Agreement with AT&T (Western Electric).
+ *
+ *	@(#)awk.def	4.6 (Berkeley) 4/27/91
+ */
+
+#include <stdlib.h>
 
 #define hack	int
 #define	AWKFLOAT	float
@@ -53,7 +64,7 @@ extern cell	*nfloc;		/* NF */
 
 awkfloat setfval(), getfval();
 char	*setsval(), *getsval();
-char	*tostring(), *tokname(), *malloc();
+char	*tostring(), *tokname();
 double	log(), sqrt(), exp(), atof();
 
 /* function types */

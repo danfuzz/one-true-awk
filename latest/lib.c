@@ -1,12 +1,24 @@
-#ifndef lint
-static char sccsid[] = "@(#)lib.c	4.4 9/17/84";
-#endif
+/*-
+ * Copyright (c) 1991 The Regents of the University of California.
+ * All rights reserved.
+ *
+ * This module is believed to contain source code proprietary to AT&T.
+ * Use and redistribution is subject to the Berkeley Software License
+ * Agreement and your Software Agreement with AT&T (Western Electric).
+ */
 
+#ifndef lint
+static char sccsid[] = "@(#)lib.c	4.9 (Berkeley) 4/17/91";
+#endif /* not lint */
+
+#include <stdarg.h>
 #include "stdio.h"
 #include "awk.def"
 #include "awk.h"
 #include "ctype.h"
 
+extern FILE	*yyin;	/* lex input file */
+extern char	*lexprog;	/* points to program argument if it exists */
 FILE	*infile	= NULL;
 char	*file;
 #define	RECSIZE	(5 * 512)
@@ -22,13 +34,15 @@ int	mustfld;	/* 1 = NF seen, so always break*/
 #define	FINIT	{EMPTY, EMPTY, 0.0, FLD|STR}
 cell fldtab[MAXFLD] = {	/*room for fields */
 	{ "$record", record, 0.0, STR|FLD},
-	FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT,
-	FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT,
-	FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT,
-	FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT,
-	FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT,
-	FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT,
-	FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT
+	FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT,
+	FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT,
+	FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT,
+	FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT,
+	FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT,
+	FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT,
+	FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT,
+	FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT,
+	FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT, FINIT,
 };
 int	maxfld	= 0;	/* last used field */
 
@@ -55,8 +69,12 @@ getrec()
 			}
 			*FILENAME = file = *svargv;
 			dprintf("opening file %s\n", file, NULL, NULL);
-			if (*file == '-')
-				infile = stdin;
+			if (*file == '-') {
+				if (yyin == stdin && ! lexprog)
+					error(FATAL, "standard input already used for reading commands");
+				else
+					infile = stdin;
+			}
 			else if ((infile = fopen(file, "r")) == NULL)
 				error(FATAL, "can't open %s", file);
 		}
@@ -207,13 +225,20 @@ yyerror(s) char *s; {
 	errorflag = 2;
 }
 
-error(f, s, a1, a2, a3, a4, a5, a6, a7) {
-	fprintf(stderr, "awk: ");
-	fprintf(stderr, s, a1, a2, a3, a4, a5, a6, a7);
-	fprintf(stderr, "\n");
+error(isfatal, fmt)
+	int isfatal;
+	char *fmt;
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	(void)fprintf(stderr, "awk: ");
+	(void)vfprintf(stderr, fmt, ap);
+	va_end(ap);
+	(void)fprintf(stderr, "\n");
 	if (NR && *NR > 0)
-		fprintf(stderr, " record number %g\n", *NR);
-	if (f)
+		(void)fprintf(stderr, " record number %g\n", *NR);
+	if (isfatal)
 		exit(2);
 }
 
