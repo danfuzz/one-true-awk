@@ -1,3 +1,7 @@
+#ifndef lint
+static char sccsid[] = "@(#)main.c	4.4 (Berkeley) 12/8/84";
+#endif
+
 #include "stdio.h"
 #include "ctype.h"
 #include "awk.def"
@@ -5,6 +9,9 @@
 #define TOLOWER(c)	(isupper(c) ? tolower(c) : c) /* ugh!!! */
 
 int	dbg	= 0;
+int	ldbg	= 0;
+int	svflg	= 0;
+int	rstflg	= 0;
 int	svargc;
 char	**svargv, **xargv;
 extern FILE	*yyin;	/* lex input file */
@@ -17,8 +24,6 @@ extern int maxsym, errno;
 main(argc, argv) int argc; char *argv[]; {
 	if (argc == 1)
 		error(FATAL, "Usage: awk [-f source | 'cmds'] [files]");
-	if (strcmp(argv[0], "a.out"))
-		logit(argc, argv);
 	syminit();
 	while (argc > 1) {
 		argc--;
@@ -49,6 +54,20 @@ main(argc, argv) int argc; char *argv[]; {
 		} else if (strcmp("-d", argv[0])==0) {
 			dbg = 1;
 		}
+		else if (strcmp("-l", argv[0])==0) {
+			ldbg = 1;
+		}
+		else if(strcmp("-S", argv[0]) == 0) {
+			svflg = 1;
+		}
+		else if(strncmp("-R", argv[0], 2) == 0) {
+			if(thaw(argv[0] + 2) == 0)
+				rstflg = 1;
+			else {
+				fprintf(stderr, "not restored\n");
+				exit(1);
+			}
+		}
 	}
 	if (argc <= 1) {
 		argv[0][0] = '-';
@@ -60,37 +79,19 @@ main(argc, argv) int argc; char *argv[]; {
 	svargv = ++argv;
 	dprintf("svargc=%d svargv[0]=%s\n", svargc, svargv[0], NULL);
 	*FILENAME = *svargv;	/* initial file name */
-	yyparse();
+	if(rstflg == 0)
+		yyparse();
 	dprintf("errorflag=%d\n", errorflag, NULL, NULL);
 	if (errorflag)
 		exit(errorflag);
+	if(svflg) {
+		svflg = 0;
+		if(freeze("awk.out") != 0)
+			fprintf(stderr, "not saved\n");
+		exit(0);
+	}
 	run();
 	exit(errorflag);
-}
-
-logit(n, s) char *s[];
-{	int i, tvec[2];
-	FILE *f, *g;
-	char buf[512];
-	if ((f=fopen("/usr/pjw/awk/awkhist", "a"))==NULL)
-		return;
-	time(tvec);
-	fprintf(f, "%-8s %s", getlogin(), ctime(tvec));
-	for (i=0; i<n; i++)
-		fprintf(f, "'%s'", s[i]);
-	putc('\n', f);
-	if (strcmp(s[1], "-f")) {
-		fclose(f);
-		return;
-	}
-	if ((g=fopen(s[2], "r"))==NULL) {
-		fclose(f);
-		return;
-	}
-	while ((i=fread(buf, 1, 512, g))>0)
-		fwrite(buf, 1, i, f);
-	fclose(f);
-	fclose(g);
 }
 
 yywrap()

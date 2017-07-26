@@ -1,3 +1,7 @@
+#ifndef lint
+static char sccsid[] = "@(#)token.c	4.3 (Berkeley) 12/8/84";
+#endif
+
 #include "awk.h"
 struct tok
 {	char *tnm;
@@ -81,14 +85,6 @@ struct tok
 "INDIRECT", 332,
 "LASTTOKEN", 333,
 };
-ptoken(n)
-{
-	if(n<128) printf("lex: %c\n",n);
-	else	if(n<=256) printf("lex:? %o\n",n);
-	else	if(n<LASTTOKEN) printf("lex: %s\n",tok[n-257].tnm);
-	else	printf("lex:? %o\n",n);
-	return;
-}
 
 char *tokname(n)
 {
