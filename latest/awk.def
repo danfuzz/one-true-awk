@@ -1,8 +1,5 @@
-#ifdef pdp11
-#define hack	int
-#endif
 #define	AWKFLOAT	float
-#define	xfree(a)	{ if(a!=NULL) { yfree(a); a=NULL;} }
+#define	xfree(a)	{ if(a!=NULL) yfree(a); a=NULL;}
 #define yfree free
 #ifdef	DEBUG
 #	define	dprintf	if(dbg)printf

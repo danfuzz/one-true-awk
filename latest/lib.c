@@ -235,13 +235,11 @@ register char *s;
 	if (!isdigit(*s) && *s != '.')
 		return(0);
 	if (isdigit(*s)) {
+		d1++;
 		do {
-			d1++;
 			s++;
 		} while (isdigit(*s));
 	}
-	if(d1 >= MAXEXPON)
-		return(0);	/* too many digits to convert */
 	if (*s == '.') {
 		point++;
 		s++;
