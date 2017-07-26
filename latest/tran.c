@@ -76,7 +76,7 @@ cell **tab;
 	register cell *p;
 	cell *lookup();
 
-	if (n != NULL && *n != '\0' && (p = lookup(n, tab)) != NULL) {
+	if (n != NULL && (p = lookup(n, tab)) != NULL) {
 		xfree(s);
 		dprintf("setsymtab found %o: %s", p, p->nval, NULL);
 		dprintf(" %s %g %o\n", p->sval, p->fval, p->tval);
@@ -162,13 +162,17 @@ register cell *vp;
 	dprintf("getfval: %o", vp, NULL, NULL);
 	checkval(vp);
 	if ((vp->tval & NUM) == 0) {
-		vp->fval = atof(vp->sval);
-		vp->tval |= NUM;
-		if (*vp->sval == '\0') {	/* "" is not equal to "0" */
-			vp->tval &= ~STR;
-			if (!(vp->tval&FLD))
-				xfree(vp->sval);
+		/* the problem is to make non-numeric things */
+		/* have unlikely numeric variables, so that */
+		/* $1 == $2 comparisons sort of make sense when */
+		/* one or the other is numeric */
+		if (isnumber(vp->sval)) {
+			vp->fval = atof(vp->sval);
+			if (!(vp->tval & CON))	/* don't change type of a constant */
+				vp->tval |= NUM;
 		}
+		else
+			vp->fval = 0.0;	/* not a very good idea */
 	}
 	dprintf("  %g\n", vp->fval, NULL, NULL);
 	return(vp->fval);

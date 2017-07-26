@@ -107,7 +107,7 @@ extern obj	true, false;
 extern int	pairstack[], paircnt;
 
 #define cantexec(n)	(n->ntype == NVALUE)
-#define notlegal(n)	(proctab[n-FIRSTTOKEN]== nullproc)
+#define notlegal(n)	(n <= FIRSTTOKEN || n >= LASTTOKEN || proctab[n-FIRSTTOKEN]== nullproc)
 #define isexpr(n)	(n->ntype == NEXPR)
 #define isjump(n)	(n.otype == OJUMP)
 #define isexit(n)	(n.otype == OJUMP && n.osub == JEXIT)

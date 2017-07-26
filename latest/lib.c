@@ -5,7 +5,7 @@
 
 FILE	*infile	= NULL;
 char	*file;
-#define	RECSIZE	BUFSIZ
+#define	RECSIZE	512
 char	record[RECSIZE];
 char	fields[RECSIZE];
 
@@ -209,16 +209,66 @@ PUTS(s) char *s; {
 	dprintf("%s\n", s, NULL, NULL);
 }
 
-/*
-isnumber(s) char *s;
+#define	MAXEXPON	38	/* maximum exponenet for fp number */
+
+isnumber(s)
+register char *s;
 {
-	for(;*s!=0; s++)
-	{	if(isdigit(*s) || *s=='-' || *s=='.'
-			|| *s=='+' || *s=='e' || *s=='E')
-			continue;
-		else	return(0);
+	register d1, d2;
+	int point;
+	char *es;
+
+	d1 = d2 = point = 0;
+	while (*s == ' ' || *s == '\t' || *s == '\n')
+		s++;
+	if (*s == '\0')
+		return(0);	/* empty stuff isn't number */
+	if (*s == '+' || *s == '-')
+		s++;
+	if (!isdigit(*s) && *s != '.')
+		return(0);
+	if (isdigit(*s)) {
+		d1++;
+		do {
+			s++;
+		} while (isdigit(*s));
 	}
-	return(1);
+	if (*s == '.') {
+		point++;
+		s++;
+	}
+	if (d1 == 0 && point == 0)
+		return(0);
+	if (isdigit(*s)) {
+		d2++;
+		do {
+			s++;
+		} while (isdigit(*s));
+	}
+	if (!(d1 || point && d2))
+		return(0);
+	if (*s == 'e' || *s == 'E') {
+		s++;
+		if (*s == '+' || *s == '-')
+			s++;
+		if (!isdigit(*s))
+			return(0);
+		es = s;
+		do {
+			s++;
+		} while (isdigit(*s));
+		if (s - es > 2)
+			return(0);
+		else if (s - es == 2 && 10 * (*es-'0') + *(es+1)-'0' >= MAXEXPON)
+			return(0);
+	}
+	while (*s == ' ' || *s == '\t' || *s == '\n')
+		s++;
+	if (*s == '\0')
+		return(1);
+	else
+		return(0);
 }
- */
+/*
 isnumber(s) char *s; {return(0);}
+*/
