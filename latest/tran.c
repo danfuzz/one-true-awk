@@ -129,7 +129,7 @@ awkfloat f;
 		error(FATAL, "can't set $0");
 	vp->tval &= ~STR;	/* mark string invalid */
 	vp->tval |= NUM;	/* mark number ok */
-	if ((vp->tval & FLD) && vp->nval == 0)
+	if ((vp->tval & FLD) && isnull(vp->nval))
 		donerec = 0;
 	return(vp->fval = f);
 }
@@ -144,7 +144,7 @@ char *s;
 		error(FATAL, "can't set $0");
 	vp->tval &= ~NUM;
 	vp->tval |= STR;
-	if ((vp->tval & FLD) && vp->nval == 0)
+	if ((vp->tval & FLD) && isnull(vp->nval))
 		donerec = 0;
 	if (!(vp->tval&FLD))
 		xfree(vp->sval);
