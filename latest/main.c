@@ -22,7 +22,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
 THIS SOFTWARE.
 ****************************************************************/
 
-char	*version = "version 990305";
+char	*version = "version 19990416";
 
 #define DEBUG
 #include <stdio.h>
@@ -177,6 +177,7 @@ int pgetc(void)		/* get 1 character from awk program */
 				yyin = stdin;
 			else if ((yyin = fopen(pfile[curpfile], "r")) == NULL)
 				ERROR "can't open file %s", pfile[curpfile] FATAL;
+			lineno = 1;
 		}
 		if ((c = getc(yyin)) != EOF)
 			return c;
@@ -185,4 +186,12 @@ int pgetc(void)		/* get 1 character from awk program */
 		yyin = NULL;
 		curpfile++;
 	}
+}
+
+char *cursource(void)	/* current source file name */
+{
+	if (npfile > 0)
+		return pfile[curpfile];
+	else
+		return NULL;
 }

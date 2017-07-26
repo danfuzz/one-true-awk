@@ -163,9 +163,9 @@ int	regexpr(void);
 int	sc	= 0;	/* 1 => return a } right now */
 int	reg	= 0;	/* 1 => return a REGEXPR now */
 
-int yylex()
+int yylex(void)
 {
-	int c, n;
+	int c;
 	static char *buf = 0;
 	static int bufsize = 500;
 
@@ -208,7 +208,7 @@ int yylex()
 			RET(';');
 		case '\\':
 			if (peek() == '\n') {
-				input(); lineno++;
+				input();
 			} else if (peek() == '\r') {
 				input(); input();	/* \n */
 				lineno++;
@@ -283,10 +283,7 @@ int yylex()
 			} else
 				RET('*');
 		case '/':
-			if (peek() == '=') {
-				input(); yylval.i = DIVEQ; RET(ASGNOP);
-			} else
-				RET('/');
+			RET('/');
 		case '%':
 			if (peek() == '=') {
 				input(); yylval.i = MODEQ; RET(ASGNOP);
@@ -301,7 +298,7 @@ int yylex()
 		case '$':
 			/* BUG: awkward, if not wrong */
 			c = gettok(&buf, &bufsize);
-			if (c == '(' || c == '[' || (infunc && (n=isarg(buf)) >= 0)) {
+			if (c == '(' || c == '[' || (infunc && isarg(buf) >= 0)) {
 				unputstr(buf);
 				RET(INDIRECT);
 			} else if (isalpha(c)) {
@@ -348,7 +345,7 @@ int yylex()
 	}
 }
 
-int string()
+int string(void)
 {
 	int c, n;
 	char *s, *bp;
@@ -377,7 +374,7 @@ int string()
 			case 'r': *bp++ = '\r'; break;
 			case 'b': *bp++ = '\b'; break;
 			case 'v': *bp++ = '\v'; break;
-			case 'a': *bp++ = '\a'; break;
+			case 'a': *bp++ = '\007'; break;
 			case '\\': *bp++ = '\\'; break;
 
 			case '0': case '1': case '2': /* octal: \d \dd \ddd */
@@ -492,7 +489,7 @@ void startreg(void)	/* next call to yyles will return a regular expression */
 	reg = 1;
 }
 
-int regexpr()
+int regexpr(void)
 {
 	int c;
 	static char *buf = 0;

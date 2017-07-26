@@ -24,6 +24,8 @@
 
 CFLAGS = -g
 CFLAGS = -O2
+CFLAGS =
+
 CC = gcc -Wall -g
 CC = purify cc
 CC = cc
