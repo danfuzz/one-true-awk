@@ -75,7 +75,7 @@ int	patlen;
 fa	*fatab[NFA];
 int	nfatab	= 0;	/* entries in fatab */
 
-fa *makedfa(char *s, int anchor)	/* returns dfa for reg expr s */
+fa *makedfa(const char *s, int anchor)	/* returns dfa for reg expr s */
 {
 	int i, use, nuse;
 	fa *pfa;
@@ -117,7 +117,7 @@ fa *makedfa(char *s, int anchor)	/* returns dfa for reg expr s */
 	return pfa;
 }
 
-fa *mkdfa(char *s, int anchor)	/* does the real work of making a dfa */
+fa *mkdfa(const char *s, int anchor)	/* does the real work of making a dfa */
 				/* anchor = 1 for anchored matches, else 0 */
 {
 	Node *p, *p1;
@@ -282,7 +282,7 @@ int quoted(char **pp)	/* pick up next thing after a \\ */
 	return c;
 }
 
-char *cclenter(char *argp)	/* add a character class */
+char *cclenter(const char *argp)	/* add a character class */
 {
 	int i, c, c2;
 	uschar *p = (uschar *) argp;
@@ -328,7 +328,7 @@ char *cclenter(char *argp)	/* add a character class */
 	return (char *) tostring((char *) buf);
 }
 
-void overflo(char *s)
+void overflo(const char *s)
 {
 	FATAL("regular expression too big: %.30s...", s);
 }
@@ -446,7 +446,7 @@ void follow(Node *v)	/* collects leaves that can follow v into setvec */
 	}
 }
 
-int member(int c, char *sarg)	/* is c in s? */
+int member(int c, const char *sarg)	/* is c in s? */
 {
 	uschar *s = (uschar *) sarg;
 
@@ -456,7 +456,7 @@ int member(int c, char *sarg)	/* is c in s? */
 	return(0);
 }
 
-int match(fa *f, char *p0)	/* shortest match ? */
+int match(fa *f, const char *p0)	/* shortest match ? */
 {
 	int s, ns;
 	uschar *p = (uschar *) p0;
@@ -475,7 +475,7 @@ int match(fa *f, char *p0)	/* shortest match ? */
 	return(0);
 }
 
-int pmatch(fa *f, char *p0)	/* longest match, for sub */
+int pmatch(fa *f, const char *p0)	/* longest match, for sub */
 {
 	int s, ns;
 	uschar *p = (uschar *) p0;
@@ -528,7 +528,7 @@ int pmatch(fa *f, char *p0)	/* longest match, for sub */
 	return (0);
 }
 
-int nematch(fa *f, char *p0)	/* non-empty match, for sub */
+int nematch(fa *f, const char *p0)	/* non-empty match, for sub */
 {
 	int s, ns;
 	uschar *p = (uschar *) p0;
@@ -580,15 +580,17 @@ int nematch(fa *f, char *p0)	/* non-empty match, for sub */
 	return (0);
 }
 
-Node *reparse(char *p)	/* parses regular expression pointed to by p */
+Node *reparse(const char *p)	/* parses regular expression pointed to by p */
 {			/* uses relex() to scan regular expression */
 	Node *np;
 
 	dprintf( ("reparse <%s>\n", p) );
 	lastre = prestr = (uschar *) p;	/* prestr points to string to be parsed */
 	rtok = relex();
+	/* GNU compatibility: an empty regexp matches anything */
 	if (rtok == '\0')
-		FATAL("empty regular expression");
+		/* FATAL("empty regular expression"); previous */
+		return(op2(ALL, NIL, NIL));
 	np = regexp();
 	if (rtok != '\0')
 		FATAL("syntax error in regular expression %s at %s", lastre, prestr);

@@ -22,7 +22,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
 THIS SOFTWARE.
 ****************************************************************/
 
-char	*version = "version 20020210";
+const char	*version = "version 20020628";
 
 #define DEBUG
 #include <stdio.h>
@@ -52,7 +52,7 @@ int	safe	= 0;	/* 1 => "safe" mode */
 
 int main(int argc, char *argv[])
 {
-	char *fs = NULL;
+	const char *fs = NULL;
 
 	cmdname = argv[0];
 	if (argc == 1) {
