@@ -1,5 +1,5 @@
 /****************************************************************
-Copyright (C) AT&T 1993
+Copyright (C) AT&T and Lucent Technologies 1996
 All Rights Reserved
 
 Permission to use, copy, modify, and distribute this software and
@@ -7,20 +7,23 @@ its documentation for any purpose and without fee is hereby
 granted, provided that the above copyright notice appear in all
 copies and that both that the copyright notice and this
 permission notice and warranty disclaimer appear in supporting
-documentation, and that the name of AT&T or any of its entities
-not be used in advertising or publicity pertaining to
-distribution of the software without specific, written prior
-permission.
+documentation, and that the names of AT&T or Lucent Technologies
+or any of their entities not be used in advertising or publicity
+pertaining to distribution of the software without specific,
+written prior permission.
 
-AT&T DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
-INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
-IN NO EVENT SHALL AT&T OR ANY OF ITS ENTITIES BE LIABLE FOR ANY
-SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
-IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
-ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
-THIS SOFTWARE.
+AT&T AND LUCENT DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
+SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+FITNESS. IN NO EVENT SHALL AT&T OR LUCENT OR ANY OF THEIR
+ENTITIES BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL
+DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE
+USE OR PERFORMANCE OF THIS SOFTWARE.
 ****************************************************************/
+
+This file lists all bug fixes, changes, etc., made since the AWK book
+was sent to the printers in August, 1987.
 
 Sep 12, 1987:
 	Very long printf strings caused core dump;
@@ -375,4 +378,100 @@ May 11, 1994:
 
 Aug 24, 1994:
 	detect duplicate arguments in function definitions (mdm).
+
+Jul 17, 1995:
+	added dynamically growing strings to awk.lx.l and b.c
+	to permit regular expressions to be much bigger.
+	the state arrays can still overflow.
+
+Aug 15, 1995:
+	initialized Cells in setsymtab more carefully; some fields
+	were not set.  (thanks to purify, all of whose complaints i
+	think i now understand.)
+
+	fixed at least one error in gsub that looked at -1-th element
+	of an array when substituting for a null match (e.g., $).
+
+	delete arrayname is now legal; it clears the elements but leaves
+	the array, which may not be the right behavior.
+
+	modified makefile: my current make can't cope with the test used
+	to avoid unnecessary yacc invocations.
+
+Apr 29, 1996:
+	replaced uchar by uschar everwhere; apparently some compilers
+	usurp this name and this causes conflicts.
+
+	fixed call to time in run.c (bltin); arg is time_t *.
+
+	replaced horrible pointer/long punning in b.c by a legitimate
+	union.  should be safer on 64-bit machines and cleaner everywhere.
+	(thanks to nelson beebe for pointing out some of these problems.)
+
+	replaced nested comments by #if 0...#endif in run.c, lib.c.
+
+	removed getsval, setsval, execute macros from run.c and lib.c.
+	machines are 100x faster than they were when these macros were
+	first used.
+
+	revised filenames: awk.g.y => awkgram.y, awk.lx.l => awklex.l,
+	y.tab.[ch] => ytab.[ch], lex.yy.c => lexyy.c, all in the aid of
+	portability to nameless systems.
+
+	"make bundle" now includes yacc and lex output files for recipients
+	who don't have yacc or lex.
+
+May 2, 1996:
+	removed all register declarations.
+
+	enhanced split(), as in gawk, etc:  split(s, a, "") splits s into
+	a[1]...a[length(s)] with each character a single element.
+
+	made the same changes for field-splitting if FS is "".
+
+	added nextfile, as in gawk: causes immediate advance to next
+	input file. (thanks to arnold robbins for inspiration and code).
+
+	small fixes to regexpr code:  can now handle []], [[], and
+	variants;  [] is now a syntax error, rather than matching 
+	everything;  [z-a] is now empty, not z.  far from complete
+	or correct, however.  (thanks to jeffrey friedl for pointing out
+	some awful behaviors.)
+
+May 26, 1996:
+	an attempt to rationalize the (unsigned) char issue.  almost all
+	instances of unsigned char have been removed; the handful of places
+	in b.c where chars are used as table indices have been hand-crafted.
+	added some latin-1 tests to the regression, but i'm not confident;
+	none of my compilers seem to care much.  thanks to nelson beebe for
+	pointing out some others that do care.
+
+May 27, 1996:
+	cleaned up some declarations so gcc -Wall is now almost silent.
+
+	makefile now includes backup copies of ytab.c and lexyy.c in case
+	one makes before looking; it also avoids recreating lexyy.c unless
+	really needed.
+
+	s/aprintf/awkprint, s/asprintf/awksprintf/ to avoid some name clashes
+	with unwisely-written header files.
+
+	thanks to jeffrey friedl for several of these.
+
+May 28, 1996:
+	fixed appalling but apparently unimportant bug in parsing octal
+	numbers in reg exprs.
+
+	explicit hex in reg exprs now limited to 2 chars: \xa, \xaa.
+
+Jun 28, 1996:
+	changed field-splitting to conform to posix definition: fields are
+	split using the value of FS at the time of input; it used to be
+	the value when the field or NF was first referred to, a much less
+	predictable definition.  thanks to arnold robbins for encouragement
+	to do the right thing.
+
+Jun 29, 1996:
+	fixed awful bug in new field splitting; didn't get all the places
+	where input was done.
 

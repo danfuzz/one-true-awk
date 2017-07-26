@@ -1,3 +1,12 @@
+.de EX
+.nf
+.ft CW
+..
+.de EE
+.br
+.fi
+.ft 1
+..
 awk
 .TH AWK 1
 .CT 1 files prog_other
@@ -6,23 +15,23 @@ awk \- pattern-directed scanning and processing language
 .SH SYNOPSIS
 .B awk
 [
-.BI -F
+.BI \-F
 .I fs
 ]
 [
-.BI -v
+.BI \-v
 .I var=value
 ]
 [
-.BI -mr n
+.BI \-mr n
 ]
 [
-.BI -mf n
+.BI \-mf n
 ]
 [
 .I 'prog'
 |
-.BI -f
+.BI \-f
 .I progfile
 ]
 [
@@ -36,7 +45,7 @@ for lines that match any of a set of patterns specified literally in
 .IR prog
 or in one or more files
 specified as
-.B -f
+.B \-f
 .IR progfile .
 With each pattern
 there can be an associated action that will be performed
@@ -47,7 +56,7 @@ Each line is matched against the
 pattern portion of every pattern-action statement;
 the associated action is performed for each matched pattern.
 The file name 
-.L -
+.B \-
 means the standard input.
 Any
 .IR file
@@ -56,17 +65,17 @@ of the form
 is treated as an assignment, not a filename,
 and is executed at the time it would have been opened if it were a filename.
 The option
-.B -v
+.B \-v
 followed by
 .I var=value
 is an assignment to be done before
 .I prog
 is executed;
 any number of
-.B -v
+.B \-v
 options may be present.
 The
-.B -F
+.B \-F
 .IR fs
 option defines the input field separator to be the regular expression
 .IR fs.
@@ -80,13 +89,16 @@ The fields are denoted
 \&..., while
 .B $0
 refers to the entire line.
+If
+.BR FS
+is null, the input line is split into one field per character.
 .PP
 To compensate for inadequate implementation of storage management,
 the 
-.B -mr
+.B \-mr
 option can be used to set the maximum size of the input record,
 and the
-.B -mf
+.B \-mf
 option to set the maximum number of fields.
 .PP
 A pattern-action statement has the form
@@ -106,6 +118,7 @@ A statement can be one of the following:
 .ta \w'\f(CWdelete array[expression]'u
 .RS
 .nf
+.ft CW
 if(\fI expression \fP)\fI statement \fP\fR[ \fPelse\fI statement \fP\fR]\fP
 while(\fI expression \fP)\fI statement\fP
 for(\fI expression \fP;\fI expression \fP;\fI expression \fP)\fI statement\fP
@@ -119,7 +132,9 @@ print\fR [ \fP\fIexpression-list \fP\fR] \fP\fR[ \fP>\fI expression \fP\fR]\fP
 printf\fI format \fP\fR[ \fP,\fI expression-list \fP\fR] \fP\fR[ \fP>\fI expression \fP\fR]\fP
 return\fR [ \fP\fIexpression \fP\fR]\fP
 next	#\fR skip remaining patterns on this input line\fP
+nextfile	#\fR skip rest of this file, open next, start at top\fP
 delete\fI array\fP[\fI expression \fP]	#\fR delete an array element\fP
+delete\fI array\fP	#\fR delete all elements of array\fP
 exit\fR [ \fP\fIexpression \fP\fR]\fP	#\fR exit immediately; status is \fP\fIexpression\fP
 .fi
 .RE
@@ -136,11 +151,11 @@ String constants are quoted \&\f(CW"\ "\fR,
 with the usual C escapes recognized within.
 Expressions take on string or numeric values as appropriate,
 and are built using the operators
-.B + - * / % ^
+.B + \- * / % ^
 (exponentiation), and concatenation (indicated by white space).
 The operators
 .B
-! ++ -- += -= *= /= %= ^= > >= < <= == != ?:
+! ++ \-\- += \-= *= /= %= ^= > >= < <= == != ?:
 are also available in expressions.
 Variables may be scalars, array elements
 (denoted
@@ -181,6 +196,10 @@ statement formats its expression list according to the format
 The built-in function
 .BI close( expr )
 closes the file or pipe
+.IR expr .
+The built-in function
+.BI fflush( expr )
+flushes any buffered output for the file or pipe
 .IR expr .
 .PP
 The mathematical functions
@@ -258,6 +277,8 @@ or with the field separator
 if
 .I fs
 is not given.
+An empty string as field separator splits the string
+into one array element per character.
 .TP
 .BI sub( r , " t" , " s\fB)
 substitutes
@@ -294,6 +315,18 @@ format
 executes
 .I cmd
 and returns its exit status
+.TP
+.BI tolower( str )
+returns a copy of
+.I str
+with all upper-case characters translated to their
+corresponding lower-case equivalents.
+.TP
+.BI toupper( str )
+returns a copy of
+.I str
+with all lower-case characters translated to their
+corresponding upper-case equivalents.
 .PD
 .PP
 The ``function''
@@ -390,10 +423,15 @@ do not combine with other patterns.
 Variable names with special meanings:
 .TF FILENAME
 .TP
+.B CONVFMT
+conversion format used when converting numbers
+(default
+.BR "%.6g" )
+.TP
 .B FS
 regular expression used to separate fields; also settable
 by option
-.BI -F fs.
+.BI \-F fs.
 .TP
 .BR NF
 number of fields in the current record
@@ -436,7 +474,7 @@ array of environment variables; subscripts are names.
 .PP
 Functions may be defined (at the position of a pattern-action statement) thus:
 .IP
-.L
+.B
 function foo(a, b, c) { ...; return x }
 .PP
 Parameters are passed by value if scalar and by reference if array name;
@@ -446,12 +484,14 @@ Thus local variables may be created by providing excess parameters in
 the function definition.
 .SH EXAMPLES
 .TP
-.L
-length > 72
+.EX
+length($0) > 72
+.EE
 Print lines longer than 72 characters.
 .TP
-.L
+.EX
 { print $2, $1 }
+.EE
 Print first two fields in opposite order.
 .PP
 .EX
@@ -472,8 +512,9 @@ END	{ print "sum is", s, " average is", s/NR }
 .IP
 Add up first column, print sum and average.
 .TP
-.L
+.EX
 /start/, /stop/
+.EE
 Print all lines between start/stop pairs.
 .PP
 .EX
@@ -491,7 +532,7 @@ BEGIN	{	# Simulate echo(1)
 A. V. Aho, B. W. Kernighan, P. J. Weinberger,
 .I
 The AWK Programming Language,
-Addison-Wesley, 1988.
+Addison-Wesley, 1988.  ISBN 0-201-07981-X
 .SH BUGS
 There are no explicit conversions between numbers and strings.
 To force an expression to be treated as a number add 0 to it;

@@ -1,5 +1,5 @@
 /****************************************************************
-Copyright (C) AT&T 1993
+Copyright (C) AT&T and Lucent Technologies 1996
 All Rights Reserved
 
 Permission to use, copy, modify, and distribute this software and
@@ -7,22 +7,22 @@ its documentation for any purpose and without fee is hereby
 granted, provided that the above copyright notice appear in all
 copies and that both that the copyright notice and this
 permission notice and warranty disclaimer appear in supporting
-documentation, and that the name of AT&T or any of its entities
-not be used in advertising or publicity pertaining to
-distribution of the software without specific, written prior
-permission.
+documentation, and that the names of AT&T or Lucent Technologies
+or any of their entities not be used in advertising or publicity
+pertaining to distribution of the software without specific,
+written prior permission.
 
-AT&T DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
-INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
-IN NO EVENT SHALL AT&T OR ANY OF ITS ENTITIES BE LIABLE FOR ANY
-SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
-IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
-ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
-THIS SOFTWARE.
+AT&T AND LUCENT DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
+SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+FITNESS. IN NO EVENT SHALL AT&T OR LUCENT OR ANY OF THEIR
+ENTITIES BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL
+DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE
+USE OR PERFORMANCE OF THIS SOFTWARE.
 ****************************************************************/
 
-char	*version = "version August 24, 1994";
+char	*version = "version June 29, 1996";
 
 #define DEBUG
 #include <stdio.h>
@@ -31,27 +31,26 @@ char	*version = "version August 24, 1994";
 #include <string.h>
 #include <signal.h>
 #include "awk.h"
-#include "y.tab.h"
+#include "ytab.h"
 
 extern	char	**environ;
 extern	int	nfields;
 
 int	dbg	= 0;
-uchar	*cmdname;	/* gets argv[0] for error messages */
+char	*cmdname;	/* gets argv[0] for error messages */
 extern	FILE	*yyin;	/* lex input file */
-uchar	*lexprog;	/* points to program argument if it exists */
+char	*lexprog;	/* points to program argument if it exists */
 extern	int errorflag;	/* non-zero if any syntax errors; set by yyerror */
 int	compile_time = 2;	/* for error printing: */
 				/* 2 = cmdline, 1 = compile, 0 = running */
 
-uchar	*pfile[20];	/* program filenames from -f's */
+char	*pfile[20];	/* program filenames from -f's */
 int	npfile = 0;	/* number of filenames */
 int	curpfile = 0;	/* current filename */
 
-
-main(int argc, uchar *argv[])
+int main(int argc, char *argv[])
 {
-	uchar *fs = NULL, *marg;
+	char *fs = NULL, *marg;
 	int temp;
 
 	cmdname = argv[0];
@@ -59,6 +58,7 @@ main(int argc, uchar *argv[])
 		fprintf(stderr, "Usage: %s [-f programfile | 'program'] [-Ffieldsep] [-v var=value] [-mf n] [-mr n] [files]\n", cmdname);
 		exit(1);
 	}
+	gs = newGstring();	/* for lex */
 	signal(SIGFPE, fpecatch);
 	yyin = NULL;
 	symtab = makesymtab(NSYMTAB);
@@ -79,13 +79,13 @@ main(int argc, uchar *argv[])
 		case 'F':	/* set field separator */
 			if (argv[1][2] != 0) {	/* arg is -Fsomething */
 				if (argv[1][2] == 't' && argv[1][3] == 0)	/* wart: t=>\t */
-					fs = (uchar *) "\t";
+					fs = (char *) "\t";
 				else if (argv[1][2] != 0)
 					fs = &argv[1][2];
 			} else {		/* arg is -F something */
 				argc--; argv++;
 				if (argc > 1 && argv[1][0] == 't' && argv[1][1] == 0)	/* wart: t=>\t */
-					fs = (uchar *) "\t";
+					fs = (char *) "\t";
 				else if (argc > 1 && argv[1][0] != 0)
 					fs = &argv[1][0];
 			}
@@ -154,7 +154,7 @@ main(int argc, uchar *argv[])
 	return(errorflag);
 }
 
-pgetc(void)		/* get 1 character from awk program */
+int pgetc(void)		/* get 1 character from awk program */
 {
 	int c;
 

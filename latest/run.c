@@ -1,5 +1,5 @@
 /****************************************************************
-Copyright (C) AT&T 1993
+Copyright (C) AT&T and Lucent Technologies 1996
 All Rights Reserved
 
 Permission to use, copy, modify, and distribute this software and
@@ -7,22 +7,20 @@ its documentation for any purpose and without fee is hereby
 granted, provided that the above copyright notice appear in all
 copies and that both that the copyright notice and this
 permission notice and warranty disclaimer appear in supporting
-documentation, and that the name of AT&T or any of its entities
-not be used in advertising or publicity pertaining to
-distribution of the software without specific, written prior
-permission.
+documentation, and that the names of AT&T or Lucent Technologies
+or any of their entities not be used in advertising or publicity
+pertaining to distribution of the software without specific,
+written prior permission.
 
-AT&T DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
-INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
-IN NO EVENT SHALL AT&T OR ANY OF ITS ENTITIES BE LIABLE FOR ANY
-SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
-IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
-ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
-THIS SOFTWARE.
+AT&T AND LUCENT DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
+SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+FITNESS. IN NO EVENT SHALL AT&T OR LUCENT OR ANY OF THEIR
+ENTITIES BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL
+DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE
+USE OR PERFORMANCE OF THIS SOFTWARE.
 ****************************************************************/
-
-#define tempfree(x)	if (istemp(x)) tfree(x); else
 
 #define DEBUG
 #include <stdio.h>
@@ -33,7 +31,22 @@ THIS SOFTWARE.
 #include <stdlib.h>
 #include <time.h>
 #include "awk.h"
-#include "y.tab.h"
+#include "ytab.h"
+
+#define tempfree(x)	if (istemp(x)) tfree(x); else
+
+/*
+#undef tempfree
+
+void tempfree(Cell *p) {
+	if (p->ctype == OCELL && (p->csub < CUNK || p->csub > CFREE)) {
+		ERROR "bad csub %d in Cell %d %s",
+			p->csub, p->ctype, p->sval WARNING;
+	}
+	if (istemp(p))
+		tfree(p);
+}
+*/
 
 #ifdef _NFILE
 #ifndef FOPEN_MAX
@@ -50,14 +63,6 @@ THIS SOFTWARE.
 #endif
 
 jmp_buf env;
-
-/* an attempt to go a bit faster: */
-
-/* #define	execute(p)	(isvalue(p) ? (Cell *)((p)->narg[0]) : r_execute(p)) */
-#define	execute(p) r_execute(p)
-#define	getfval(p)	(((p)->tval & (ARR|FLD|REC|NUM)) == NUM ? (p)->fval : r_getfval(p))
-#define	getsval(p)	(((p)->tval & (ARR|FLD|REC|STR)) == STR ? (p)->sval : r_getsval(p))
-
 
 #define PA2NUM	29	/* max number of pat,pat patterns allowed */
 int	paircnt;		/* number of them in use */
@@ -76,6 +81,8 @@ static Cell	contcell	={ OJUMP, JCONT, 0, 0, 0.0, NUM };
 Cell	*jcont	= &contcell;
 static Cell	nextcell	={ OJUMP, JNEXT, 0, 0, 0.0, NUM };
 Cell	*jnext	= &nextcell;
+static Cell	nextfilecell	={ OJUMP, JNEXTFILE, 0, 0, 0.0, NUM };
+Cell	*jnextfile	= &nextfilecell;
 static Cell	exitcell	={ OJUMP, JEXIT, 0, 0, 0.0, NUM };
 Cell	*jexit	= &exitcell;
 static Cell	retcell		={ OJUMP, JRET, 0, 0, 0.0, NUM };
@@ -90,11 +97,11 @@ void run(Node *a)	/* execution of parse tree starts here */
 	closeall();
 }
 
-Cell *r_execute(Node *u)	/* execute a node of the parse tree */
+Cell *execute(Node *u)	/* execute a node of the parse tree */
 {
-	register Cell *(*proc)(Node **, int);
-	register Cell *x;
-	register Node *a;
+	Cell *(*proc)(Node **, int);
+	Cell *x;
+	Node *a;
 
 	if (u == NULL)
 		return(true);
@@ -129,7 +136,7 @@ Cell *r_execute(Node *u)	/* execute a node of the parse tree */
 
 Cell *program(Node **a, int n)	/* execute an awk program */
 {				/* a[0] = BEGIN, a[1] = body, a[2] = END */
-	register Cell *x;
+	Cell *x;
 
 	if (setjmp(env) != 0)
 		goto ex;
@@ -138,10 +145,9 @@ Cell *program(Node **a, int n)	/* execute an awk program */
 		if (isexit(x))
 			return(true);
 		if (isjump(x))
-			ERROR "illegal break, continue or next from BEGIN" FATAL;
+			ERROR "illegal break, continue, next or nextfile from BEGIN" FATAL;
 		tempfree(x);
 	}
-  loop:
 	if (a[1] || a[2])
 		while (getrec(record) > 0) {
 			x = execute(a[1]);
@@ -155,7 +161,7 @@ Cell *program(Node **a, int n)	/* execute an awk program */
 	if (a[2]) {		/* END */
 		x = execute(a[2]);
 		if (isbreak(x) || isnext(x) || iscont(x))
-			ERROR "illegal break, next, or continue from END" FATAL;
+			ERROR "illegal break, continue, next or nextfile from END" FATAL;
 		tempfree(x);
 	}
   ex1:
@@ -177,11 +183,11 @@ struct Frame *fp = NULL;	/* frame pointer. bottom level unused */
 
 Cell *call(Node **a, int n)	/* function call.  very kludgy and fragile */
 {
-	static Cell newcopycell = { OCELL, CCOPY, 0, (uchar *) "", 0.0, NUM|STR|DONTFREE };
+	static Cell newcopycell = { OCELL, CCOPY, 0, (char *) "", 0.0, NUM|STR|DONTFREE };
 	int i, ncall, ndef;
 	Node *x;
 	Cell *args[NARGS], *oargs[NARGS], *y, *z, *fcn;
-	uchar *s;
+	char *s;
 
 	fcn = execute(a[0]);	/* the function itself */
 	s = fcn->nval;
@@ -257,7 +263,7 @@ Cell *call(Node **a, int n)	/* function call.  very kludgy and fragile */
 		}
 	}
 	tempfree(fcn);
-	if (isexit(y) || isnext(y))
+	if (isexit(y) || isnext(y) || isnextfile(y))
 		return y;
 	tempfree(y);		/* this can free twice! */
 	z = fp->retval;			/* return value */
@@ -291,9 +297,9 @@ Cell *arg(Node **a, int n)	/* nth argument of a function */
 	return fp->args[n];
 }
 
-Cell *jump(Node **a, int n)	/* break, continue, next, continue, return */
+Cell *jump(Node **a, int n)	/* break, continue, next, nextfile, return */
 {
-	register Cell *y;
+	Cell *y;
 
 	switch (n) {
 	case EXIT:
@@ -322,6 +328,9 @@ Cell *jump(Node **a, int n)	/* break, continue, next, continue, return */
 		return(jret);
 	case NEXT:
 		return(jnext);
+	case NEXTFILE:
+		nextfile();
+		return(jnextfile);
 	case BREAK:
 		return(jbreak);
 	case CONTINUE:
@@ -334,8 +343,8 @@ Cell *jump(Node **a, int n)	/* break, continue, next, continue, return */
 
 Cell *getline(Node **a, int n)	/* get next line from specific input */
 {		/* a[0] is variable, a[1] is operator, a[2] is filename */
-	register Cell *r, *x;
-	uchar buf[RECSIZE];
+	Cell *r, *x;
+	char buf[RECSIZE];
 	FILE *fp;
 
 	fflush(stdout);	/* in case someone is waiting for a prompt */
@@ -387,17 +396,17 @@ Cell *getnf(Node **a, int n)	/* get NF */
 
 Cell *array(Node **a, int n)	/* a[0] is symtab, a[1] is list of subscripts */
 {
-	register Cell *x, *y, *z;
-	register uchar *s;
-	register Node *np;
-	uchar buf[RECSIZE];
+	Cell *x, *y, *z;
+	char *s;
+	Node *np;
+	char buf[RECSIZE];
 
 	x = execute(a[0]);	/* Cell* for symbol table */
 	buf[0] = 0;
 	for (np = a[1]; np; np = np->nnext) {
 		y = execute(np);	/* subscript */
 		s = getsval(y);
-		strcat(buf, s);
+		strcat(buf, s);		/* BUG: unchecked! */
 		if (np->nnext)
 			strcat(buf, *SUBSEP);
 		tempfree(y);
@@ -408,7 +417,7 @@ Cell *array(Node **a, int n)	/* a[0] is symtab, a[1] is list of subscripts */
 			xfree(x->sval);
 		x->tval &= ~(STR|NUM|DONTFREE);
 		x->tval |= ARR;
-		x->sval = (uchar *) makesymtab(NSYMTAB);
+		x->sval = (char *) makesymtab(NSYMTAB);
 	}
 	z = setsymtab(buf, "", 0.0, STR|NUM, (Array *) x->sval);
 	z->ctype = OCELL;
@@ -421,31 +430,38 @@ Cell *adelete(Node **a, int n)	/* a[0] is symtab, a[1] is list of subscripts */
 {
 	Cell *x, *y;
 	Node *np;
-	uchar buf[RECSIZE], *s;
+	char buf[RECSIZE], *s;
 
 	x = execute(a[0]);	/* Cell* for symbol table */
 	if (!isarr(x))
 		return true;
-	buf[0] = 0;
-	for (np = a[1]; np; np = np->nnext) {
-		y = execute(np);	/* subscript */
-		s = getsval(y);
-		strcat(buf, s);
-		if (np->nnext)
-			strcat(buf, *SUBSEP);
-		tempfree(y);
+	if (a[1] == 0) {	/* delete the elements, not the table */
+		freesymtab(x);
+		x->tval &= ~STR;
+		x->tval |= ARR;
+		x->sval = (char *) makesymtab(NSYMTAB);
+	} else {
+		buf[0] = 0;
+		for (np = a[1]; np; np = np->nnext) {
+			y = execute(np);	/* subscript */
+			s = getsval(y);
+			strcat(buf, s);
+			if (np->nnext)
+				strcat(buf, *SUBSEP);
+			tempfree(y);
+		}
+		freeelem(x, buf);
 	}
-	freeelem(x, buf);
 	tempfree(x);
 	return true;
 }
 
 Cell *intest(Node **a, int n)	/* a[0] is index (list), a[1] is symtab */
 {
-	register Cell *x, *ap, *k;
+	Cell *x, *ap, *k;
 	Node *p;
 	char buf[RECSIZE];
-	uchar *s;
+	char *s;
 
 	ap = execute(a[1]);	/* array name */
 	if (!isarr(ap)) {
@@ -454,7 +470,7 @@ Cell *intest(Node **a, int n)	/* a[0] is index (list), a[1] is symtab */
 			xfree(ap->sval);
 		ap->tval &= ~(STR|NUM|DONTFREE);
 		ap->tval |= ARR;
-		ap->sval = (uchar *) makesymtab(NSYMTAB);
+		ap->sval = (char *) makesymtab(NSYMTAB);
 	}
 	buf[0] = 0;
 	for (p = a[0]; p; p = p->nnext) {
@@ -476,11 +492,11 @@ Cell *intest(Node **a, int n)	/* a[0] is index (list), a[1] is symtab */
 
 Cell *matchop(Node **a, int n)	/* ~ and match() */
 {
-	register Cell *x, *y;
-	register uchar *s, *t;
-	register int i;
+	Cell *x, *y;
+	char *s, *t;
+	int i;
 	fa *pfa;
-	int (*mf)(fa *, uchar *) = match, mode = 0;
+	int (*mf)(fa *, char *) = match, mode = 0;
 
 	if (n == MATCHFCN) {
 		mf = pmatch;
@@ -508,7 +524,7 @@ Cell *matchop(Node **a, int n)	/* ~ and match() */
 		x->tval = NUM;
 		x->fval = start;
 		return x;
-	} else if (n == MATCH && i == 1 || n == NOTMATCH && i == 0)
+	} else if ((n == MATCH && i == 1) || (n == NOTMATCH && i == 0))
 		return(true);
 	else
 		return(false);
@@ -517,8 +533,8 @@ Cell *matchop(Node **a, int n)	/* ~ and match() */
 
 Cell *boolop(Node **a, int n)	/* a[0] || a[1], a[0] && a[1], !a[0] */
 {
-	register Cell *x, *y;
-	register int i;
+	Cell *x, *y;
+	int i;
 
 	x = execute(a[0]);
 	i = istrue(x);
@@ -549,8 +565,8 @@ Cell *boolop(Node **a, int n)	/* a[0] || a[1], a[0] && a[1], !a[0] */
 
 Cell *relop(Node **a, int n)	/* a[0 < a[1], etc. */
 {
-	register int i;
-	register Cell *x, *y;
+	int i;
+	Cell *x, *y;
 	Awkfloat j;
 
 	x = execute(a[0]);
@@ -594,7 +610,7 @@ void tfree(Cell *a)	/* free a tempcell */
 
 Cell *gettemp(void)	/* get a tempcell */
 {	int i;
-	register Cell *x;
+	Cell *x;
 
 	if (!tmps) {
 		tmps = (Cell *) calloc(100, sizeof(Cell));
@@ -612,9 +628,9 @@ Cell *gettemp(void)	/* get a tempcell */
 
 Cell *indirect(Node **a, int n)	/* $( a[0] ) */
 {
-	register Cell *x;
-	register int m;
-	register uchar *s;
+	Cell *x;
+	int m;
+	char *s;
 
 	x = execute(a[0]);
 	m = getfval(x);
@@ -631,10 +647,10 @@ Cell *indirect(Node **a, int n)	/* $( a[0] ) */
 
 Cell *substr(Node **a, int nnn)		/* substr(a[0], a[1], a[2]) */
 {
-	register int k, m, n;
-	register uchar *s;
+	int k, m, n;
+	char *s;
 	int temp;
-	register Cell *x, *y, *z;
+	Cell *x, *y, *z = 0;
 
 	x = execute(a[0]);
 	y = execute(a[1]);
@@ -678,8 +694,8 @@ Cell *substr(Node **a, int nnn)		/* substr(a[0], a[1], a[2]) */
 
 Cell *sindex(Node **a, int nnn)		/* index(a[0], a[1]) */
 {
-	register Cell *x, *y, *z;
-	register uchar *s1, *s2, *p1, *p2, *q;
+	Cell *x, *y, *z;
+	char *s1, *s2, *p1, *p2, *q;
 	Awkfloat v = 0.0;
 
 	x = execute(a[0]);
@@ -702,11 +718,11 @@ Cell *sindex(Node **a, int nnn)		/* index(a[0], a[1]) */
 	return(z);
 }
 
-format(uchar *buf, int bufsize, uchar *s, Node *a)	/* printf-like conversions */
+int format(char *buf, int bufsize, char *s, Node *a)	/* printf-like conversions */
 {
-	uchar fmt[RECSIZE];
-	register uchar *p, *t, *os;
-	register Cell *x;
+	char fmt[RECSIZE];
+	char *p, *t, *os;
+	Cell *x;
 	int flag = 0, n;
 
 	os = s;
@@ -797,11 +813,11 @@ format(uchar *buf, int bufsize, uchar *s, Node *a)	/* printf-like conversions */
 	return 0;
 }
 
-Cell *asprintf(Node **a, int n)		/* sprintf(a[0]) */
+Cell *awksprintf(Node **a, int n)		/* sprintf(a[0]) */
 {
-	register Cell *x;
-	register Node *y;
-	uchar buf[3*RECSIZE];
+	Cell *x;
+	Node *y;
+	char buf[3*RECSIZE];
 
 	y = a[0]->nnext;
 	x = execute(a[0]);
@@ -814,13 +830,13 @@ Cell *asprintf(Node **a, int n)		/* sprintf(a[0]) */
 	return(x);
 }
 
-Cell *aprintf(Node **a, int n)		/* printf */
+Cell *awkprintf(Node **a, int n)		/* printf */
 {	/* a[0] is list of args, starting with format string */
 	/* a[1] is redirection operator, a[2] is redirection file */
 	FILE *fp;
-	register Cell *x;
-	register Node *y;
-	uchar buf[3*RECSIZE];
+	Cell *x;
+	Node *y;
+	char buf[3*RECSIZE];
 
 	y = a[0]->nnext;
 	x = execute(a[0]);
@@ -843,9 +859,9 @@ Cell *aprintf(Node **a, int n)		/* printf */
 
 Cell *arith(Node **a, int n)	/* a[0] + a[1], etc.  also -a[0] */
 {
-	Awkfloat i, j;
+	Awkfloat i, j = 0;
 	double v;
-	register Cell *x, *y, *z;
+	Cell *x, *y, *z;
 
 	x = execute(a[0]);
 	i = getfval(x);
@@ -908,8 +924,8 @@ double ipow(double x, int n)	/* x**n.  ought to be done by pow, but isn't always
 
 Cell *incrdecr(Node **a, int n)		/* a[0]++, etc. */
 {
-	register Cell *x, *z;
-	register int k;
+	Cell *x, *z;
+	int k;
 	Awkfloat xf;
 
 	x = execute(a[0]);
@@ -928,7 +944,7 @@ Cell *incrdecr(Node **a, int n)		/* a[0]++, etc. */
 
 Cell *assign(Node **a, int n)	/* a[0] = a[1], a[0] += a[1], etc. */
 {		/* this is subtle; don't muck with it. */
-	register Cell *x, *y;
+	Cell *x, *y;
 	Awkfloat xf, yf;
 	double v;
 
@@ -991,9 +1007,9 @@ Cell *assign(Node **a, int n)	/* a[0] = a[1], a[0] += a[1], etc. */
 
 Cell *cat(Node **a, int q)	/* a[0] cat a[1] */
 {
-	register Cell *x, *y, *z;
-	register int n1, n2;
-	register uchar *s;
+	Cell *x, *y, *z;
+	int n1, n2;
+	char *s;
 
 	x = execute(a[0]);
 	y = execute(a[1]);
@@ -1001,7 +1017,7 @@ Cell *cat(Node **a, int q)	/* a[0] cat a[1] */
 	getsval(y);
 	n1 = strlen(x->sval);
 	n2 = strlen(y->sval);
-	s = (uchar *) malloc(n1 + n2 + 1);
+	s = (char *) malloc(n1 + n2 + 1);
 	if (s == NULL)
 		ERROR "out of space concatenating %.15s... and %.15s...",
 			x->sval, y->sval FATAL;
@@ -1017,7 +1033,7 @@ Cell *cat(Node **a, int q)	/* a[0] cat a[1] */
 
 Cell *pastat(Node **a, int n)	/* a[0] { a[1] } */
 {
-	register Cell *x;
+	Cell *x;
 
 	if (a[0] == 0)
 		x = execute(a[1]);
@@ -1033,8 +1049,8 @@ Cell *pastat(Node **a, int n)	/* a[0] { a[1] } */
 
 Cell *dopa2(Node **a, int n)	/* a[0], a[1] { a[2] } */
 {
-	register Cell *x;
-	register int pair;
+	Cell *x;
+	int pair;
 
 	pair = (int) a[3];
 	if (pairstack[pair] == 0) {
@@ -1056,10 +1072,10 @@ Cell *dopa2(Node **a, int n)	/* a[0], a[1] { a[2] } */
 
 Cell *split(Node **a, int nnn)	/* split(a[0], a[1], a[2]); a[3] is type */
 {
-	Cell *x, *y, *ap;
-	register uchar *s;
-	register int sep;
-	uchar *t, temp, num[10], *fs;
+	Cell *x = 0, *y, *ap;
+	char *s;
+	int sep;
+	char *t, temp, num[10], *fs = 0;
 	int n, tempstat;
 
 	y = execute(a[0]);	/* source string */
@@ -1070,7 +1086,7 @@ Cell *split(Node **a, int nnn)	/* split(a[0], a[1], a[2]); a[3] is type */
 		x = execute(a[2]);
 		fs = getsval(x);
 	} else if ((int) a[3] == REGEXPR)
-		fs = (uchar*) "(regexpr)";	/* split(str,arr,/regexpr/) */
+		fs = (char*) "(regexpr)";	/* split(str,arr,/regexpr/) */
 	else
 		ERROR "illegal type of split()" FATAL;
 	sep = *fs;
@@ -1079,10 +1095,10 @@ Cell *split(Node **a, int nnn)	/* split(a[0], a[1], a[2]); a[3] is type */
 	dprintf( ("split: s=|%s|, a=%s, sep=|%s|\n", s, ap->nval, fs) );
 	ap->tval &= ~STR;
 	ap->tval |= ARR;
-	ap->sval = (uchar *) makesymtab(NSYMTAB);
+	ap->sval = (char *) makesymtab(NSYMTAB);
 
 	n = 0;
-	if (*s != '\0' && strlen(fs) > 1 || (int) a[3] == REGEXPR) {	/* reg expr */
+	if ((*s != '\0' && strlen(fs) > 1) || (int) a[3] == REGEXPR) {	/* reg expr */
 		fa *pfa;
 		if ((int) a[3] == REGEXPR) {	/* it's ready already */
 			pfa = (fa *) a[2];
@@ -1142,6 +1158,18 @@ Cell *split(Node **a, int nnn)	/* split(a[0], a[1], a[2]); a[3] is type */
 			if (*s != 0)
 				s++;
 		}
+	} else if (sep == 0) {	/* new: split(s, a, "") => 1 char/elem */
+		for (n = 0; *s != 0; s++) {
+			char buf[2];
+			n++;
+			sprintf((char *)num, "%d", n);
+			buf[0] = *s;
+			buf[1] = 0;
+			if (isdigit(buf[0]))
+				setsymtab(num, buf, atof(buf), STR|NUM, (Array *) ap->sval);
+			else
+				setsymtab(num, buf, 0.0, STR, (Array *) ap->sval);
+		}
 	} else if (*s != 0) {
 		for (;;) {
 			n++;
@@ -1172,7 +1200,7 @@ Cell *split(Node **a, int nnn)	/* split(a[0], a[1], a[2]); a[3] is type */
 
 Cell *condexpr(Node **a, int n)	/* a[0] ? a[1] : a[2] */
 {
-	register Cell *x;
+	Cell *x;
 
 	x = execute(a[0]);
 	if (istrue(x)) {
@@ -1187,7 +1215,7 @@ Cell *condexpr(Node **a, int n)	/* a[0] ? a[1] : a[2] */
 
 Cell *ifstat(Node **a, int n)	/* if (a[0]) a[1]; else a[2] */
 {
-	register Cell *x;
+	Cell *x;
 
 	x = execute(a[0]);
 	if (istrue(x)) {
@@ -1202,7 +1230,7 @@ Cell *ifstat(Node **a, int n)	/* if (a[0]) a[1]; else a[2] */
 
 Cell *whilestat(Node **a, int n)	/* while (a[0]) a[1] */
 {
-	register Cell *x;
+	Cell *x;
 
 	for (;;) {
 		x = execute(a[0]);
@@ -1222,13 +1250,13 @@ Cell *whilestat(Node **a, int n)	/* while (a[0]) a[1] */
 
 Cell *dostat(Node **a, int n)	/* do a[0]; while(a[1]) */
 {
-	register Cell *x;
+	Cell *x;
 
 	for (;;) {
 		x = execute(a[0]);
 		if (isbreak(x))
 			return true;
-		if (isnext(x) || isexit(x) || isret(x))
+		if (isnext(x) || isnextfile(x) || isexit(x) || isret(x))
 			return(x);
 		tempfree(x);
 		x = execute(a[1]);
@@ -1240,7 +1268,7 @@ Cell *dostat(Node **a, int n)	/* do a[0]; while(a[1]) */
 
 Cell *forstat(Node **a, int n)	/* for (a[0]; a[1]; a[2]) a[3] */
 {
-	register Cell *x;
+	Cell *x;
 
 	x = execute(a[0]);
 	tempfree(x);
@@ -1263,7 +1291,7 @@ Cell *forstat(Node **a, int n)	/* for (a[0]; a[1]; a[2]) a[3] */
 
 Cell *instat(Node **a, int n)	/* for (a[0] in a[1]) a[2] */
 {
-	register Cell *x, *vp, *arrayp, *cp, *ncp;
+	Cell *x, *vp, *arrayp, *cp, *ncp;
 	Array *tp;
 	int i;
 
@@ -1293,69 +1321,68 @@ Cell *instat(Node **a, int n)	/* for (a[0] in a[1]) a[2] */
 	return true;
 }
 
-/* if someone ever wants to run over the arrays in sorted order, */
-/* here it is.  but it will likely run slower, not faster. */
-
-/*
- *int qstrcmp(p, q)
- *	uchar **p, **q;
- *{
- *	return strcmp(*p, *q);
- *}
- */
-
-/*Cell *instat(Node **a, int n)	/* for (a[0] in a[1]) a[2] */
-/*{
-/*	register Cell *x, *vp, *arrayp, *cp, *ncp, *ret;
-/*	Array *tp;
-/*	int i, ne;
-/*#define BIGENOUGH 1000
-/*	uchar *elems[BIGENOUGH], **ep;
-/*
-/*	vp = execute(a[0]);
-/*	arrayp = execute(a[1]);
-/*	if (!isarr(arrayp))
-/*		ERROR "%s is not an array", arrayp->nval FATAL;
-/*	tp = (Array *) arrayp->sval;
-/*	tempfree(arrayp);
-/*	ep = elems;
-/*	ret = true;
-/*	if (tp->nelem >= BIGENOUGH)
-/*		ep = (uchar **) malloc(tp->nelem * sizeof(char *));
-/*
-/*	for (i = ne = 0; i < tp->size; i++)
-/*		for (cp = tp->tab[i]; cp != NULL; cp = cp->cnext)
-/*			ep[ne++] = cp->nval;
-/*	if (ne != tp->nelem)
-/*		ERROR "can't happen: lost elems %d vs. %d", ne, tp->nelem FATAL;
-/*	qsort(ep, ne, sizeof(char *), qstrcmp);
-/*	for (i = 0; i < ne; i++) {
-/*		setsval(vp, ep[i]);
-/*		x = execute(a[2]);
-/*		if (isbreak(x)) {
-/*			tempfree(vp);
-/*			break;
-/*		}
-/*		if (isnext(x) || isexit(x) || isret(x)) {
-/*			tempfree(vp);
-/*			ret = x;
-/*			break;
-/*		}
-/*		tempfree(x);
-/*	}
-/*	if (ep != elems)
-/*		free(ep);
-/*	return ret;
-/*}
-*/
+#if 0
+	/* if someone ever wants to run over the arrays in sorted order, */
+	/* here it is.  but it will likely run slower, not faster. */
+	
+	int qstrcmp(p, q)
+		char **p, **q;
+	{
+		return strcmp(*p, *q);
+	}
+	
+	Cell *instat(Node **a, int n)	/* for (a[0] in a[1]) a[2] */
+	{
+		Cell *x, *vp, *arrayp, *cp, *ncp, *ret;
+		Array *tp;
+		int i, ne;
+	#define BIGENOUGH 1000
+		char *elems[BIGENOUGH], **ep;
+	
+		vp = execute(a[0]);
+		arrayp = execute(a[1]);
+		if (!isarr(arrayp))
+			ERROR "%s is not an array", arrayp->nval FATAL;
+		tp = (Array *) arrayp->sval;
+		tempfree(arrayp);
+		ep = elems;
+		ret = true;
+		if (tp->nelem >= BIGENOUGH)
+			ep = (char **) malloc(tp->nelem * sizeof(char *));
+	
+		for (i = ne = 0; i < tp->size; i++)
+			for (cp = tp->tab[i]; cp != NULL; cp = cp->cnext)
+				ep[ne++] = cp->nval;
+		if (ne != tp->nelem)
+			ERROR "can't happen: lost elems %d vs. %d", ne, tp->nelem FATAL;
+		qsort(ep, ne, sizeof(char *), qstrcmp);
+		for (i = 0; i < ne; i++) {
+			setsval(vp, ep[i]);
+			x = execute(a[2]);
+			if (isbreak(x)) {
+				tempfree(vp);
+				break;
+			}
+			if (isnext(x) || isnextfile(x) || isexit(x) || isret(x)) {
+				tempfree(vp);
+				ret = x;
+				break;
+			}
+			tempfree(x);
+		}
+		if (ep != elems)
+			free(ep);
+		return ret;
+	}
+#endif
 
 
 Cell *bltin(Node **a, int n)	/* builtin functions. a[0] is type, a[1] is arg list */
 {
-	register Cell *x, *y;
+	Cell *x, *y;
 	Awkfloat u;
-	register int t;
-	uchar *p, buf[RECSIZE];
+	int t;
+	char *p, buf[RECSIZE];
 	Node *nextarg;
 	FILE *fp;
 
@@ -1398,7 +1425,7 @@ Cell *bltin(Node **a, int n)	/* builtin functions. a[0] is type, a[1] is arg lis
 		break;
 	case FSRAND:
 		if (x->tval & REC)	/* no argument provided */
-			u = time((long *)0);
+			u = time((time_t *)0);
 		else
 			u = getfval(x);
 		srand((int) u); u = (int) u;
@@ -1442,8 +1469,8 @@ Cell *bltin(Node **a, int n)	/* builtin functions. a[0] is type, a[1] is arg lis
 
 Cell *printstat(Node **a, int n)	/* print a[0] */
 {
-	register Node *x;
-	register Cell *y;
+	Node *x;
+	Cell *y;
 	FILE *fp;
 
 	if (a[1] == 0)	/* a[1] is redirection operator, a[2] is file */
@@ -1468,8 +1495,8 @@ Cell *printstat(Node **a, int n)	/* print a[0] */
 
 Cell *nullproc(Node **a, int n)
 {
-	n;
-	a;
+	n = 0;
+	a = 0;
 	return 0;
 }
 
@@ -1478,7 +1505,7 @@ FILE *redirect(int a, Node *b)	/* set up all i/o redirections */
 {
 	FILE *fp;
 	Cell *x;
-	uchar *fname;
+	char *fname;
 
 	x = execute(b);
 	fname = getsval(x);
@@ -1491,7 +1518,7 @@ FILE *redirect(int a, Node *b)	/* set up all i/o redirections */
 
 struct files {
 	FILE	*fp;
-	uchar	*fname;
+	char	*fname;
 	int	mode;	/* '|', 'a', 'w' => LE/LT, GT */
 } files[FOPEN_MAX] ={
 	{ stdin,  "/dev/stdin",  LT },	/* watch out: don't free this! */
@@ -1499,17 +1526,17 @@ struct files {
 	{ stderr, "/dev/stderr", GT }
 };
 
-FILE *openfile(int a, uchar *us)
+FILE *openfile(int a, char *us)
 {
 	char *s = us;
-	register int i, m;
-	register FILE *fp;
+	int i, m;
+	FILE *fp = 0;
 
 	if (*s == '\0')
 		ERROR "null file name in print or getline" FATAL;
 	for (i=0; i < FOPEN_MAX; i++)
 		if (files[i].fname && strcmp(s, files[i].fname) == 0)
-			if (a == files[i].mode || a==APPEND && files[i].mode==GT)
+			if (a == files[i].mode || (a==APPEND && files[i].mode==GT))
 				return files[i].fp;
 	for (i=0; i < FOPEN_MAX; i++)
 		if (files[i].fp == 0)
@@ -1539,7 +1566,7 @@ FILE *openfile(int a, uchar *us)
 	return fp;
 }
 
-uchar *filename(FILE *fp)
+char *filename(FILE *fp)
 {
 	int i;
 
@@ -1551,10 +1578,10 @@ uchar *filename(FILE *fp)
 
 Cell *closefile(Node **a, int n)
 {
-	register Cell *x;
+	Cell *x;
 	int i, stat;
 
-	n;
+	n = 0;
 	x = execute(a[0]);
 	getsval(x);
 	for (i = 0; i < FOPEN_MAX; i++)
@@ -1597,9 +1624,9 @@ void closeall(void)
 
 Cell *sub(Node **a, int nnn)	/* substitute command */
 {
-	register uchar *sptr, *pb, *q;
-	register Cell *x, *y, *result;
-	uchar buf[SUBSIZE], *t;
+	char *sptr, *pb, *q;
+	Cell *x, *y, *result;
+	char buf[SUBSIZE], *t;
 	fa *pfa;
 
 	x = execute(a[3]);	/* target string */
@@ -1634,7 +1661,7 @@ Cell *sub(Node **a, int nnn)	/* substitute command */
 			ERROR "sub() result %.30s too big", buf FATAL;
 		sptr = patbeg + patlen;
 		if ((patlen == 0 && *patbeg) || (patlen && *(sptr-1)))
-			while (*pb++ = *sptr++)
+			while ((*pb++ = *sptr++) != 0)
 				;
 		if (pb >= buf + SUBSIZE)
 			ERROR "sub() result %.30s too big", buf FATAL;
@@ -1648,10 +1675,10 @@ Cell *sub(Node **a, int nnn)	/* substitute command */
 
 Cell *gsub(Node **a, int nnn)	/* global substitute */
 {
-	register Cell *x, *y;
-	register uchar *rptr, *sptr, *t, *pb;
-	uchar buf[SUBSIZE];
-	register fa *pfa;
+	Cell *x, *y;
+	char *rptr, *sptr, *t, *pb;
+	char buf[SUBSIZE];
+	fa *pfa;
 	int mflag, tempstat, num;
 
 	mflag = 0;	/* if mflag == 0, can replace empty string */
@@ -1673,7 +1700,7 @@ Cell *gsub(Node **a, int nnn)	/* global substitute */
 		rptr = getsval(y);
 		do {
 			/*
-			uchar *p;
+			char *p;
 			int i;
 			printf("target string: %s, *patbeg = %o, patlen = %d\n",
 				t, *patbeg, patlen);
@@ -1692,7 +1719,7 @@ Cell *gsub(Node **a, int nnn)	/* global substitute */
 							sptr++;
 							*pb++ = *sptr++;
 						} else if (*sptr == '&') {
-							uchar *q;
+							char *q;
 							sptr++;
 							for (q = patbeg; q < patbeg+patlen; )
 								*pb++ = *q++;
@@ -1708,6 +1735,8 @@ Cell *gsub(Node **a, int nnn)	/* global substitute */
 			}
 			else {	/* matched nonempty string */
 				num++;
+				/* if (patlen <= 0)
+					ERROR "4: buf=%s, patlen %d, t=%s, patbeg=%s", buf, patlen, t, patbeg WARNING; */
 				sptr = t;
 				while (sptr < patbeg && pb < buf + SUBSIZE-1)
 					*pb++ = *sptr++;
@@ -1717,14 +1746,14 @@ Cell *gsub(Node **a, int nnn)	/* global substitute */
 						sptr++;
 						*pb++ = *sptr++;
 					} else if (*sptr == '&') {
-						uchar *q;
+						char *q;
 						sptr++;
 						for (q = patbeg; q < patbeg+patlen; )
 							*pb++ = *q++;
 					} else
 						*pb++ = *sptr++;
 				t = patbeg + patlen;
-				if ((*(t-1) == 0) || (*t == 0))
+				if (patlen == 0 || *t == 0 || *(t-1) == 0)
 					goto done;
 				if (pb >= buf + SUBSIZE-1)
 					ERROR "gsub() result %.30s too big", buf FATAL;
@@ -1732,7 +1761,7 @@ Cell *gsub(Node **a, int nnn)	/* global substitute */
 			}
 		} while (pmatch(pfa,t));
 		sptr = t;
-		while (*pb++ = *sptr++)
+		while ((*pb++ = *sptr++) != 0)
 			;
 	done:	if (pb >= buf + SUBSIZE-1)
 			ERROR "gsub() result %.30s too big", buf FATAL;

@@ -1,5 +1,5 @@
 /****************************************************************
-Copyright (C) AT&T 1993
+Copyright (C) AT&T and Lucent Technologies 1996
 All Rights Reserved
 
 Permission to use, copy, modify, and distribute this software and
@@ -7,22 +7,22 @@ its documentation for any purpose and without fee is hereby
 granted, provided that the above copyright notice appear in all
 copies and that both that the copyright notice and this
 permission notice and warranty disclaimer appear in supporting
-documentation, and that the name of AT&T or any of its entities
-not be used in advertising or publicity pertaining to
-distribution of the software without specific, written prior
-permission.
+documentation, and that the names of AT&T or Lucent Technologies
+or any of their entities not be used in advertising or publicity
+pertaining to distribution of the software without specific,
+written prior permission.
 
-AT&T DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
-INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
-IN NO EVENT SHALL AT&T OR ANY OF ITS ENTITIES BE LIABLE FOR ANY
-SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
-IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
-ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
-THIS SOFTWARE.
+AT&T AND LUCENT DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
+SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+FITNESS. IN NO EVENT SHALL AT&T OR LUCENT OR ANY OF THEIR
+ENTITIES BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL
+DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE
+USE OR PERFORMANCE OF THIS SOFTWARE.
 ****************************************************************/
 
-/* lasciate ogni speranza, voi ch'entrate. */
+/* lasciate ogne speranza, voi ch'entrate. */
 
 #define	DEBUG
 
@@ -31,11 +31,11 @@ THIS SOFTWARE.
 #include <string.h>
 #include <stdlib.h>
 #include "awk.h"
-#include "y.tab.h"
+#include "ytab.h"
 
 #define	HAT	(NCHARS-1)	/* matches ^ in regular expr */
 				/* NCHARS is 2**n */
-#define MAXLIN 512
+#define MAXLIN 22
 
 #define type(v)		(v)->nobj
 #define left(v)		(v)->narg[0]
@@ -54,36 +54,44 @@ THIS SOFTWARE.
 */
 
 
-uchar	chars[MAXLIN];
-int	setvec[MAXLIN];
-int	tmpset[MAXLIN];
-Node	*point[MAXLIN];
+int	*setvec;
+int	*tmpset;
+int	maxsetvec = 0;
 
 int	rtok;		/* next token in current re */
 int	rlxval;
-uchar	*rlxstr;
-uchar	*prestr;	/* current position in current re */
-uchar	*lastre;	/* origin of last re */
+char	*rlxstr;
+char	*prestr;	/* current position in current re */
+char	*lastre;	/* origin of last re */
 
 static	int setcnt;
 static	int poscnt;
 
-uchar	*patbeg;
+char	*patbeg;
 int	patlen;
 
 #define	NFA	20	/* cache this many dynamic fa's */
 fa	*fatab[NFA];
 int	nfatab	= 0;	/* entries in fatab */
 
-fa *makedfa(uchar *s, int anchor)	/* returns dfa for reg expr s */
+fa *makedfa(char *s, int anchor)	/* returns dfa for reg expr s */
 {
 	int i, use, nuse;
 	fa *pfa;
 
+	if (setvec == 0) {	/* first time through any RE */
+		maxsetvec = MAXLIN;
+		setvec = (int *) malloc(maxsetvec * sizeof(int));
+		tmpset = (int *) malloc(maxsetvec * sizeof(int));
+		if (setvec == 0 || tmpset == 0)
+			overflo("out of space initializing makedfa");
+	}
+
 	if (compile_time)	/* a constant for sure */
 		return mkdfa(s, anchor);
 	for (i = 0; i < nfatab; i++)	/* is it there already? */
-		if (fatab[i]->anchor == anchor && strcmp(fatab[i]->restr,s) == 0) {
+		if (fatab[i]->anchor == anchor
+		  && strcmp(fatab[i]->restr, s) == 0) {
 			fatab[i]->use++;
 			return fatab[i];
 	}
@@ -107,7 +115,7 @@ fa *makedfa(uchar *s, int anchor)	/* returns dfa for reg expr s */
 	return pfa;
 }
 
-fa *mkdfa(uchar *s, int anchor)	/* does the real work of making a dfa */
+fa *mkdfa(char *s, int anchor)	/* does the real work of making a dfa */
 				/* anchor = 1 for anchored matches, else 0 */
 {
 	Node *p, *p1;
@@ -139,7 +147,7 @@ fa *mkdfa(uchar *s, int anchor)	/* does the real work of making a dfa */
 
 int makeinit(fa *f, int anchor)
 {
-	register int i, k;
+	int i, k;
 
 	f->curstat = 2;
 	f->out[2] = 0;
@@ -148,17 +156,17 @@ int makeinit(fa *f, int anchor)
 	xfree(f->posns[2]);			
 	if ((f->posns[2] = (int *) calloc(1, (k+1)*sizeof(int))) == NULL)
 		overflo("out of space in makeinit");
-	for (i=0; i<=k; i++) {
+	for (i=0; i <= k; i++) {
 		(f->posns[2])[i] = (f->re[0].lfollow)[i];
 	}
 	if ((f->posns[2])[1] == f->accept)
 		f->out[2] = 1;
-	for (i=0; i<NCHARS; i++)
+	for (i=0; i < NCHARS; i++)
 		f->gototab[2][i] = 0;
 	f->curstat = cgoto(f, 2, HAT);
 	if (anchor) {
 		*f->posns[2] = k-1;	/* leave out position 0 */
-		for (i=0; i<k; i++) {
+		for (i=0; i < k; i++) {
 			(f->posns[0])[i] = (f->posns[2])[i];
 		}
 
@@ -174,9 +182,7 @@ void penter(Node *p)	/* set up parent pointers and leaf indices */
 	switch (type(p)) {
 	LEAF
 		left(p) = (Node *) poscnt;
-		if (poscnt >= MAXLIN)
-			overflo("leaf index overflow in penter");
-		point[poscnt++] = p;
+		poscnt++;
 		break;
 	UNARY
 		penter(left(p));
@@ -190,7 +196,7 @@ void penter(Node *p)	/* set up parent pointers and leaf indices */
 		parent(right(p)) = p;
 		break;
 	default:	/* can't happen */
-		ERROR "unknown type %d in penter", type(p) FATAL;
+		ERROR "can't happen: unknown type %d in penter", type(p) FATAL;
 		break;
 	}
 }
@@ -212,7 +218,7 @@ void freetr(Node *p)	/* free parse tree */
 		xfree(p);
 		break;
 	default:	/* can't happen */
-		ERROR "unknown type %d in freetr", type(p) FATAL;
+		ERROR "can't happen: unknown type %d in freetr", type(p) FATAL;
 		break;
 	}
 }
@@ -220,12 +226,13 @@ void freetr(Node *p)	/* free parse tree */
 /* in the parsing of regular expressions, metacharacters like . have */
 /* to be seen literally;  \056 is not a metacharacter. */
 
-hexstr(char **pp)	/* find and eval hex string at pp, return new p */
-{
+int hexstr(char **pp)	/* find and eval hex string at pp, return new p */
+{			/* only pick up one 8-bit byte (2 chars) */
 	char *p;
 	int n = 0;
+	int i;
 
-	for (p = *pp; isxdigit(*p); p++) {
+	for (i = 0, p = *pp; i < 2 && isxdigit(*p); i++, p++) {
 		if (isdigit(*p))
 			n = 16 * n + *p - '0';
 		else if (*p >= 'a' && *p <= 'f')
@@ -237,9 +244,9 @@ hexstr(char **pp)	/* find and eval hex string at pp, return new p */
 	return n;
 }
 
-#define isoctdigit(c) ((c) >= '0' && (c) <= '8')	/* multiple use of arg */
+#define isoctdigit(c) ((c) >= '0' && (c) <= '7')	/* multiple use of arg */
 
-quoted(char **pp)	/* pick up next thing after a \\ */
+int quoted(char **pp)	/* pick up next thing after a \\ */
 			/* and increment *pp */
 {
 	char *p = *pp;
@@ -258,7 +265,7 @@ quoted(char **pp)	/* pick up next thing after a \\ */
 	else if (c == '\\')
 		c = '\\';
 	else if (c == 'x') {	/* hexadecimal goo follows */
-		c = hexstr(&p);
+		c = hexstr(&p);	/* this adds a null if number is invalid */
 	} else if (isoctdigit(c)) {	/* \d \dd \ddd */
 		int n = c - '0';
 		if (isoctdigit(*p)) {
@@ -273,55 +280,70 @@ quoted(char **pp)	/* pick up next thing after a \\ */
 	return c;
 }
 
-uchar *cclenter(uchar *p)	/* add a character class */
+char *cclenter(char *p)	/* add a character class */
 {
-	register int i, c, c2;
-	uchar *op;
+	int i, c, c2;
+	char *op;
+	static Gstring *cgp = 0;
 
 	op = p;
+	if (cgp == 0)
+		cgp = newGstring();
+	caddreset(cgp);
 	i = 0;
 	while ((c = *p++) != 0) {
 		if (c == '\\') {
 			c = quoted(&p);
-		} else if (c == '-' && i > 0 && chars[i-1] != 0) {
+		} else if (c == '-' && i > 0 && cgp->cbuf[i-1] != 0) {
 			if (*p != 0) {
-				c = chars[i-1];
+				c = cgp->cbuf[i-1];
 				c2 = *p++;
 				if (c2 == '\\')
 					c2 = quoted(&p);
+				if (c > c2) {	/* empty; ignore */
+					cunadd(cgp);
+					i--;
+					continue;
+				}
 				while (c < c2) {
-					if (i >= MAXLIN-1)
-						overflo("character class too big");
-					chars[i++] = ++c;
+					cadd(cgp, ++c);
+					i++;
 				}
 				continue;
 			}
 		}
-		if (i >= MAXLIN-1)
-			overflo("character class too big");
-		chars[i++] = c;
+		cadd(cgp, c);
+		i++;
 	}
-	chars[i++] = '\0';
-	dprintf( ("cclenter: in = |%s|, out = |%s|\n", op, chars) );
+	cadd(cgp, 0);
+	dprintf( ("cclenter: in = |%s|, out = |%s|\n", op, cgp->cbuf) );
 	xfree(op);
-	return(tostring(chars));
+	return(tostring(cgp->cbuf));
 }
 
-void overflo(uchar *s)
+void overflo(char *s)
 {
 	ERROR "regular expression too big: %.30s...", s FATAL;
 }
 
 void cfoll(fa *f, Node *v)	/* enter follow set of each leaf of vertex v into lfollow[leaf] */
 {
-	register int i;
-	register int *p;
+	int i;
+	int *p;
 
 	switch (type(v)) {
 	LEAF
 		f->re[(int) left(v)].ltype = type(v);
-		f->re[(int) left(v)].lval = (long) right(v);	/* assumes ptr & long fit */
-		for (i=0; i<=f->accept; i++)
+		f->re[(int) left(v)].lval.np = right(v);
+		while (f->accept >= maxsetvec) {	/* guessing here! */
+			maxsetvec *= 4;
+			setvec = (int *) realloc(setvec, maxsetvec * sizeof(int));
+			tmpset = (int *) realloc(tmpset, maxsetvec * sizeof(int));
+			if (setvec == 0 || tmpset == 0) { abort();
+				overflo("out of space in cfoll()");
+}
+		}
+		for (i = 0; i <= f->accept; i++)
 			setvec[i] = 0;
 		setcnt = 0;
 		follow(v);	/* computes setvec and setcnt */
@@ -330,7 +352,8 @@ void cfoll(fa *f, Node *v)	/* enter follow set of each leaf of vertex v into lfo
 		f->re[(int) left(v)].lfollow = p;
 		*p = setcnt;
 		for (i = f->accept; i >= 0; i--)
-			if (setvec[i] == 1) *++p = i;
+			if (setvec[i] == 1)
+				*++p = i;
 		break;
 	UNARY
 		cfoll(f,left(v));
@@ -341,22 +364,31 @@ void cfoll(fa *f, Node *v)	/* enter follow set of each leaf of vertex v into lfo
 		cfoll(f,right(v));
 		break;
 	default:	/* can't happen */
-		ERROR "unknown type %d in cfoll", type(v) FATAL;
+		ERROR "can't happen: unknown type %d in cfoll", type(v) FATAL;
 	}
 }
 
-first(Node *p)	/* collects initially active leaves of p into setvec */
-		/* returns 0 or 1 depending on whether p matches empty string */
+int first(Node *p)	/* collects initially active leaves of p into setvec */
+			/* returns 1 if p matches empty string */
 {
-	register int b;
+	int b, lp;
 
 	switch (type(p)) {
 	LEAF
-		if (setvec[(int) left(p)] != 1) {
-			setvec[(int) left(p)] = 1;
+		lp = (int) left(p);	/* look for high-water mark of subscripts */
+		while (setcnt >= maxsetvec || lp >= maxsetvec) {	/* guessing here! */
+			maxsetvec *= 4;
+			setvec = (int *) realloc(setvec, maxsetvec * sizeof(int));
+			tmpset = (int *) realloc(tmpset, maxsetvec * sizeof(int));
+			if (setvec == 0 || tmpset == 0) { abort();
+				overflo("out of space in first()");
+}
+		}
+		if (setvec[lp] != 1) {
+			setvec[lp] = 1;
 			setcnt++;
 		}
-		if (type(p) == CCL && (*(uchar *) right(p)) == '\0')
+		if (type(p) == CCL && (*(char *) right(p)) == '\0')
 			return(0);		/* empty CCL */
 		else return(1);
 	case PLUS:
@@ -374,7 +406,7 @@ first(Node *p)	/* collects initially active leaves of p into setvec */
 		if (first(left(p)) == 0 || b == 0) return(0);
 		return(1);
 	}
-	ERROR "unknown type %d in first", type(p) FATAL;	/* can't happen */
+	ERROR "can't happen: unknown type %d in first", type(p) FATAL;	/* can't happen */
 	return(-1);
 }
 
@@ -409,7 +441,7 @@ void follow(Node *v)	/* collects leaves that can follow v into setvec */
 	}
 }
 
-member(int c, uchar *s)	/* is c in s? */
+int member(int c, char *s)	/* is c in s? */
 {
 	while (*s)
 		if (c == *s++)
@@ -417,45 +449,47 @@ member(int c, uchar *s)	/* is c in s? */
 	return(0);
 }
 
-match(fa *f, uchar *p)	/* shortest match ? */
+int match(fa *f, char *p0)	/* shortest match ? */
 {
-	register int s, ns;
+	int s, ns;
+	uschar *p = (uschar *) p0;
 
 	s = f->reset ? makeinit(f,0) : f->initstat;
 	if (f->out[s])
 		return(1);
 	do {
-		if (ns=f->gototab[s][*p])
+		if ((ns = f->gototab[s][*p]) != 0)
 			s = ns;
 		else
-			s = cgoto(f,s,*p);
+			s = cgoto(f, s, *p);
 		if (f->out[s])
 			return(1);
 	} while (*p++ != 0);
 	return(0);
 }
 
-pmatch(fa *f, uchar *p)	/* longest match, for sub */
+int pmatch(fa *f, char *p0)	/* longest match, for sub */
 {
-	register int s, ns;
-	register uchar *q;
+	int s, ns;
+	uschar *p = (uschar *) p0;
+	uschar *q;
 	int i, k;
 
 	s = f->reset ? makeinit(f,1) : f->initstat;
-	patbeg = p;
+	patbeg = (char *) p;
 	patlen = -1;
 	do {
 		q = p;
 		do {
 			if (f->out[s])		/* final state */
 				patlen = q-p;
-			if (ns=f->gototab[s][*q])
+			if ((ns = f->gototab[s][*q]) != 0)
 				s = ns;
 			else
-				s = cgoto(f,s,*q);
+				s = cgoto(f, s, *q);
 			if (s == 1)	/* no transition */
 				if (patlen >= 0) {
-					patbeg = p;
+					patbeg = (char *) p;
 					return(1);
 				}
 				else
@@ -464,7 +498,7 @@ pmatch(fa *f, uchar *p)	/* longest match, for sub */
 		if (f->out[s])
 			patlen = q-p-1;	/* don't count $ */
 		if (patlen >= 0) {
-			patbeg = p;
+			patbeg = (char *) p;
 			return(1);
 		}
 	nextin:
@@ -486,10 +520,11 @@ pmatch(fa *f, uchar *p)	/* longest match, for sub */
 	return (0);
 }
 
-nematch(fa *f, uchar *p)	/* non-empty match, for sub */
+int nematch(fa *f, char *p0)	/* non-empty match, for sub */
 {
-	register int s, ns;
-	register uchar *q;
+	int s, ns;
+	uschar *p = (uschar *) p0;
+	uschar *q;
 	int i, k;
 
 	s = f->reset ? makeinit(f,1) : f->initstat;
@@ -499,13 +534,13 @@ nematch(fa *f, uchar *p)	/* non-empty match, for sub */
 		do {
 			if (f->out[s])		/* final state */
 				patlen = q-p;
-			if (ns = f->gototab[s][*q])
+			if ((ns = f->gototab[s][*q]) != 0)
 				s = ns;
 			else
-				s = cgoto(f,s,*q);
+				s = cgoto(f, s, *q);
 			if (s == 1)	/* no transition */
 				if (patlen > 0) {
-					patbeg = p;
+					patbeg = (char *) p;
 					return(1);
 				} else
 					goto nnextin;	/* no nonempty match */
@@ -513,7 +548,7 @@ nematch(fa *f, uchar *p)	/* non-empty match, for sub */
 		if (f->out[s])
 			patlen = q-p-1;	/* don't count $ */
 		if (patlen > 0 ) {
-			patbeg = p;
+			patbeg = (char *) p;
 			return(1);
 		}
 	nnextin:
@@ -536,7 +571,7 @@ nematch(fa *f, uchar *p)	/* non-empty match, for sub */
 	return (0);
 }
 
-Node *reparse(uchar *p)	/* parses regular expression pointed to by p */
+Node *reparse(char *p)	/* parses regular expression pointed to by p */
 {			/* uses relex() to scan regular expression */
 	Node *np;
 
@@ -639,11 +674,11 @@ Node *unary(Node *np)
 	}
 }
 
-relex(void)		/* lexical analyzer for reparse */
+int relex(void)		/* lexical analyzer for reparse */
 {
-	register int c;
-	uchar cbuf[MAXLIN];
-	int clen, cflag;
+	int c;
+	int cflag;
+	static Gstring *gp = 0;
 
 	switch (c = *prestr++) {
 	case '|': return OR;
@@ -664,45 +699,55 @@ relex(void)		/* lexical analyzer for reparse */
 		rlxval = c;
 		return CHAR;
 	case '[': 
-		clen = 0;
+		if (gp == 0)
+			gp = newGstring();
+		caddreset(gp);
 		if (*prestr == '^') {
 			cflag = 1;
 			prestr++;
 		}
 		else
 			cflag = 0;
-		for ( ; clen < MAXLIN-1; ) {
+		for (; ; ) {
 			if ((c = *prestr++) == '\\') {
-				cbuf[clen++] = '\\';
+				cadd(gp, '\\');
 				if ((c = *prestr++) == '\0')
 					ERROR "nonterminated character class %.20s...", lastre FATAL;
-				cbuf[clen++] = c;
-			} else if (c == ']') {
-				cbuf[clen] = 0;
-				rlxstr = tostring(cbuf);
-				if (cflag == 0)
-					return CCL;
-				else
-					return NCCL;
+				cadd(gp, c);
 			} else if (c == '\n') {
 				ERROR "newline in character class %.20s...", lastre FATAL;
 			} else if (c == '\0') {
 				ERROR "nonterminated character class %.20s", lastre FATAL;
+			} else if (gp->clen == 0) {	/* 1st char is special */
+				cadd(gp, c);
+			} else if (c == ']') {
+				cadd(gp, 0);
+				rlxstr = tostring(gp->cbuf);
+				if (cflag == 0)
+					return CCL;
+				else
+					return NCCL;
 			} else
-				cbuf[clen++] = c;
+				cadd(gp, c);
 		}
-		if (clen >= MAXLIN-1)
-			ERROR "character class %.20s... too long", cbuf FATAL;
 	}
-	/* can't happen */
-	return 0;
 }
 
 int cgoto(fa *f, int s, int c)
 {
-	register int i, j, k;
-	register int *p, *q;
+	int i, j, k;
+	int *p, *q;
 
+	if (c < 0)
+		ERROR "can't happen: neg char %d in cgoto", c FATAL;
+	while (f->accept >= maxsetvec) {	/* guessing here! */
+		maxsetvec *= 4;
+		setvec = (int *) realloc(setvec, maxsetvec * sizeof(int));
+		tmpset = (int *) realloc(tmpset, maxsetvec * sizeof(int));
+		if (setvec == 0 || tmpset == 0) { abort();
+			overflo("out of space in cgoto()");
+}
+	}
 	for (i = 0; i <= f->accept; i++)
 		setvec[i] = 0;
 	setcnt = 0;
@@ -710,19 +755,26 @@ int cgoto(fa *f, int s, int c)
 	p = f->posns[s];
 	for (i = 1; i <= *p; i++) {
 		if ((k = f->re[p[i]].ltype) != FINAL) {
-			if (k == CHAR && c == f->re[p[i]].lval
-				|| k == DOT && c != 0 && c != HAT
-				|| k == ALL && c != 0
-				|| k == CCL && member(c, (uchar *) f->re[p[i]].lval)
-				|| k == NCCL && !member(c, (uchar *) f->re[p[i]].lval) && c != 0 && c != HAT) {
-					q = f->re[p[i]].lfollow;
-					for (j = 1; j <= *q; j++) {
-						if (setvec[q[j]] == 0) {
-							setcnt++;
-							setvec[q[j]] = 1;
-						}
+			if ((k == CHAR && c == f->re[p[i]].lval.i)
+			 || (k == DOT && c != 0 && c != HAT)
+			 || (k == ALL && c != 0)
+			 || (k == CCL && member(c, f->re[p[i]].lval.up))
+			 || (k == NCCL && !member(c, f->re[p[i]].lval.up) && c != 0 && c != HAT)) {
+				q = f->re[p[i]].lfollow;
+				for (j = 1; j <= *q; j++) {
+					if (q[j] >= maxsetvec) {
+						maxsetvec *= 4;
+						setvec = (int *) realloc(setvec, maxsetvec * sizeof(int));
+						tmpset = (int *) realloc(setvec, maxsetvec * sizeof(int));
+						if (setvec == 0 || tmpset == 0)
+							overflo("cgoto overflow");
+					}
+					if (setvec[q[j]] == 0) {
+						setcnt++;
+						setvec[q[j]] = 1;
 					}
 				}
+			}
 		}
 	}
 	/* determine if setvec is a previous state */
@@ -774,7 +826,7 @@ int cgoto(fa *f, int s, int c)
 
 void freefa(fa *f)	/* free a finite automaton */
 {
-	register int i;
+	int i;
 
 	if (f == NULL)
 		return;
@@ -783,7 +835,7 @@ void freefa(fa *f)	/* free a finite automaton */
 	for (i = 0; i <= f->accept; i++) {
 		xfree(f->re[i].lfollow);
 		if (f->re[i].ltype == CCL || f->re[i].ltype == NCCL)
-			xfree((f->re[i].lval));
+			xfree((f->re[i].lval.np));
 	}
 	xfree(f->restr);
 	xfree(f);

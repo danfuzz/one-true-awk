@@ -1,5 +1,5 @@
 /****************************************************************
-Copyright (C) AT&T 1993
+Copyright (C) AT&T and Lucent Technologies 1996
 All Rights Reserved
 
 Permission to use, copy, modify, and distribute this software and
@@ -7,19 +7,19 @@ its documentation for any purpose and without fee is hereby
 granted, provided that the above copyright notice appear in all
 copies and that both that the copyright notice and this
 permission notice and warranty disclaimer appear in supporting
-documentation, and that the name of AT&T or any of its entities
-not be used in advertising or publicity pertaining to
-distribution of the software without specific, written prior
-permission.
+documentation, and that the names of AT&T or Lucent Technologies
+or any of their entities not be used in advertising or publicity
+pertaining to distribution of the software without specific,
+written prior permission.
 
-AT&T DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
-INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
-IN NO EVENT SHALL AT&T OR ANY OF ITS ENTITIES BE LIABLE FOR ANY
-SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
-IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
-ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
-THIS SOFTWARE.
+AT&T AND LUCENT DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
+SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+FITNESS. IN NO EVENT SHALL AT&T OR LUCENT OR ANY OF THEIR
+ENTITIES BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL
+DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE
+USE OR PERFORMANCE OF THIS SOFTWARE.
 ****************************************************************/
 
 #define DEBUG
@@ -29,18 +29,16 @@ THIS SOFTWARE.
 #include <errno.h>
 #include <stdlib.h>
 #include "awk.h"
-#include "y.tab.h"
-
-#define	getfval(p)	(((p)->tval & (ARR|FLD|REC|NUM)) == NUM ? (p)->fval : r_getfval(p))
-#define	getsval(p)	(((p)->tval & (ARR|FLD|REC|STR)) == STR ? (p)->sval : r_getsval(p))
+#include "ytab.h"
 
 FILE	*infile	= NULL;
-uchar	*file	= (uchar*) "";
+char	*file	= "";
 int	recsize	= RECSIZE;
-uchar	*recdata;
-uchar	*record;
-uchar	*fields;
+char	*recdata;
+char	*record;
+char	*fields;
 Cell	*fldtab;
+char	inputFS[100];	/* BUG: unchecked */
 
 #define	MAXFLD	200
 int	nfields	= MAXFLD;	/* can be set from commandline in main */
@@ -55,13 +53,13 @@ extern	Awkfloat *ARGC;
 void recinit(unsigned int n)
 {
 	static Cell dollar0 = {
-	    OCELL, CFLD, (uchar*) "$0", /*recdata*/0, 0.0, REC|STR|DONTFREE };
+	    OCELL, CFLD, "$0", /*recdata*/0, 0.0, REC|STR|DONTFREE };
 	static Cell dollar1 = {
-	    OCELL, CFLD, NULL, (uchar*) "", 0.0, FLD|STR|DONTFREE };
+	    OCELL, CFLD, NULL, "", 0.0, FLD|STR|DONTFREE };
 	int i;
 
-	record = recdata = (uchar *) malloc(n);
-	fields = (uchar *) malloc(n);
+	record = recdata = (char *) malloc(n);
+	fields = (char *) malloc(n);
 	fldtab = (Cell *) malloc(nfields * sizeof(Cell));
 	if (recdata == NULL || fields == NULL || fldtab == NULL)
 		ERROR "out of space for $0 and fields" FATAL;
@@ -74,7 +72,7 @@ void recinit(unsigned int n)
 void initgetrec(void)
 {
 	int i;
-	uchar *p;
+	char *p;
 
 	for (i = 1; i < *ARGC; i++) {
 		if (!isclvar(p = getargv(i))) {	/* find 1st real filename */
@@ -87,7 +85,7 @@ void initgetrec(void)
 	infile = stdin;		/* no filenames, so use stdin */
 }
 
-getrec(uchar *buf)	/* get next input record from whatever source */
+int getrec(char *buf)	/* get next input record from whatever source */
 {			/* note: tests whether buf == record */
 	int c;
 	static int firsttime = 1;
@@ -147,12 +145,21 @@ getrec(uchar *buf)	/* get next input record from whatever source */
 	return 0;	/* true end of file */
 }
 
-readrec(uchar *buf, int bufsize, FILE *inf)	/* read one record into buf */
+void nextfile(void)
 {
-	register int sep, c;
-	register uchar *rr;
-	register int nrr;
+	if (infile != stdin)
+		fclose(infile);
+	infile = NULL;
+	argno++;
+}
 
+int readrec(char *buf, int bufsize, FILE *inf)	/* read one record into buf */
+{
+	int sep, c;
+	char *rr;
+	int nrr;
+
+	strcpy(inputFS, *FS);	/* for subsequent field splitting */
 	if ((sep = **RS) == 0) {
 		sep = '\n';
 		while ((c=getc(inf)) == '\n' && c != EOF)	/* skip leading \n's */
@@ -178,22 +185,22 @@ readrec(uchar *buf, int bufsize, FILE *inf)	/* read one record into buf */
 	return c == EOF && rr == buf ? 0 : 1;
 }
 
-uchar *getargv(int n)	/* get ARGV[n] */
+char *getargv(int n)	/* get ARGV[n] */
 {
 	Cell *x;
-	uchar *s, temp[10];
+	char *s, temp[10];
 	extern Array *ARGVtab;
 
-	sprintf((char *)temp, "%d", n);
+	sprintf(temp, "%d", n);
 	x = setsymtab(temp, "", 0.0, STR, ARGVtab);
 	s = getsval(x);
 	dprintf( ("getargv(%d) returns |%s|\n", n, s) );
 	return s;
 }
 
-void setclvar(uchar *s)	/* set var=value from s */
+void setclvar(char *s)	/* set var=value from s */
 {
-	uchar *p;
+	char *p;
 	Cell *q;
 
 	for (p=s; *p != '='; p++)
@@ -212,7 +219,7 @@ void setclvar(uchar *s)	/* set var=value from s */
 
 void fldbld(void)	/* create fields from current record */
 {
-	register uchar *r, *fr, sep;
+	char *r, *fr, sep;
 	Cell *p;
 	int i;
 
@@ -223,9 +230,9 @@ void fldbld(void)	/* create fields from current record */
 	r = recloc->sval;
 	fr = fields;
 	i = 0;	/* number of fields accumulated here */
-	if (strlen(*FS) > 1) {	/* it's a regular expression */
-		i = refldbld(r, *FS);
-	} else if ((sep = **FS) == ' ') {	/* default whitespace */
+	if (strlen(inputFS) > 1) {	/* it's a regular expression */
+		i = refldbld(r, inputFS);
+	} else if ((sep = *inputFS) == ' ') {	/* default whitespace */
 		for (i = 0; ; ) {
 			while (*r == ' ' || *r == '\t' || *r == '\n')
 				r++;
@@ -242,6 +249,20 @@ void fldbld(void)	/* create fields from current record */
 				*fr++ = *r++;
 			while (*r != ' ' && *r != '\t' && *r != '\n' && *r != '\0');
 			*fr++ = 0;
+		}
+		*fr = 0;
+	} else if ((sep = *inputFS) == 0) {		/* new: FS="" => 1 char/field */
+		for (i = 0; *r != 0; r++) {
+			char buf[2];
+			i++;
+			if (i >= nfields)
+				break;
+			if (!(fldtab[i].tval & DONTFREE))
+				xfree(fldtab[i].sval);
+			buf[0] = *r;
+			buf[1] = 0;
+			fldtab[i].sval = tostring(buf);
+			fldtab[i].tval = FLD | STR;
 		}
 		*fr = 0;
 	} else if (*r != 0) {	/* if 0, it's a null field */
@@ -281,8 +302,8 @@ void fldbld(void)	/* create fields from current record */
 
 void cleanfld(int n1, int n2)	/* clean out fields n1..n2 inclusive */
 {
-	static uchar *nullstat = (uchar *) "";
-	register Cell *p, *q;
+	static char *nullstat = "";
+	Cell *p, *q;
 
 	for (p = &fldtab[n2], q = &fldtab[n1]; p > q; p--) {
 		if (!(p->tval & DONTFREE))
@@ -295,15 +316,15 @@ void cleanfld(int n1, int n2)	/* clean out fields n1..n2 inclusive */
 void newfld(int n)	/* add field n (after end) */
 {
 	if (n >= nfields)
-		ERROR "creating too many fields (%d); try -mf n", n, record FATAL;
+		ERROR "creating too many fields (%d); try -mf n", n FATAL;
 	cleanfld(maxfld, n);
 	maxfld = n;
 	setfval(nfloc, (Awkfloat) n);
 }
 
-refldbld(uchar *rec, uchar *fs)	/* build fields from reg expr in FS */
+int refldbld(char *rec, char *fs)	/* build fields from reg expr in FS */
 {
-	uchar *fr;
+	char *fr;
 	int i, tempstat;
 	fa *pfa;
 
@@ -339,14 +360,14 @@ refldbld(uchar *rec, uchar *fs)	/* build fields from reg expr in FS */
 
 void recbld(void)	/* create $0 from $1..$NF if necessary */
 {
-	register int i;
-	register uchar *r, *p;
-	static uchar *rec = 0;
+	int i;
+	char *r, *p;
+	static char *rec = 0;
 
 	if (donerec == 1)
 		return;
 	if (rec == 0) {
-		rec = (uchar *) malloc(recsize);
+		rec = (char *) malloc(recsize);
 		if (rec == 0)
 			ERROR "out of space building $0, record size %d", recsize FATAL;
 	}
@@ -362,10 +383,10 @@ void recbld(void)	/* create $0 from $1..$NF if necessary */
 	if (r > rec + recsize - 1)
 		ERROR "built giant record `%.30s...'; try -mr n", record FATAL;
 	*r = '\0';
-	dprintf( ("in recbld FS=%o, recloc=%o\n", **FS, recloc) );
+	dprintf( ("in recbld inputFS=%s, recloc=%p\n", inputFS, recloc) );
 	recloc->tval = REC | STR | DONTFREE;
 	recloc->sval = record = rec;
-	dprintf( ("in recbld FS=%o, recloc=%o\n", **FS, recloc) );
+	dprintf( ("in recbld inputFS=%s, recloc=%p\n", inputFS, recloc) );
 	dprintf( ("recbld = |%s|\n", record) );
 	donerec = 1;
 }
@@ -380,9 +401,9 @@ Cell *fieldadr(int n)
 int	errorflag	= 0;
 char	errbuf[200];
 
-void yyerror(uchar *s)
+void yyerror(char *s)
 {
-	extern uchar *cmdname, *curfname;
+	extern char *cmdname, *curfname;
 	static int been_here = 0;
 
 	if (been_here++ > 2)
@@ -432,7 +453,7 @@ void bcheck2(int n, int c1, int c2)
 void error(int f, char *s)
 {
 	extern Node *curnode;
-	extern uchar *cmdname;
+	extern char *cmdname;
 
 	fflush(stdout);
 	fprintf(stderr, "%s: ", cmdname);
@@ -458,10 +479,10 @@ void error(int f, char *s)
 
 void eprint(void)	/* try to print context around error */
 {
-	uchar *p, *q;
+	char *p, *q;
 	int c;
 	static int been_here = 0;
-	extern uchar ebuf[], *ep;
+	extern char ebuf[], *ep;
 
 	if (compile_time == 2 || compile_time == 0 || been_here++ > 0)
 		return;
@@ -504,7 +525,7 @@ void bclass(int c)
 	}
 }
 
-double errcheck(double x, uchar *s)
+double errcheck(double x, char *s)
 {
 	extern int errno;
 
@@ -520,9 +541,9 @@ double errcheck(double x, uchar *s)
 	return x;
 }
 
-isclvar(uchar *s)	/* is s of form var=something ? */
+int isclvar(char *s)	/* is s of form var=something ? */
 {
-	uchar *os = s;
+	char *os = s;
 
 	if (!isalpha(*s) && *s != '_')
 		return 0;
@@ -534,31 +555,11 @@ isclvar(uchar *s)	/* is s of form var=something ? */
 
 #define	MAXEXPON	38	/* maximum exponent for fp number. should be IEEE */
 
-isnumber(uchar *s)	/* should be done by a library function */
+int isnumber(char *s)	/* should be done by a library function */
 {
-	register int d1, d2;
+	int d1, d2;
 	int point;
-	uchar *es;
-
-/* /* THIS IS AN EXPERIMENT THAT'S NOT REALLY DONE. */
-/* /* strtod ought to provide a better test of what's */
-/* /* a valid number, but it doesn't work according to */
-/* /* the standard on any machine near me! */
-/* 
-/* #include <math.h>
-/* 	double r;
-/* 	uchar *ep;
-/* 	errno = 0;
-/* 	r = strtod(s, &ep);
-/* 	if (r == HUGE_VAL || errno == ERANGE)
-/* 		return 0;
-/* 	while (*ep == ' ' || *ep == '\t' || *ep == '\n')
-/* 		ep++;
-/* 	if (*ep == '\0')
-/* 		return 1;
-/* 	else
-/* 		return 0;
- */
+	char *es;
 
 	d1 = d2 = point = 0;
 	while (*s == ' ' || *s == '\t' || *s == '\n')
@@ -585,7 +586,7 @@ isnumber(uchar *s)	/* should be done by a library function */
 			s++;
 		} while (isdigit(*s));
 	}
-	if (!(d1 || point && d2))
+	if (!(d1 || (point && d2)))
 		return(0);
 	if (*s == 'e' || *s == 'E') {
 		s++;
@@ -609,3 +610,27 @@ isnumber(uchar *s)	/* should be done by a library function */
 	else
 		return(0);
 }
+
+#if 0
+	/* THIS IS AN EXPERIMENT THAT'S NOT DONE. */
+	/* strtod ought to provide a better test of what's */
+	/* a valid number, but it doesn't work according to */
+	/* the standard on any machine near me! */
+	
+	#include <math.h>
+	isnumber(char *s)
+	{
+		double r;
+		char *ep;
+		errno = 0;
+		r = strtod(s, &ep);
+		if (r == HUGE_VAL || errno == ERANGE)
+			return 0;
+		while (*ep == ' ' || *ep == '\t' || *ep == '\n')
+			ep++;
+		if (*ep == '\0')
+			return 1;
+		else
+			return 0;
+	}
+#endif	
