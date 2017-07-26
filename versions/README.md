@@ -10,14 +10,14 @@ Origins / Sources Of The Code Contained Herein
 * 1979-11-30 &mdash; Addenda to Seventh Edition Unix,
   via [The Unix Archive](http://minnie.tuhs.org/TUHS/archive_sites.html).
 
-  Note: The date stamp on the files is 1980-12-02, but the
+  **Note:** The date stamp on the files is 1980-12-02, but the
   `EXPLAIN` file which appeared in this version bears the
   date 1979-11-30.
 
 * 1979-12-30 &mdash; 3BSD
   via [The Unix Archive](http://minnie.tuhs.org/TUHS/archive_sites.html).
 
-  Note: This is 1979-02-16 with a patch to use a larger input buffer.
+  **Note:** This is 1979-02-16 with a patch to use a larger input buffer.
 
 * 1980-04-11 &mdash; System III,
   via [The Unix Archive](http://minnie.tuhs.org/TUHS/archive_sites.html).
@@ -25,7 +25,7 @@ Origins / Sources Of The Code Contained Herein
 * 1983-12-09 &mdash; from
   [RetroBSD](https://code.google.com/p/retrobsd/source/browse/trunk/src/cmd/awk/?r=702).
 
-  Note: The date here is based on a comment at the top of the file
+  **Note:** The date here is based on a comment at the top of the file
   `awk.def.h`, which *may* also indicate that the "real" name of this
   file was merely `awk.def`.
 
@@ -35,13 +35,17 @@ Origins / Sources Of The Code Contained Herein
 * 1983-12-10 &mdash; 2.9BSD
   via [The Unix Archive](http://minnie.tuhs.org/TUHS/archive_sites.html).
 
-  Note: This is a very minor (null check) patch to 1979-05-16.
+  **Note:** This is a very minor (null check) patch to 1979-05-16.
 
 * 1985-08-03 &mdash; Research Unix V8
   via [The Unix Archive](http://www.tuhs.org/Archive/Distributions/Research/Dan_Cross_v8/)
 
 * 1986-06-05 &mdash; 4.3BSD
   via [The Unix Archive](http://minnie.tuhs.org/TUHS/archive_sites.html).
+
+  **Note:** This one is more similar to 1980-04-11 than it is to any of
+  the other versions which precede it, which is why it is ordered immediately
+  after that version the versions list.
 
 * 1989-10-11 &mdash; System V Release 4, from OpenSolaris.
 
@@ -165,12 +169,12 @@ Origins / Sources Of The Code Contained Herein
   Princeton](http://www.cs.princeton.edu/~bwk/btl.mirror/).
 
 * forks &mdash; versions that appear to be more significant "forks" of the
-  original awk code, but may be of interest nonetheless. These are *not*
+  original awk code, but may be of interest nonetheless. These are _not_
   included in the historical order.
 
 - - - - - - -
 
-*Note:* The file [order.txt](order.txt) in this directory is the ordering
+**Note:** The file [order.txt](order.txt) in this directory is the ordering
 of versions used when generating the history in [latest/](../latest/),
-which is *not* the same as the version dates because the history
+which is _not_ the same as the version dates because the history
 isn't really linear.
