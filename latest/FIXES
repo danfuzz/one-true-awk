@@ -25,6 +25,14 @@ THIS SOFTWARE.
 This file lists all bug fixes, changes, etc., made since the AWK book
 was sent to the printers in August, 1987.
 
+Nov 29, 2002:
+	modified b.c (with tiny changes in main and run) to support
+	locales, using strcoll and iswhatever tests for posix character
+	classes.  thanks to ruslan ermilov (ru@freebsd.org) for code.
+	the function isblank doesn't seem to have propagated to any
+	header file near me, so it's there explicitly.  not properly
+	tested on non-ascii character sets by me.
+
 Jun 28, 2002:
 	modified run/format() and tran/getsval() to do a slightly better
 	job on using OFMT for output from print and CONVFMT for other
