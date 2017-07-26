@@ -52,6 +52,9 @@ Origins / Sources Of The Code Contained Herein
 * 1992-08-01 &mdash; 4.4BSD Alpha
   via [The Unix Archive](http://minnie.tuhs.org/TUHS/archive_sites.html).
 
+* 1992-11-28 &mdash; Research Unix V10
+  via [The Unix Archive](http://www.tuhs.org/Archive/Distributions/Research/Norman_v10/)
+
 * 1993-07-23 &mdash; from the collection of Arnold Robbins.
 
 * 1994-08-24 &mdash; possibly a release via Netlib, from the collection
