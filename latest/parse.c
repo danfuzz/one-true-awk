@@ -35,7 +35,7 @@ Node *nodealloc(int n)
 
 	x = (Node *) malloc(sizeof(Node) + (n-1)*sizeof(Node *));
 	if (x == NULL)
-		ERROR "out of space in nodealloc" FATAL;
+		FATAL("out of space in nodealloc");
 	x->nnext = NULL;
 	x->lineno = lineno;
 	return(x);
@@ -189,7 +189,7 @@ Node *makearr(Node *p)
 	if (isvalue(p)) {
 		cp = (Cell *) (p->narg[0]);
 		if (isfcn(cp))
-			ERROR "%s is a function, not an array", cp->nval SYNTAX;
+			SYNTAX( "%s is a function, not an array", cp->nval );
 		else if (!isarr(cp)) {
 			xfree(cp->sval);
 			cp->sval = (char *) makesymtab(NSYMTAB);
@@ -209,7 +209,7 @@ Node *pa2stat(Node *a, Node *b, Node *c)	/* pat, pat {...} */
 
 	x = node4(PASTAT2, a, b, c, itonp(paircnt));
 	if (paircnt++ >= PA2NUM)
-		ERROR "limited to %d pat,pat statements", PA2NUM SYNTAX;
+		SYNTAX( "limited to %d pat,pat statements", PA2NUM );
 	x->ntype = NSTAT;
 	return(x);
 }
@@ -236,7 +236,7 @@ void defn(Cell *v, Node *vl, Node *st)	/* turn on FCN bit in definition, */
 	int n;
 
 	if (isarr(v)) {
-		ERROR "`%s' is an array name and a function name", v->nval SYNTAX;
+		SYNTAX( "`%s' is an array name and a function name", v->nval );
 		return;
 	}
 	v->tval = FCN;

@@ -198,7 +198,7 @@ void penter(Node *p)	/* set up parent pointers and leaf indices */
 		parent(right(p)) = p;
 		break;
 	default:	/* can't happen */
-		ERROR "can't happen: unknown type %d in penter", type(p) FATAL;
+		FATAL("can't happen: unknown type %d in penter", type(p));
 		break;
 	}
 }
@@ -220,7 +220,7 @@ void freetr(Node *p)	/* free parse tree */
 		xfree(p);
 		break;
 	default:	/* can't happen */
-		ERROR "can't happen: unknown type %d in freetr", type(p) FATAL;
+		FATAL("can't happen: unknown type %d in freetr", type(p));
 		break;
 	}
 }
@@ -291,7 +291,7 @@ char *cclenter(char *p)	/* add a character class */
 
 	op = p;
 	if (buf == 0 && (buf = (char *) malloc(bufsz)) == NULL)
-		ERROR "out of space for character class [%.10s...] 1", p FATAL;
+		FATAL("out of space for character class [%.10s...] 1", p);
 	bp = buf;
 	for (i = 0; (c = *p++) != 0; ) {
 		if (c == '\\') {
@@ -309,7 +309,7 @@ char *cclenter(char *p)	/* add a character class */
 				}
 				while (c < c2) {
 					if (!adjbuf(&buf, &bufsz, bp-buf+2, 100, &bp, 0))
-						ERROR "out of space for character class [%.10s...] 2", p FATAL;
+						FATAL("out of space for character class [%.10s...] 2", p);
 					*bp++ = ++c;
 					i++;
 				}
@@ -317,7 +317,7 @@ char *cclenter(char *p)	/* add a character class */
 			}
 		}
 		if (!adjbuf(&buf, &bufsz, bp-buf+2, 100, &bp, 0))
-			ERROR "out of space for character class [%.10s...] 3", p FATAL;
+			FATAL("out of space for character class [%.10s...] 3", p);
 		*bp++ = c;
 		i++;
 	}
@@ -329,7 +329,7 @@ char *cclenter(char *p)	/* add a character class */
 
 void overflo(char *s)
 {
-	ERROR "regular expression too big: %.30s...", s FATAL;
+	FATAL("regular expression too big: %.30s...", s);
 }
 
 void cfoll(fa *f, Node *v)	/* enter follow set of each leaf of vertex v into lfollow[leaf] */
@@ -369,7 +369,7 @@ void cfoll(fa *f, Node *v)	/* enter follow set of each leaf of vertex v into lfo
 		cfoll(f,right(v));
 		break;
 	default:	/* can't happen */
-		ERROR "can't happen: unknown type %d in cfoll", type(v) FATAL;
+		FATAL("can't happen: unknown type %d in cfoll", type(v));
 	}
 }
 
@@ -410,7 +410,7 @@ int first(Node *p)	/* collects initially active leaves of p into setvec */
 		if (first(left(p)) == 0 || b == 0) return(0);
 		return(1);
 	}
-	ERROR "can't happen: unknown type %d in first", type(p) FATAL;	/* can't happen */
+	FATAL("can't happen: unknown type %d in first", type(p));	/* can't happen */
 	return(-1);
 }
 
@@ -583,10 +583,10 @@ Node *reparse(char *p)	/* parses regular expression pointed to by p */
 	lastre = prestr = p;	/* prestr points to string to be parsed */
 	rtok = relex();
 	if (rtok == '\0')
-		ERROR "empty regular expression" FATAL;
+		FATAL("empty regular expression");
 	np = regexp();
 	if (rtok != '\0')
-		ERROR "syntax error in regular expression %s at %s", lastre, prestr FATAL;
+		FATAL("syntax error in regular expression %s at %s", lastre, prestr);
 	return(np);
 }
 
@@ -636,9 +636,9 @@ Node *primary(void)
 			return (unary(np));
 		}
 		else
-			ERROR "syntax error in regular expression %s at %s", lastre, prestr FATAL;
+			FATAL("syntax error in regular expression %s at %s", lastre, prestr);
 	default:
-		ERROR "illegal primary in regular expression %s at %s", lastre, prestr FATAL;
+		FATAL("illegal primary in regular expression %s at %s", lastre, prestr);
 	}
 	return 0;	/*NOTREACHED*/
 }
@@ -706,7 +706,7 @@ int relex(void)		/* lexical analyzer for reparse */
 		return CHAR;
 	case '[': 
 		if (buf == 0 && (buf = (char *) malloc(bufsz)) == NULL)
-			ERROR "out of space in reg expr %.10s..", lastre FATAL;
+			FATAL("out of space in reg expr %.10s..", lastre);
 		bp = buf;
 		if (*prestr == '^') {
 			cflag = 1;
@@ -716,17 +716,17 @@ int relex(void)		/* lexical analyzer for reparse */
 			cflag = 0;
 		n = 2 * strlen(prestr)+1;
 		if (!adjbuf(&buf, &bufsz, n, n, &bp, 0))
-			ERROR "out of space for reg expr %.10s...", lastre FATAL;
+			FATAL("out of space for reg expr %.10s...", lastre);
 		for (; ; ) {
 			if ((c = *prestr++) == '\\') {
 				*bp++ = '\\';
 				if ((c = *prestr++) == '\0')
-					ERROR "nonterminated character class %.20s...", lastre FATAL;
+					FATAL("nonterminated character class %.20s...", lastre);
 				*bp++ = c;
 			} else if (c == '\n') {
-				ERROR "newline in character class %.20s...", lastre FATAL;
+				FATAL("newline in character class %.20s...", lastre);
 			} else if (c == '\0') {
-				ERROR "nonterminated character class %.20s", lastre FATAL;
+				FATAL("nonterminated character class %.20s", lastre);
 			} else if (bp == buf) {	/* 1st char is special */
 				*bp++ = c;
 			} else if (c == ']') {
@@ -748,7 +748,7 @@ int cgoto(fa *f, int s, int c)
 	int *p, *q;
 
 	if (c < 0)
-		ERROR "can't happen: neg char %d in cgoto", c FATAL;
+		FATAL("can't happen: neg char %d in cgoto", c);
 	while (f->accept >= maxsetvec) {	/* guessing here! */
 		maxsetvec *= 4;
 		setvec = (int *) realloc(setvec, maxsetvec * sizeof(int));

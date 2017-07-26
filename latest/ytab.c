@@ -128,9 +128,9 @@ YYSTYPE	yyval;
 void setfname(Cell *p)
 {
 	if (isarr(p))
-		ERROR "%s is an array, not a function", p->nval SYNTAX;
+		SYNTAX("%s is an array, not a function", p->nval);
 	else if (isfcn(p))
-		ERROR "you can't define function %s more than once", p->nval SYNTAX;
+		SYNTAX("you can't define function %s more than once", p->nval);
 	curfname = p->nval;
 }
 
@@ -160,7 +160,7 @@ void checkdup(Node *vl, Cell *cp)	/* check if name already in list */
 	char *s = cp->nval;
 	for ( ; vl; vl = vl->nnext) {
 		if (strcmp(s, ((Cell *)(vl->narg[0]))->nval) == 0) {
-			ERROR "duplicate argument %s", s SYNTAX;
+			SYNTAX("duplicate argument %s", s);
 			break;
 		}
 	}
@@ -1167,7 +1167,7 @@ case 1:
 			winner = (Node *)stat3(PROGRAM, beginloc, yypt[-0].yyv.p, endloc); } break;
 case 2:
 #line	100	"awkgram.y"
-{ yyclearin; bracecheck(); ERROR "bailing out" SYNTAX; } break;
+{ yyclearin; bracecheck(); SYNTAX("bailing out"); } break;
 case 13:
 #line	124	"awkgram.y"
 {inloop++;} break;
@@ -1324,12 +1324,12 @@ case 72:
 case 73:
 #line	241	"awkgram.y"
 { 
-			if (safe) ERROR "cmd | getline is unsafe" SYNTAX;
+			if (safe) SYNTAX("cmd | getline is unsafe");
 			else yyval.p = op3(GETLINE, yypt[-0].yyv.p, itonp(yypt[-2].yyv.i), yypt[-3].yyv.p); } break;
 case 74:
 #line	244	"awkgram.y"
 { 
-			if (safe) ERROR "cmd | getline is unsafe" SYNTAX;
+			if (safe) SYNTAX("cmd | getline is unsafe");
 			else yyval.p = op3(GETLINE, (Node*)0, itonp(yypt[-1].yyv.i), yypt[-2].yyv.p); } break;
 case 75:
 #line	247	"awkgram.y"
@@ -1364,17 +1364,17 @@ case 96:
 case 99:
 #line	295	"awkgram.y"
 { 
-			if (safe) ERROR "print | is unsafe" SYNTAX;
+			if (safe) SYNTAX("print | is unsafe");
 			else yyval.p = stat3(yypt[-3].yyv.i, yypt[-2].yyv.p, itonp(yypt[-1].yyv.i), yypt[-0].yyv.p); } break;
 case 100:
 #line	298	"awkgram.y"
 {
-			if (safe) ERROR "print >> is unsafe" SYNTAX;
+			if (safe) SYNTAX("print >> is unsafe");
 			else yyval.p = stat3(yypt[-3].yyv.i, yypt[-2].yyv.p, itonp(yypt[-1].yyv.i), yypt[-0].yyv.p); } break;
 case 101:
 #line	301	"awkgram.y"
 {
-			if (safe) ERROR "print > is unsafe" SYNTAX;
+			if (safe) SYNTAX("print > is unsafe");
 			else yyval.p = stat3(yypt[-3].yyv.i, yypt[-2].yyv.p, itonp(yypt[-1].yyv.i), yypt[-0].yyv.p); } break;
 case 102:
 #line	304	"awkgram.y"
@@ -1390,17 +1390,17 @@ case 105:
 { yyval.p = exptostat(yypt[-0].yyv.p); } break;
 case 106:
 #line	308	"awkgram.y"
-{ yyclearin; ERROR "illegal statement" SYNTAX; } break;
+{ yyclearin; SYNTAX("illegal statement"); } break;
 case 109:
 #line	317	"awkgram.y"
-{ if (!inloop) ERROR "break illegal outside of loops" SYNTAX;
+{ if (!inloop) SYNTAX("break illegal outside of loops");
 				  yyval.p = stat1(BREAK, NIL); } break;
 case 110:
 #line	319	"awkgram.y"
 { yyval.p = stat1(CLOSE, yypt[-1].yyv.p); } break;
 case 111:
 #line	320	"awkgram.y"
-{  if (!inloop) ERROR "continue illegal outside of loops" SYNTAX;
+{  if (!inloop) SYNTAX("continue illegal outside of loops");
 				  yyval.p = stat1(CONTINUE, NIL); } break;
 case 112:
 #line	322	"awkgram.y"
@@ -1429,12 +1429,12 @@ case 120:
 case 121:
 #line	330	"awkgram.y"
 { if (infunc)
-				ERROR "next is illegal inside a function" SYNTAX;
+				SYNTAX("next is illegal inside a function");
 			  yyval.p = stat1(NEXT, NIL); } break;
 case 122:
 #line	333	"awkgram.y"
 { if (infunc)
-				ERROR "nextfile is illegal inside a function" SYNTAX;
+				SYNTAX("nextfile is illegal inside a function");
 			  yyval.p = stat1(NEXTFILE, NIL); } break;
 case 123:
 #line	336	"awkgram.y"
@@ -1528,7 +1528,7 @@ case 156:
 { yyval.p = op2(INDEX, yypt[-3].yyv.p, yypt[-1].yyv.p); } break;
 case 157:
 #line	379	"awkgram.y"
-{ ERROR "index() doesn't permit regular expressions" SYNTAX;
+{ SYNTAX("index() doesn't permit regular expressions");
 		  yyval.p = op2(INDEX, yypt[-3].yyv.p, (Node*)yypt[-1].yyv.s); } break;
 case 158:
 #line	381	"awkgram.y"

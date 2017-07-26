@@ -68,9 +68,9 @@ tar:
 	@cp ytab.h ytabh.bak
 	@cp ytab.c ytabc.bak
 	@bundle $(SHIP) >awk.shar
-	@tar cf awktar $(SHIP)
-	gzip awktar
-	ls -l awktar.gz
+	@tar cf awk.tar $(SHIP)
+	gzip awk.tar
+	ls -l awk.tar.gz
 	@zip awk.zip $(SHIP)
 	ls -l awk.zip
 
