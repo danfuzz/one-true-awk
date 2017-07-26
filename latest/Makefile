@@ -22,8 +22,8 @@
 # THIS SOFTWARE.
 # ****************************************************************/
 
-#CFLAGS = -g
-CFLAGS = -O
+CFLAGS = -g
+CFLAGS = -O2
 CC = gcc -Wall -g
 CC = purify cc
 CC = cc
@@ -34,9 +34,11 @@ YFLAGS = -d
 
 OFILES = b.o main.o parse.o proctab.o tran.o lib.o run.o lex.o
 
-SOURCE = awk.h ytab.c ytab.h proto.h awkgram.y lex.c b.c main.c maketab.c parse.c lib.c run.c tran.c missing95.c
+SOURCE = awk.h ytab.c ytab.h proto.h awkgram.y lex.c b.c main.c maketab.c parse.c lib.c run.c tran.c proctab.c missing95.c
 
 LISTING = awk.h proto.h awkgram.y lex.c b.c main.c maketab.c parse.c lib.c run.c tran.c missing.c
+
+SHIP = README FIXES $(SOURCE) ytab[ch].bak makefile awk.1 buildwin.bat buildmac
 
 a.out:	ytab.o $(OFILES)
 	$(CC) $(CFLAGS) ytab.o $(OFILES) $(ALLOC)  -lm
@@ -55,19 +57,19 @@ proctab.c:	maketab
 maketab:	ytab.h maketab.c
 	$(CC) $(CFLAGS) maketab.c -o maketab
 
-bundle:	
+bundle:
 	@cp ytab.h ytabh.bak
 	@cp ytab.c ytabc.bak
-	@bundle README FIXES $(SOURCE) ytab[ch].bak makefile awk.1
+	@bundle $(SHIP)
 
 tar:
 	@cp ytab.h ytabh.bak
 	@cp ytab.c ytabc.bak
-	@bundle README FIXES $(SOURCE) ytab[ch].bak makefile awk.1 >awk.shar
-	@tar cf awktar README FIXES $(SOURCE) ytab[ch].bak makefile awk.1
+	@bundle $(SHIP) >awk.shar
+	@tar cf awktar $(SHIP)
 	gzip awktar
 	ls -l awktar.gz
-	@zip awk.zip README FIXES $(SOURCE) ytab[ch].bak makefile awk.1
+	@zip awk.zip $(SHIP)
 	ls -l awk.zip
 
 names:

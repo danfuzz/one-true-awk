@@ -282,6 +282,7 @@ Cell *call(Node **a, int n)	/* function call.  very kludgy and fragile */
 				if (i >= ncall) {
 					freesymtab(t);
 					t->csub = CTEMP;
+					tempfree(t);
 				} else {
 					oargs[i]->tval = t->tval;
 					oargs[i]->tval &= ~(STR|NUM|DONTFREE);
@@ -337,7 +338,7 @@ Cell *jump(Node **a, int n)	/* break, continue, next, nextfile, return */
 	case EXIT:
 		if (a[0] != NULL) {
 			y = execute(a[0]);
-			errorflag = getfval(y);
+			errorflag = (int) getfval(y);
 			tempfree(y);
 		}
 		longjmp(env, 1);
@@ -404,7 +405,7 @@ Cell *getline(Node **a, int n)	/* get next line from specific input */
 			tempfree(x);
 		} else {			/* getline <file */
 			setsval(fldtab[0], buf);
-			if (isnumber(fldtab[0]->sval)) {
+			if (is_number(fldtab[0]->sval)) {
 				fldtab[0]->fval = atof(fldtab[0]->sval);
 				fldtab[0]->tval |= NUM;
 			}
@@ -696,8 +697,8 @@ Cell *indirect(Node **a, int n)	/* $( a[0] ) */
 	char *s;
 
 	x = execute(a[0]);
-	m = getfval(x);
-	if (m == 0 && !isnumber(s = getsval(x)))	/* suspicion! */
+	m = (int) getfval(x);
+	if (m == 0 && !is_number(s = getsval(x)))	/* suspicion! */
 		ERROR "illegal field $(%s), name \"%s\"", s, x->nval FATAL;
 		/* BUG: can x->nval ever be null??? */
 	tempfree(x);
@@ -729,14 +730,14 @@ Cell *substr(Node **a, int nnn)		/* substr(a[0], a[1], a[2]) */
 		setsval(x, "");
 		return(x);
 	}
-	m = getfval(y);
+	m = (int) getfval(y);
 	if (m <= 0)
 		m = 1;
 	else if (m > k)
 		m = k;
 	tempfree(y);
 	if (a[2] != 0) {
-		n = getfval(z);
+		n = (int) getfval(z);
 		tempfree(z);
 	} else
 		n = k - 1;
@@ -1222,7 +1223,7 @@ Cell *split(Node **a, int nnn)	/* split(a[0], a[1], a[2]); a[3] is type */
 				sprintf(num, "%d", n);
 				temp = *patbeg;
 				*patbeg = '\0';
-				if (isnumber(s))
+				if (is_number(s))
 					setsymtab(num, s, atof(s), STR|NUM, (Array *) ap->sval);
 				else
 					setsymtab(num, s, 0.0, STR, (Array *) ap->sval);
@@ -1239,7 +1240,7 @@ Cell *split(Node **a, int nnn)	/* split(a[0], a[1], a[2]); a[3] is type */
 		}
 		n++;
 		sprintf(num, "%d", n);
-		if (isnumber(s))
+		if (is_number(s))
 			setsymtab(num, s, atof(s), STR|NUM, (Array *) ap->sval);
 		else
 			setsymtab(num, s, 0.0, STR, (Array *) ap->sval);
@@ -1259,7 +1260,7 @@ Cell *split(Node **a, int nnn)	/* split(a[0], a[1], a[2]); a[3] is type */
 			temp = *s;
 			*s = '\0';
 			sprintf(num, "%d", n);
-			if (isnumber(t))
+			if (is_number(t))
 				setsymtab(num, t, atof(t), STR|NUM, (Array *) ap->sval);
 			else
 				setsymtab(num, t, 0.0, STR, (Array *) ap->sval);
@@ -1288,7 +1289,7 @@ Cell *split(Node **a, int nnn)	/* split(a[0], a[1], a[2]); a[3] is type */
 			temp = *s;
 			*s = '\0';
 			sprintf(num, "%d", n);
-			if (isnumber(t))
+			if (is_number(t))
 				setsymtab(num, t, atof(t), STR|NUM, (Array *) ap->sval);
 			else
 				setsymtab(num, t, 0.0, STR, (Array *) ap->sval);
@@ -1481,7 +1482,7 @@ Cell *bltin(Node **a, int n)	/* builtin functions. a[0] is type, a[1] is arg lis
 			u = time((time_t *)0);
 		else
 			u = getfval(x);
-		srand((int) u); u = (int) u;
+		srand((unsigned int) u);
 		break;
 	case FTOUPPER:
 	case FTOLOWER:

@@ -132,7 +132,7 @@ extern	void	eprint(void);
 extern	void	bclass(int);
 extern	double	errcheck(double, char *);
 extern	int	isclvar(char *);
-extern	int	isnumber(char *);
+extern	int	is_number(char *);
 
 extern	int	adjbuf(char **pb, int *sz, int min, int q, char **pbp, char *what);
 extern	void	run(Node *);
