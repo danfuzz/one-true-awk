@@ -25,6 +25,11 @@ THIS SOFTWARE.
 This file lists all bug fixes, changes, etc., made since the AWK book
 was sent to the printers in August, 1987.
 
+Nov 15, 2000:
+	fixed a bug introduced in august 1997 that caused expressions
+	like $f[1] to be syntax errors.  thanks to arnold robbins for
+	noticing this and providing a fix.
+
 Oct 30, 2000:
 	fixed some nextfile bugs: not handling all cases.  thanks to
 	arnold robbins for pointing this out.  new regressions added.
