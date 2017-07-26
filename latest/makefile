@@ -26,12 +26,11 @@ CFLAGS = -g
 CFLAGS = -O2
 CFLAGS =
 
-CC = gcc -Wall -g -Wwrite-strings
-CC = gcc -fprofile-arcs -ftest-coverage # then gcov f1.c; cat f1.c.gcov
 CC = gcc -Wall -g
 CC = cc
+CC = gcc -Wall -g -Wwrite-strings
+CC = gcc -fprofile-arcs -ftest-coverage # then gcov f1.c; cat f1.c.gcov
 CC = gcc -O4
-
 
 YACC = bison -y
 YACC = yacc
