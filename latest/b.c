@@ -78,6 +78,7 @@ fa *makedfa(char *s, int anchor)	/* returns dfa for reg expr s */
 {
 	int i, use, nuse;
 	fa *pfa;
+	static int now = 1;
 
 	if (setvec == 0) {	/* first time through any RE */
 		maxsetvec = MAXLIN;
@@ -92,13 +93,13 @@ fa *makedfa(char *s, int anchor)	/* returns dfa for reg expr s */
 	for (i = 0; i < nfatab; i++)	/* is it there already? */
 		if (fatab[i]->anchor == anchor
 		  && strcmp(fatab[i]->restr, s) == 0) {
-			fatab[i]->use++;
+			fatab[i]->use = now++;
 			return fatab[i];
 	}
 	pfa = mkdfa(s, anchor);
 	if (nfatab < NFA) {	/* room for another */
 		fatab[nfatab] = pfa;
-		fatab[nfatab]->use = 1;
+		fatab[nfatab]->use = now++;
 		nfatab++;
 		return pfa;
 	}
@@ -111,7 +112,7 @@ fa *makedfa(char *s, int anchor)	/* returns dfa for reg expr s */
 		}
 	freefa(fatab[nuse]);
 	fatab[nuse] = pfa;
-	pfa->use = 1;
+	pfa->use = now++;
 	return pfa;
 }
 

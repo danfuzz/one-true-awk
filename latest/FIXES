@@ -321,7 +321,7 @@ Nov 19, 1991:
 
 Nov 30, 1991:
 	fixed storage leak in freefa, failing to recover [N]CCL.
-	thanks to Bill Jones (jones@skorpio.usask.ca)
+	thanks to Bill Jones (jones@cs.usask.ca)
 
 Dec 2, 1991:
 	die-casting time:  converted to ansi C, installed that.
@@ -555,3 +555,23 @@ Feb 11, 1998:
 	example:  awk 'length($0) > 10'.  blush.  at least i found it
 	myself.
 
+Mar 12, 1998:
+	added -V to print version number and die.
+
+[notify dave kerns, dkerns@dacsoup.ih.lucent.com]
+
+May 12, 1998:
+	fixed potential bug in readrec: might fail to update record
+	pointer after growing.  thanks to dan levy for spotting this
+	and suggesting the fix.
+
+Oct 19, 1998:
+	fixed a couple of bugs in getrec: could fail to update $0
+	after a getline var; because inputFS wasn't initialized, 
+	could split $0 on every character, a misleading diversion.
+
+	fixed caching bug in makedfa: LRU was actually removing
+	least often used.
+
+	thanks to ross ridge for finding these, and for providing
+	great bug reports.

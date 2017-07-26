@@ -22,10 +22,10 @@
 # THIS SOFTWARE.
 # ****************************************************************/
 
-CFLAGS = -g
+#CFLAGS = -g
 CFLAGS = -O
-CC = purify cc
 CC = gcc -Wall -g
+CC = purify cc
 CC = cc
 
 YACC = bison -y
@@ -63,9 +63,10 @@ bundle:
 tar:
 	@cp ytab.h ytabh.bak
 	@cp ytab.c ytabc.bak
-	@tar cf awk.tar README FIXES $(SOURCE) ytab[ch].bak makefile awk.1
-	gzip awk.tar
-	ls -l awk.tar.gz
+	@bundle README FIXES $(SOURCE) ytab[ch].bak makefile awk.1 >awk.shar
+	@tar cf awktar README FIXES $(SOURCE) ytab[ch].bak makefile awk.1
+	gzip awktar
+	ls -l awktar.gz
 	@zip awk.zip README FIXES $(SOURCE) ytab[ch].bak makefile awk.1
 	ls -l awk.zip
 

@@ -22,7 +22,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
 THIS SOFTWARE.
 ****************************************************************/
 
-char	*version = "version 980211";
+char	*version = "version 981019";
 
 #define DEBUG
 #include <stdio.h>
@@ -121,6 +121,10 @@ int main(int argc, char *argv[])
 			if (dbg == 0)
 				dbg = 1;
 			printf("awk %s\n", version);
+			break;
+		case 'V':	/* added for exptools "standard" */
+			printf("awk %s\n", version);
+			exit(0);
 			break;
 		default:
 			ERROR "unknown option %s ignored", argv[1] WARNING;
