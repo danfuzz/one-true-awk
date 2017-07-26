@@ -1,9 +1,7 @@
-#ifndef lint
-static char sccsid[] = "@(#)tran.c	4.3 8/11/83";
-#endif
-
-#include "stdio.h"
-#include "awk.def"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "awk.def.h"
 #include "awk.h"
 
 cell *symtab[MAXSYM];	/* symbol table pointers */
@@ -136,7 +134,7 @@ awkfloat f;
 		error(FATAL, "can't set $0");
 	vp->tval &= ~STR;	/* mark string invalid */
 	vp->tval |= NUM;	/* mark number ok */
-	if ((vp->tval & FLD) && vp->nval == 0)
+	if ((vp->tval & FLD) && isnull(vp->nval))
 		donerec = 0;
 	return(vp->fval = f);
 }
@@ -151,7 +149,7 @@ char *s;
 		error(FATAL, "can't set $0");
 	vp->tval &= ~NUM;
 	vp->tval |= STR;
-	if ((vp->tval & FLD) && vp->nval == 0)
+	if ((vp->tval & FLD) && isnull(vp->nval))
 		donerec = 0;
 	if (!(vp->tval&FLD))
 		strfree(vp->sval);
