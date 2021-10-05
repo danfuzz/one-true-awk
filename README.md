@@ -39,7 +39,7 @@ Cheers!
 Acknowledgments
 ---------------
 
-* Eric Fischer, <https://github.com/ericfischer>, who has gone above
+* Erica Fischer, <https://github.com/e-n-f>, who has gone above
   and beyond in finding versions to include here.
 
 * Olivier Dulac, <http://stackoverflow.com/users/1841533/olivier-dulac>,
