@@ -10,10 +10,10 @@ middle initial is "W") has been the most active of the authors in
 developing this code.
 
 This archive includes the earliest widely published version through
-versions released quite recently (as of this writing). The
-[versions/](versions) directory has each version in a separate
-subdirectory. See that directory's [README](versions/README.md) file
-for details about the origin of each version.
+versions released in 2012. The [versions/](versions) directory has
+each version in a separate subdirectory. See that directory's
+[README](versions/README.md) file for details about the origin of
+each version.
 
 The [latest/](latest) directory has a full (as can be
 made) git history of all the versions, with tip-of-tree being the
@@ -26,6 +26,9 @@ particular, the earliest version contained herein is from 1979, and
 the historical record is missing any versions published in the
 following years: 1981 1982 1984 1987 1988 1990 1991 1994 1995
 2001 2006 2008
+
+Since 2012, Awk has its own somewhat-active repo on Github. Find it
+at: <https://github.com/onetrueawk/awk>
 
 I hope you find this archive educational, entertaining, and enlightening.
 Cheers!
